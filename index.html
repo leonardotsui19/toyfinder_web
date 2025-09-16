@@ -286,7 +286,7 @@
     </div>
 
     <!-- Google Maps Style Header -->
-    <header class="fixed top-0 left-0 right-0 vintage-legend vintage-shadow z-40">
+    <header class="fixed top-0 left-0 right-0 z-40">
         <!-- Main Search Bar (Google Maps Style) -->
         <div class="px-3 sm:px-4 py-3 sm:py-4 relative">
             <!-- User Controls (Top Right of Header) -->
@@ -321,13 +321,7 @@
     </header>
     
     <!-- Floating Action Buttons -->
-    <div class="fixed top-20 sm:top-24 left-1/2 transform -translate-x-1/2 flex space-x-3 sm:space-x-4 z-30">
-        <!-- Location Button -->
-        <button id="getCurrentLocationBtn" class="flex items-center justify-center px-4 py-2 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Update Current Location">
-            <i class="fas fa-location-arrow vintage-text-secondary text-sm mr-2"></i>
-            <span class="text-sm font-medium vintage-text-primary">My Location</span>
-        </button>
-        
+    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 flex space-x-3 sm:space-x-4 z-30">
         <!-- Recommendations Button -->
         <button id="getRecommendationsBtn" class="flex items-center justify-center px-4 py-2 vintage-button vintage-shadow rounded-full transition-all hover:scale-105" title="Get Recommendations">
             <i class="fas fa-star text-sm mr-2"></i>
@@ -335,9 +329,15 @@
         </button>
     </div>
 
+    <div class="fixed bottom-6 right-1 xs:right-2 sm:right-3 md:right-4 lg:right-6 xl:right-8 z-30">
+        <!-- Location Button -->
+        <button id="getCurrentLocationBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Update Current Location">
+            <i class="fas fa-location-arrow"></i>
+        </button>
+    </div>
+
     <!-- Map Legend -->
-    <div class="fixed bottom-16 xs:bottom-12 sm:bottom-8 md:bottom-6 lg:bottom-4 xl:bottom-6 
-                left-1 xs:left-2 sm:left-3 md:left-4 lg:left-6 xl:left-8
+    <div class="fixed bottom-6 left-1 xs:left-2 sm:left-3 md:left-4 lg:left-6 xl:left-8
                 vintage-legend vintage-shadow
                 p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 xl:p-4
                 z-30 
