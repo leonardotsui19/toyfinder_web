@@ -329,7 +329,7 @@
         </button>
     </div>
 
-    <div class="fixed bottom-6 right-1 xs:right-2 sm:right-3 md:right-4 lg:right-6 xl:right-8 z-30">
+    <div class="fixed bottom-5 right-5 z-30">
         <!-- Location Button -->
         <button id="getCurrentLocationBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Update Current Location">
             <i class="fas fa-location-arrow"></i>
@@ -337,8 +337,7 @@
     </div>
 
     <!-- Map Legend -->
-    <div class="fixed bottom-6 left-1 xs:left-2 sm:left-3 md:left-4 lg:left-6 xl:left-8
-                vintage-legend vintage-shadow
+    <div class="fixed bottom-5 left-5 vintage-legend vintage-shadow
                 p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 xl:p-4
                 z-30 
                 max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] xl:max-w-none
@@ -419,7 +418,7 @@
     </div>
 
     <!-- Show Stores Button -->
-    <button id="showStoresBtn" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 vintage-button px-6 py-3 vintage-shadow z-30 transition-all hover:scale-105">
+    <button id="showStoresBtn" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 vintage-button px-4 py-2 vintage-shadow z-30 rounded-full transition-all hover:scale-105">
         <span class="font-medium">📍 View Nearby Stores</span>
     </button>
 
@@ -1418,6 +1417,7 @@
                 map = new google.maps.Map(document.getElementById('map'), {
                     zoom: 15,
                     center: defaultLocation,
+		    disableDefaultUI: true,
                     styles: [
                         // Hide modern POI labels for clean vintage look
                         {
