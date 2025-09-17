@@ -1,12 +1,15 @@
-<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="x-poe-datastore-behavior" content="local_only">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
     <meta name="x-poe-datastore-behavior" content="local_only">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ToyFinder - Discover &amp; Share</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
+    <script>tailwind.config = {
             theme: {
                 extend: {
                     colors: {
@@ -21,36 +24,47 @@
                     }
                 }
             }
-        }
-    </script>
+        }</script>
     <style>
         /* Vintage Map-style effects */
         @keyframes subtleFade {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+            0%, 100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
-        
+
         @keyframes paperTexture {
-            0% { filter: sepia(0.1); }
-            100% { filter: sepia(0.3); }
+            0% {
+                filter: sepia(0.1);
+            }
+
+            100% {
+                filter: sepia(0.3);
+            }
         }
-        
-        .vintage-fade { animation: subtleFade 4s ease-in-out infinite; }
-        
+
+        .vintage-fade {
+            animation: subtleFade 4s ease-in-out infinite;
+        }
+
         .vintage-header {
             background: linear-gradient(135deg, #4a3c2a 0%, #3d2f1f 50%, #2d1f13 100%);
             border-bottom: 2px solid #6b5b47;
         }
-        
+
         .vintage-shadow {
             box-shadow: 0 4px 12px rgba(45, 31, 19, 0.3), 0 2px 6px rgba(45, 31, 19, 0.2);
         }
-        
+
         .vintage-border {
             border: 2px solid #8b7355;
             border-radius: 4px;
         }
-        
+
         .vintage-button {
             background: linear-gradient(145deg, #8b7355, #6b5b47);
             border: 1px solid #a68b5b;
@@ -58,87 +72,90 @@
             transition: all 0.3s ease;
             color: #f4f0e8;
         }
-        
-        .vintage-button:hover {
-            background: linear-gradient(145deg, #9b8365, #7b6b57);
-            box-shadow: 0 2px 8px rgba(45, 31, 19, 0.4);
-        }
-        
+
+            .vintage-button:hover {
+                background: linear-gradient(145deg, #9b8365, #7b6b57);
+                box-shadow: 0 2px 8px rgba(45, 31, 19, 0.4);
+            }
+
         .vintage-panel {
             background: linear-gradient(145deg, #f4f0e8 0%, #e8e0d0 100%);
             border: 2px solid #8b7355;
             border-radius: 6px 6px 0 0;
         }
-        
+
         .vintage-card {
             background: linear-gradient(145deg, #f9f6f0, #f0ebe0);
             border: 1px solid #d4c4a8;
             border-radius: 4px;
         }
-        
+
         .vintage-text-primary {
             color: #5a4a3a;
         }
-        
+
         .vintage-text-secondary {
             color: #8b7355;
         }
-        
+
         .vintage-text-muted {
             color: #a68b5b;
         }
-        
+
         .vintage-search {
             background: #faf8f3;
             border: 2px solid #d4c4a8;
             border-radius: 4px;
             color: #5a4a3a;
         }
-        
-        .vintage-search:focus {
-            border-color: #8b7355;
-            box-shadow: 0 0 0 2px rgba(139, 115, 85, 0.2);
-        }
-        
+
+            .vintage-search:focus {
+                border-color: #8b7355;
+                box-shadow: 0 0 0 2px rgba(139, 115, 85, 0.2);
+            }
+
         .vintage-overlay {
             background: linear-gradient(145deg, #f4f0e8, #e8e0d0);
             border: 2px solid #8b7355;
             border-radius: 6px;
         }
-        
+
         .vintage-legend {
             background: linear-gradient(145deg, #f9f6f0, #f0ebe0);
             border: 2px solid #8b7355;
             border-radius: 6px;
         }
-        
+
         .vintage-tab-active {
             background: linear-gradient(145deg, #8b7355, #6b5b47);
             color: #f4f0e8;
         }
-        
+
         .vintage-tab-inactive {
             background: linear-gradient(145deg, #d4c4a8, #c4b498);
             color: #5a4a3a;
         }
-        
-        .vintage-tab-inactive:hover {
-            background: linear-gradient(145deg, #baa488, #aa9478);
-        }
-        
+
+            .vintage-tab-inactive:hover {
+                background: linear-gradient(145deg, #baa488, #aa9478);
+            }
+
         /* Orientation-specific styles */
         @media (orientation: landscape) and (max-height: 500px) {
             .mobile-landscape-adjust {
                 height: 70vh !important;
                 max-height: 70vh !important;
             }
+
             .mobile-landscape-header {
                 padding-top: 0.25rem !important;
                 padding-bottom: 0.25rem !important;
             }
+
             .mobile-landscape-search {
                 top: 3rem !important;
             }
+
             .mobile-landscape-legend-adaptive {
                 bottom: 8px !important;
                 left: 4px !important;
@@ -146,7 +163,7 @@
                 max-width: 120px !important;
             }
         }
-        
+
         /* Comprehensive orientation adaptations */
         @media (orientation: landscape) and (min-width: 768px) and (max-height: 600px) {
             /* Tablet landscape */
@@ -157,7 +174,7 @@
                 max-width: 160px !important;
             }
         }
-        
+
         @media (orientation: landscape) and (min-width: 1024px) {
             /* Desktop/laptop landscape */
             .mobile-landscape-legend-adaptive {
@@ -167,7 +184,7 @@
                 max-width: 200px !important;
             }
         }
-        
+
         @media (orientation: portrait) and (max-width: 768px) {
             /* Mobile/tablet portrait - optimize for narrow screens */
             .mobile-landscape-legend-adaptive {
@@ -176,7 +193,7 @@
                 max-width: 140px !important;
             }
         }
-        
+
         @media (orientation: portrait) and (min-width: 768px) {
             /* Large tablet/desktop portrait */
             .mobile-landscape-legend-adaptive {
@@ -185,7 +202,7 @@
                 max-width: 220px !important;
             }
         }
-        
+
         /* Screen resolution specific adaptations */
         @media (max-width: 320px) {
             .mobile-landscape-legend-adaptive {
@@ -195,7 +212,7 @@
                 max-width: 100px !important;
             }
         }
-        
+
         @media (min-width: 1920px) {
             .mobile-landscape-legend-adaptive {
                 bottom: 32px !important;
@@ -204,7 +221,7 @@
                 max-width: none !important;
             }
         }
-        
+
         @media (min-width: 2560px) {
             .mobile-landscape-legend-adaptive {
                 bottom: 48px !important;
@@ -214,43 +231,43 @@
                 transform-origin: bottom left !important;
             }
         }
-        
+
         /* High DPI screens */
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             .mobile-landscape-legend-adaptive {
                 border: 1px solid rgba(0, 0, 0, 0.1);
             }
         }
-        
+
         /* Google Maps Style Category Pills */
         .category-pill {
             @apply flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-full whitespace-nowrap transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500;
         }
-        
-        .category-pill.active {
-            @apply bg-primary text-white border-primary hover:bg-primary-dark;
-        }
-        
-        .category-pill:focus {
-            @apply outline-none ring-2 ring-primary ring-opacity-50;
-        }
-        
+
+            .category-pill.active {
+                @apply bg-primary text-white border-primary hover:bg-primary-dark;
+            }
+
+            .category-pill:focus {
+                @apply outline-none ring-2 ring-primary ring-opacity-50;
+            }
+
         /* Scrollbar hiding for category pills */
         .scrollbar-hide {
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
         @media (orientation: portrait) {
             .portrait-panel-height {
                 max-height: 60vh;
             }
         }
-        
+
         @media (orientation: landscape) {
             .landscape-panel-height {
                 max-height: 50vh;
@@ -260,11 +277,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4&amp;libraries=places&amp;callback=initMap"></script>
     <script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script>
-<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+    <script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script>
+</head>
 <body class="bg-white dark:bg-gray-900 transition-colors duration-300">
     <!-- Dark mode detection -->
-    <script>
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    <script>if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.documentElement.classList.add('dark');
         }
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
@@ -273,12 +290,11 @@
             } else {
                 document.documentElement.classList.remove('dark');
             }
-        });
-    </script>
+        });</script>
 
     <!-- Full Screen Map -->
     <div id="map" class="w-full h-screen"></div>
-    
+
     <!-- Map Loading Overlay -->
     <div id="mapLoading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
         <div class="text-center vintage-card vintage-shadow p-8">
@@ -298,13 +314,13 @@
                 <button id="collectionsToggleBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center transition-colors shadow-lg border border-gray-200 dark:border-gray-600" title="Collections">
                     <i class="fas fa-archive text-gray-600 dark:text-gray-400 text-sm sm:text-lg"></i>
                 </button>
-                
+
                 <!-- Profile Button -->
                 <button id="profileBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-primary transition-colors shadow-lg" title="Profile">
                     <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&amp;h=40&amp;fit=crop&amp;crop=face" alt="Profile" class="w-full h-full object-cover">
                 </button>
             </div>
-            
+
             <div class="relative">
                 <!-- Search Bar Container -->
                 <div class="bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 flex items-center px-4 py-3 mr-[100px] sm:mr-[136px]">
@@ -314,15 +330,15 @@
                             <i class="fas fa-map text-white text-xs sm:text-sm"></i>
                         </div>
                     </div>
-                    
+
                     <!-- Search Input -->
                     <input type="text" id="searchInput" placeholder="Search nearby stores..." class="flex-1 text-base sm:text-lg text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:outline-none">
                 </div>
             </div>
         </div>
-        
+
     </header>
-    
+
     <!-- Floating Action Buttons -->
     <div class="fixed top-20 left-1/2 transform -translate-x-1/2 flex space-x-3 sm:space-x-4 z-30">
         <!-- Recommendations Button -->
@@ -333,11 +349,6 @@
     </div>
 
     <div class="fixed bottom-5 right-5 z-30 flex flex-col space-y-3">
-        <!-- Live Tracking Toggle Button -->
-        <button id="liveTrackingBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Toggle Live Location Tracking">
-            <i id="trackingIcon" class="fas fa-crosshairs"></i>
-        </button>
-        
         <!-- Location Button -->
         <button id="getCurrentLocationBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Update Current Location">
             <i class="fas fa-location-arrow"></i>
@@ -347,15 +358,15 @@
     <!-- Map Legend -->
     <div class="fixed bottom-5 left-5 vintage-legend vintage-shadow
                 p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 xl:p-4
-                z-30 
+                z-30
                 max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] xl:max-w-none
                 transform transition-all duration-300 ease-in-out hover:scale-105
                 mobile-landscape-legend-adaptive">
-        <div class="space-y-0.5 xs:space-y-1 sm:space-y-1.5 md:space-y-2 
+        <div class="space-y-0.5 xs:space-y-1 sm:space-y-1.5 md:space-y-2
                     text-[10px] xs:text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base">
             <div class="flex items-center">
-                <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl 
-                           mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5 
+                <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl
+                           mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5
                            flex-shrink-0">📍</span>
                 <span class="vintage-text-primary truncate font-medium">
                     <span class="hidden sm:inline">Nearby Store</span>
@@ -363,8 +374,8 @@
                 </span>
             </div>
             <div class="flex items-center">
-                <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl 
-                           mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5 
+                <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl
+                           mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5
                            flex-shrink-0">⭐</span>
                 <span class="vintage-text-primary truncate font-medium">
                     <span class="hidden sm:inline">Recommendation</span>
@@ -376,13 +387,13 @@
 
     <!-- Store List Panel Overlay -->
     <div id="storeListOverlay" class="fixed inset-0 bg-black bg-opacity-25 z-40 hidden transition-opacity duration-300"></div>
-    
+
     <!-- Store List Panel -->
     <div id="storeListPanel" class="fixed bottom-0 left-0 right-0 vintage-panel vintage-shadow z-40 transform translate-y-full transition-transform duration-300">
         <div class="p-4">
             <!-- Panel Handle (Draggable) -->
             <div id="panelHandle" class="w-12 h-2 bg-gradient-to-r from-amber-600 to-amber-800 rounded-full mx-auto mb-4 cursor-pointer"></div>
-            
+
             <!-- Tabs and Close Button -->
             <div class="flex items-center gap-3 mb-4">
                 <div class="flex flex-1 vintage-border p-1">
@@ -398,14 +409,14 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <!-- Tab Content -->
             <div class="max-h-96 overflow-y-auto">
                 <!-- Nearby Stores Tab -->
                 <div id="nearbyTabContent" class="space-y-3">
                     <!-- All stores will be populated here -->
                 </div>
-                
+
                 <!-- Recommendations Tab -->
                 <div id="aiTabContent" class="hidden">
                     <div id="aiRecommendationsEmpty" class="text-center py-12">
@@ -441,7 +452,7 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                
+
                 <!-- Create Post Button -->
                 <div class="p-4 border-b vintage-border bg-amber-50">
                     <button id="createPostBtn" class="w-full vintage-button px-4 py-3 font-medium transition-colors flex items-center justify-center">
@@ -449,7 +460,7 @@
                         📜 Share Your Archive
                     </button>
                 </div>
-                
+
                 <!-- Collection Feed -->
                 <div class="flex-1 overflow-y-auto p-4 vintage-legend">
                     <div id="collectionFeed" class="space-y-6">
@@ -510,8 +521,7 @@
         </div>
     </div>
 
-    <script>
-        // Google Maps and Places variables
+    <script>// Google Maps and Places variables
         let map;
         let service;
         let infoWindow;
@@ -590,11 +600,11 @@
                 return '<div class="text-gray-500 dark:text-gray-400 text-sm">Store information not available</div>';
             }
 
-            const badgeHtml = isTopMatch 
+            const badgeHtml = isTopMatch
                 ? '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>'
                 : '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
-            
-            const borderClass = isTopMatch 
+
+            const borderClass = isTopMatch
                 ? 'ring-2 ring-green-200 dark:ring-green-600 border-green-200 dark:border-green-600'
                 : 'ring-2 ring-yellow-200 dark:ring-yellow-600 border-yellow-200 dark:border-yellow-600';
 
@@ -603,59 +613,59 @@
                 : 'Great selection of action figures and LEGO sets. Family-friendly environment with competitive prices and extensive inventory for current collectibles.';
 
             return `
-                <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border ${borderClass} hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer">
-                    ${badgeHtml}
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
-                        <div class="flex items-center text-yellow-500">
-                            <i class="fas fa-star mr-1"></i>
-                            <span class="text-sm">${store.rating}</span>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
-                    <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
-                    
-                    <!-- Specialties -->
-                    <div class="flex flex-wrap gap-1 mb-3">
-                        ${store.specialties.map(spec => `
-                            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
-                        `).join('')}
-                    </div>
-                    
-                    <!-- AI Reasoning -->
-                    <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-3 mb-3">
-                        <h6 class="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-1 flex items-center">
-                            <i class="fas fa-brain mr-1"></i>
-                            Why AI Recommends This Store
-                        </h6>
-                        <p class="text-xs text-blue-700 dark:text-blue-300">${reasoningText}</p>
-                    </div>
-                    
-                    <!-- Store Details -->
-                    <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                        <div class="flex items-center justify-between">
-                            <span><i class="fas fa-clock mr-1"></i>${store.hours}</span>
-                            ${isTopMatch ? '<span class="text-green-600 dark:text-green-400 font-medium">🎯 Best Match</span>' : '<span class="text-yellow-600 dark:text-yellow-400 font-medium">🤖 AI Pick</span>'}
-                        </div>
-                    </div>
-                    
-                    <!-- Action Button -->
-                    <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                <span>Click to view on map</span>
-                            </div>
-                            <div class="text-xs">
-                                ${isTopMatch 
-                                    ? '<span class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded-full">Perfect Match</span>'
-                                    : '<span class="bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full">Recommended</span>'
-                                }
+                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border ${borderClass} hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer">
+                        ${badgeHtml}
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
+                            <div class="flex items-center text-yellow-500">
+                                <i class="fas fa-star mr-1"></i>
+                                <span class="text-sm">${store.rating}</span>
                             </div>
                         </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                        <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
+
+                        <!-- Specialties -->
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${store.specialties.map(spec => `
+                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
+                            `).join('')}
+                        </div>
+
+                        <!-- AI Reasoning -->
+                        <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-3 mb-3">
+                            <h6 class="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-1 flex items-center">
+                                <i class="fas fa-brain mr-1"></i>
+                                Why AI Recommends This Store
+                            </h6>
+                            <p class="text-xs text-blue-700 dark:text-blue-300">${reasoningText}</p>
+                        </div>
+
+                        <!-- Store Details -->
+                        <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span><i class="fas fa-clock mr-1"></i>${store.hours}</span>
+                                ${isTopMatch ? '<span class="text-green-600 dark:text-green-400 font-medium">🎯 Best Match</span>' : '<span class="text-yellow-600 dark:text-yellow-400 font-medium">🤖 AI Pick</span>'}
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    <span>Click to view on map</span>
+                                </div>
+                                <div class="text-xs">
+                                    ${isTopMatch
+                    ? '<span class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded-full">Perfect Match</span>'
+                    : '<span class="bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full">Recommended</span>'
+                }
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
         }
 
         // Tab Management
@@ -672,18 +682,18 @@
 
         function switchToTab(tabName) {
             activeTab = tabName;
-            
+
             // Update tab buttons
             const nearbyTab = document.getElementById('nearbyTab');
             const aiTab = document.getElementById('aiTab');
             const nearbyContent = document.getElementById('nearbyTabContent');
             const aiContent = document.getElementById('aiTabContent');
-            
+
             if (tabName === 'nearby') {
                 // Activate nearby tab
                 nearbyTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm';
                 aiTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white';
-                
+
                 // Show/hide content
                 nearbyContent.classList.remove('hidden');
                 aiContent.classList.add('hidden');
@@ -691,7 +701,7 @@
                 // Activate AI tab
                 aiTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm';
                 nearbyTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white';
-                
+
                 // Show/hide content
                 aiContent.classList.remove('hidden');
                 nearbyContent.classList.add('hidden');
@@ -710,46 +720,46 @@
                 console.error('nearbyTabContent element not found');
                 return;
             }
-            
+
             nearbyContent.innerHTML = toyStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
                 const isTopMatch = topMatchStore === store.id;
-                
+
                 let badgeHtml = '';
                 if (isTopMatch) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>';
                 } else if (isRecommended) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
                 }
-                
+
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
-                        ${badgeHtml}
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
-                            <div class="flex items-center text-yellow-500">
-                                <i class="fas fa-star mr-1"></i>
-                                <span class="text-sm">${store.rating}</span>
+                        <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                            ${badgeHtml}
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
+                                <div class="flex items-center text-yellow-500">
+                                    <i class="fas fa-star mr-1"></i>
+                                    <span class="text-sm">${store.rating}</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                            <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                ${store.specialties.map(spec => `
+                                    <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
+                                `).join('')}
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
+                            ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
+                            ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                            <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    <span>Click to view on map</span>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
-                        <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
-                        <div class="flex flex-wrap gap-1 mb-2">
-                            ${store.specialties.map(spec => `
-                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
-                            `).join('')}
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
-                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
-                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
-                        <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-                            <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                <span>Click to view on map</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    `;
             }).join('');
         }
 
@@ -757,62 +767,62 @@
             const aiRecommendationsList = document.getElementById('aiRecommendationsList');
             const aiRecommendationsEmpty = document.getElementById('aiRecommendationsEmpty');
             const aiTabBadge = document.getElementById('aiTabBadge');
-            
+
             if (!aiRecommendationsList || !aiRecommendationsEmpty || !aiTabBadge) {
                 console.error('Recommendations elements not found');
                 return;
             }
-            
+
             // Check if we have Recommendations
             if (recommendedStores.length === 0 && !topMatchStore) {
                 // No recommendations - show empty state
                 aiRecommendationsEmpty.classList.remove('hidden');
                 aiRecommendationsList.classList.add('hidden');
                 aiTabBadge.classList.add('hidden');
-                
+
                 // Update empty state message based on whether AI was attempted
                 if (window.aiRecommendationsAttempted) {
                     aiRecommendationsEmpty.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
-                            <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Found</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">AI analysis completed but couldn't find suitable recommendations based on your preferences and nearby stores.</p>
-                            <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
-                                <i class="fas fa-redo mr-2"></i>
-                                Try Recommendations Again
-                            </button>
-                        </div>
-                    `;
+                            <div class="text-center py-12">
+                                <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                                <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Found</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">AI analysis completed but couldn't find suitable recommendations based on your preferences and nearby stores.</p>
+                                <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+                                    <i class="fas fa-redo mr-2"></i>
+                                    Try Recommendations Again
+                                </button>
+                            </div>
+                        `;
                 } else {
                     aiRecommendationsEmpty.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
-                            <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Yet</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">Click "Get Recommendations" button to get personalized store suggestions based on your preferences.</p>
-                            <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
-                                <i class="fas fa-sparkles mr-2"></i>
-                                Get Recommendations
-                            </button>
-                        </div>
-                    `;
+                            <div class="text-center py-12">
+                                <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                                <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Yet</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">Click "Get Recommendations" button to get personalized store suggestions based on your preferences.</p>
+                                <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
+                                    <i class="fas fa-sparkles mr-2"></i>
+                                    Get Recommendations
+                                </button>
+                            </div>
+                        `;
                 }
                 return;
             }
-            
+
             // Hide empty state and show recommendations
             aiRecommendationsEmpty.classList.add('hidden');
             aiRecommendationsList.classList.remove('hidden');
-            
+
             // Update badge count
             const totalRecommendations = recommendedStores.length + (topMatchStore ? 1 : 0);
             if (totalRecommendations > 0) {
                 aiTabBadge.textContent = totalRecommendations;
                 aiTabBadge.classList.remove('hidden');
             }
-            
+
             // Get recommended stores
             const aiRecommendedStores = [];
-            
+
             // Add top match first if exists
             if (topMatchStore) {
                 const topStore = toyStores.find(s => s.id === topMatchStore);
@@ -820,7 +830,7 @@
                     aiRecommendedStores.push({ store: topStore, isTopMatch: true, isRecommended: false });
                 }
             }
-            
+
             // Add recommended stores
             recommendedStores.forEach(storeId => {
                 if (storeId !== topMatchStore) { // Don't duplicate top match
@@ -830,9 +840,9 @@
                     }
                 }
             });
-            
+
             // Render Recommendations with enhanced cards
-            aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isTopMatch, isRecommended }) => 
+            aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isTopMatch, isRecommended }) =>
                 renderRecommendationCard(store, isTopMatch, isRecommended)
             ).join('');
         }
@@ -843,50 +853,50 @@
                 console.error('collectionFeed element not found');
                 return;
             }
-            
+
             collectionFeed.innerHTML = samplePosts.map(post => `
-                <div class="vintage-card vintage-shadow overflow-hidden">
-                    <!-- Post Header -->
-                    <div class="p-4 flex items-center space-x-3 border-b border-amber-200">
-                        <img src="${post.avatar}" alt="${post.user}" class="w-10 h-10 rounded-full border-2 border-amber-300">
-                        <div class="flex-1">
-                            <h4 class="font-semibold vintage-text-primary">${post.user}</h4>
-                            <p class="text-sm vintage-text-muted">${post.timeAgo}</p>
+                    <div class="vintage-card vintage-shadow overflow-hidden">
+                        <!-- Post Header -->
+                        <div class="p-4 flex items-center space-x-3 border-b border-amber-200">
+                            <img src="${post.avatar}" alt="${post.user}" class="w-10 h-10 rounded-full border-2 border-amber-300">
+                            <div class="flex-1">
+                                <h4 class="font-semibold vintage-text-primary">${post.user}</h4>
+                                <p class="text-sm vintage-text-muted">${post.timeAgo}</p>
+                            </div>
+                            <button class="vintage-text-muted hover:vintage-text-secondary transition-colors">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
                         </div>
-                        <button class="vintage-text-muted hover:vintage-text-secondary transition-colors">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
+
+                        <!-- Post Image -->
+                        <img src="${post.image}" alt="Collection" class="w-full h-64 object-cover">
+
+                        <!-- Post Content -->
+                        <div class="p-4 bg-amber-50">
+                            <div class="flex items-center space-x-4 mb-3">
+                                <button class="flex items-center space-x-2 vintage-text-secondary hover:text-red-600 transition-colors">
+                                    <i class="far fa-heart"></i>
+                                    <span>${post.likes}</span>
+                                </button>
+                                <button class="flex items-center space-x-2 vintage-text-secondary hover:text-amber-700 transition-colors">
+                                    <i class="far fa-comment"></i>
+                                    <span>${post.comments}</span>
+                                </button>
+                                <button class="vintage-text-secondary hover:text-amber-700 transition-colors">
+                                    <i class="far fa-share-square"></i>
+                                </button>
+                            </div>
+
+                            <p class="vintage-text-primary mb-2">${post.description}</p>
+
+                            <div class="flex flex-wrap gap-1">
+                                ${post.tags.map(tag => `
+                                    <span class="text-sm text-amber-700 hover:text-amber-800 cursor-pointer font-medium">#${tag}</span>
+                                `).join(' ')}
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Post Image -->
-                    <img src="${post.image}" alt="Collection" class="w-full h-64 object-cover">
-                    
-                    <!-- Post Content -->
-                    <div class="p-4 bg-amber-50">
-                        <div class="flex items-center space-x-4 mb-3">
-                            <button class="flex items-center space-x-2 vintage-text-secondary hover:text-red-600 transition-colors">
-                                <i class="far fa-heart"></i>
-                                <span>${post.likes}</span>
-                            </button>
-                            <button class="flex items-center space-x-2 vintage-text-secondary hover:text-amber-700 transition-colors">
-                                <i class="far fa-comment"></i>
-                                <span>${post.comments}</span>
-                            </button>
-                            <button class="vintage-text-secondary hover:text-amber-700 transition-colors">
-                                <i class="far fa-share-square"></i>
-                            </button>
-                        </div>
-                        
-                        <p class="vintage-text-primary mb-2">${post.description}</p>
-                        
-                        <div class="flex flex-wrap gap-1">
-                            ${post.tags.map(tag => `
-                                <span class="text-sm text-amber-700 hover:text-amber-800 cursor-pointer font-medium">#${tag}</span>
-                            `).join(' ')}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
         }
 
         // Modal handling
@@ -931,12 +941,12 @@
             renderCollectionFeed();
             createPostModal.classList.add('hidden');
             createPostForm.reset();
-            
+
             showAlert('Your collection has been shared successfully!');
         });
 
         // Overlay UI Controls
-        
+
         // Store Panel Drag Variables
         let isDragging = false;
         let startY = 0;
@@ -949,11 +959,11 @@
             const panel = document.getElementById('storeListPanel');
             const overlay = document.getElementById('storeListOverlay');
             const btn = document.getElementById('showStoresBtn');
-            
+
             // Show overlay first
             overlay.classList.remove('hidden');
             overlay.style.opacity = '1';
-            
+
             // Show panel
             panel.classList.remove('translate-y-full');
             btn.style.display = 'none';
@@ -964,19 +974,19 @@
             const panel = document.getElementById('storeListPanel');
             const overlay = document.getElementById('storeListOverlay');
             const btn = document.getElementById('showStoresBtn');
-            
+
             // Reset header to default
             resetStorePanelHeader();
-            
+
             // Hide panel
             panel.classList.add('translate-y-full');
-            
+
             // Hide overlay
             overlay.style.opacity = '0';
             setTimeout(() => {
                 overlay.classList.add('hidden');
             }, 300);
-            
+
             btn.style.display = 'block';
         }
 
@@ -1007,44 +1017,44 @@
             isDragging = true;
             startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
             panelStartTransform = 0;
-            
+
             // Disable transitions during drag
             storePanel.style.transition = 'none';
-            
+
             // Prevent default touch behavior
             e.preventDefault();
         }
 
         function handleDragMove(e) {
             if (!isDragging) return;
-            
+
             currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
             const deltaY = currentY - startY;
-            
+
             // Only allow dragging down
             if (deltaY > 0) {
                 const translateY = panelStartTransform + deltaY;
                 storePanel.style.transform = `translateY(${translateY}px)`;
-                
+
                 // Update overlay opacity based on drag distance
                 const overlay = document.getElementById('storeListOverlay');
                 const opacity = Math.max(0, 1 - (deltaY / 200));
                 overlay.style.opacity = opacity;
             }
-            
+
             e.preventDefault();
         }
 
         function handleDragEnd(e) {
             if (!isDragging) return;
-            
+
             isDragging = false;
-            
+
             // Re-enable transitions
             storePanel.style.transition = 'transform 0.3s ease-in-out';
-            
+
             const deltaY = currentY - startY;
-            
+
             // Check if dragged enough to close
             if (deltaY > dragThreshold) {
                 closeStorePanel();
@@ -1053,7 +1063,7 @@
                 storePanel.style.transform = 'translateY(0)';
                 document.getElementById('storeListOverlay').style.opacity = '1';
             }
-            
+
             // Reset styles after animation
             setTimeout(() => {
                 storePanel.style.transition = '';
@@ -1079,24 +1089,24 @@
             console.log('Collections toggle button clicked');
             const overlay = document.getElementById('collectionsOverlay');
             const panel = document.getElementById('collectionsPanel');
-            
+
             console.log('Overlay element:', overlay);
             console.log('Panel element:', panel);
-            
+
             if (!overlay || !panel) {
                 console.error('Collections elements not found!');
                 return;
             }
-            
+
             // Ensure overlay is visible with high z-index
             overlay.classList.remove('hidden');
             overlay.style.display = 'block';
             overlay.style.zIndex = '60'; // Higher than header (z-50)
             overlay.style.position = 'fixed';
             overlay.style.inset = '0';
-            
+
             console.log('Collections overlay should now be visible');
-            
+
             setTimeout(() => {
                 panel.classList.remove('translate-x-full');
                 console.log('Collections panel should now slide in');
@@ -1106,9 +1116,9 @@
         document.getElementById('closeCollectionsBtn').addEventListener('click', () => {
             const overlay = document.getElementById('collectionsOverlay');
             const panel = document.getElementById('collectionsPanel');
-            
+
             console.log('Closing collections panel');
-            
+
             panel.classList.add('translate-x-full');
             setTimeout(() => {
                 // Clear inline styles first, then add hidden class
@@ -1117,7 +1127,7 @@
                 overlay.style.position = '';
                 overlay.style.inset = '';
                 overlay.classList.add('hidden');
-                
+
                 console.log('Collections overlay hidden and styles cleared');
             }, 300);
         });
@@ -1140,13 +1150,13 @@
                     window.Poe.registerHandler('toy-recommendations', (result) => {
                         if (result.status === 'complete') {
                             const response = result.responses[0];
-                            
+
                             // Process AI response to extract store recommendations
                             processAIRecommendations(response.content);
-                            
+
                             // Hide loading overlay
                             document.getElementById('recommendationsLoading').classList.add('hidden');
-                            
+
                             // Show stores panel with recommendations
                             showStoresPanelWithRecommendations();
                         }
@@ -1166,14 +1176,14 @@
                         // Set mock recommendations
                         recommendedStores = ['local', 'toysrus'];
                         topMatchStore = 'local';
-                        
+
                         // Update map and store list
                         updateMapPins();
                         renderStores();
-                        
+
                         // Hide loading overlay
                         document.getElementById('recommendationsLoading').classList.add('hidden');
-                        
+
                         // Show stores panel with recommendations
                         showStoresPanelWithRecommendations();
                     }, 2000);
@@ -1188,14 +1198,14 @@
         function showStoresPanelWithRecommendations() {
             const panel = document.getElementById('storeListPanel');
             const btn = document.getElementById('showStoresBtn');
-            
+
             // Show the panel
             panel.classList.remove('translate-y-full');
             btn.style.display = 'none';
-            
+
             // Switch to AI tab automatically
             switchToTab('ai');
-            
+
             // Show success toast
             showAIRecommendationsToast();
         }
@@ -1213,23 +1223,23 @@
             const toast = document.createElement('div');
             toast.className = 'fixed top-24 left-1/2 transform -translate-x-1/2 bg-primary text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
             toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-sparkles"></i>
-                    <div>
-                        <div class="text-sm font-medium">Recommendations Ready!</div>
-                        <div class="text-xs opacity-90">Recommended stores are highlighted below</div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-sparkles"></i>
+                        <div>
+                            <div class="text-sm font-medium">Recommendations Ready!</div>
+                            <div class="text-xs opacity-90">Recommended stores are highlighted below</div>
+                        </div>
                     </div>
-                </div>
-            `;
-            
+                `;
+
             document.body.appendChild(toast);
-            
+
             // Animate in
             setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translate(-50%, 0)';
             }, 10);
-            
+
             // Remove after 4 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -1249,18 +1259,18 @@
             if (dialog) {
                 dialog.remove();
             }
-            
+
             // Clear the recommendations data
             recommendedStores = [];
             topMatchStore = null;
-            
+
             // Reset panel header
             resetStorePanelHeader();
-            
+
             // Update map to remove highlights
             updateMapPins();
             renderStores();
-            
+
             // Show goodbye toast
             showCloseToast();
         }
@@ -1272,17 +1282,17 @@
             if (dialog) {
                 dialog.remove();
             }
-            
+
             // Close the store panel but keep recommendations data
             const panel = document.getElementById('storeListPanel');
             const btn = document.getElementById('showStoresBtn');
-            
+
             // Reset header to default
             resetStorePanelHeader();
-            
+
             panel.classList.add('translate-y-full');
             btn.style.display = 'block';
-            
+
             // Show helpful toast
             showMinimizeToast();
         }
@@ -1292,23 +1302,23 @@
             const toast = document.createElement('div');
             toast.className = 'fixed top-24 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
             toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-check-circle"></i>
-                    <div>
-                        <div class="text-sm font-medium">Recommendations minimized!</div>
-                        <div class="text-xs opacity-90">Click the widget anytime to restore</div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <div class="text-sm font-medium">Recommendations minimized!</div>
+                            <div class="text-xs opacity-90">Click the widget anytime to restore</div>
+                        </div>
                     </div>
-                </div>
-            `;
-            
+                `;
+
             document.body.appendChild(toast);
-            
+
             // Animate in
             setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translate(-50%, 0)';
             }, 10);
-            
+
             // Remove after 4 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -1326,23 +1336,23 @@
             const toast = document.createElement('div');
             toast.className = 'fixed top-24 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
             toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <div class="text-sm font-medium">Recommendations cleared</div>
-                        <div class="text-xs opacity-90">Click "Recommendations" to get new suggestions</div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <div class="text-sm font-medium">Recommendations cleared</div>
+                            <div class="text-xs opacity-90">Click "Recommendations" to get new suggestions</div>
+                        </div>
                     </div>
-                </div>
-            `;
-            
+                `;
+
             document.body.appendChild(toast);
-            
+
             // Animate in
             setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translate(-50%, 0)';
             }, 10);
-            
+
             // Remove after 4 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -1363,40 +1373,40 @@
         function processAIRecommendations(content) {
             // Mark that Recommendations have been attempted
             window.aiRecommendationsAttempted = true;
-            
+
             try {
                 // Try to parse JSON response from AI
                 const aiResponse = JSON.parse(content);
-                
+
                 // Map store names to IDs
                 const storeNameToId = {
                     'Toys R Us': 'toysrus',
-                    'Target Toys': 'target', 
+                    'Target Toys': 'target',
                     'Walmart Toys': 'walmart',
                     'Little Dreamers Toy Shop': 'local'
                 };
-                
+
                 // Set top match
                 if (aiResponse.topMatch && storeNameToId[aiResponse.topMatch]) {
                     topMatchStore = storeNameToId[aiResponse.topMatch];
                 }
-                
+
                 // Set recommended stores
                 if (aiResponse.recommended && Array.isArray(aiResponse.recommended)) {
                     recommendedStores = aiResponse.recommended
                         .map(storeName => storeNameToId[storeName])
                         .filter(id => id); // Remove undefined values
                 }
-                
+
                 // If AI response has no valid recommendations, clear everything
                 if (!topMatchStore && recommendedStores.length === 0) {
                     console.log('AI returned no valid recommendations');
                 }
-                
+
                 // Update map and store list
                 updateMapPins();
                 renderStores();
-                
+
             } catch (error) {
                 console.log('Failed to parse AI response as JSON, using fallback recommendations');
                 // Fallback to mock recommendations
@@ -1413,13 +1423,13 @@
             alertModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             alertModal.style.zIndex = '90';
             alertModal.innerHTML = `
-                <div class="vintage-card vintage-shadow p-6 max-w-sm w-full mx-4">
-                    <p class="vintage-text-primary mb-4">${message}</p>
-                    <div class="flex justify-end">
-                        <button class="vintage-button px-4 py-2 transition-colors" onclick="this.closest('.fixed').remove()">OK</button>
+                    <div class="vintage-card vintage-shadow p-6 max-w-sm w-full mx-4">
+                        <p class="vintage-text-primary mb-4">${message}</p>
+                        <div class="flex justify-end">
+                            <button class="vintage-button px-4 py-2 transition-colors" onclick="this.closest('.fixed').remove()">OK</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(alertModal);
         }
 
@@ -1428,19 +1438,19 @@
             try {
                 // Default location (San Francisco) if geolocation fails
                 const defaultLocation = { lat: 37.7749, lng: -122.4194 };
-                
+
                 // Check if Google Maps is available
                 if (typeof google === 'undefined' || !google.maps) {
                     console.error('Google Maps API not loaded');
                     showAlert('Map service is currently unavailable. Please refresh the page.');
                     return;
                 }
-                
+
                 // Initialize map with vintage historical map styles
                 map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 15,
+                    zoom: 18,
                     center: defaultLocation,
-		    disableDefaultUI: true,
+                    disableDefaultUI: true,
                     styles: [
                         // Hide modern POI labels for clean vintage look
                         {
@@ -1575,7 +1585,7 @@
 
                 // Initialize Places service
                 service = new google.maps.places.PlacesService(map);
-                
+
                 // Mark map as initialized
                 isMapInitialized = true;
 
@@ -1588,36 +1598,42 @@
                                 lng: position.coords.longitude
                             };
                             map.setCenter(userLocation);
-                            
-                            // Add user location marker
-                            userLocationMarker = new google.maps.Marker({
-                                position: userLocation,
-                                map: map,
-                                title: 'Your Location',
-                                icon: {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 8,
-                                    fillColor: '#4285F4',
-                                    fillOpacity: 1,
-                                    strokeColor: '#ffffff',
-                                    strokeWeight: 2
-                                }
-                            });
+
+                            // Create user location marker (will be updated with compass if available)
+                            createUserLocationMarker(userLocation, false);
 
                             // Search for toy stores near user location
                             searchToyStores(userLocation);
+
+                            // Auto-start live tracking and compass after initial location
+                            setTimeout(() => {
+                                console.log('🚀 Auto-starting live tracking + compass...');
+                                autoStartLiveTracking();
+                            }, 1000);
                         },
                         (error) => {
                             console.log('Geolocation error:', error);
                             // Geolocation failed, use default location
                             userLocation = defaultLocation;
                             searchToyStores(defaultLocation);
+
+                            // Still try to auto-start tracking with default location
+                            setTimeout(() => {
+                                console.log('🚀 Auto-starting live tracking + compass with default location...');
+                                autoStartLiveTracking();
+                            }, 1000);
                         }
                     );
                 } else {
                     // Browser doesn't support geolocation
                     userLocation = defaultLocation;
                     searchToyStores(defaultLocation);
+
+                    // Still try compass tracking even without geolocation
+                    setTimeout(() => {
+                        console.log('🚀 Auto-starting compass (geolocation not supported)...');
+                        startCompassTracking();
+                    }, 1000);
                 }
 
                 // Hide loading overlay
@@ -1636,7 +1652,7 @@
             // Protect UI elements at the start of store search
             console.log('🔍 Starting store search - protecting UI elements');
             ensureUIElementsVisibleEnhanced();
-            
+
             if (!service || !isMapInitialized) {
                 console.log('Service or map not ready, using fallback data');
                 loadMockData();
@@ -1660,18 +1676,18 @@
             // Function to handle completion of all searches
             function handleSearchCompletion() {
                 console.log(`Completed ${completedSearches}/${totalSearches} searches`);
-                
+
                 // Protect UI during search processing
                 ensureUIElementsVisibleEnhanced();
-                
+
                 if (completedSearches === totalSearches) {
                     // Remove duplicates based on place_id
-                    const uniqueResults = allResults.filter((result, index, self) => 
+                    const uniqueResults = allResults.filter((result, index, self) =>
                         index === self.findIndex(r => r.place_id === result.place_id)
                     );
-                    
+
                     console.log(`Found ${uniqueResults.length} unique stores total`);
-                    
+
                     if (uniqueResults.length > 0) {
                         processToyStores(uniqueResults);
                     } else {
@@ -1683,27 +1699,27 @@
                         recommendedStores = [];
                         topMatchStore = null;
                     }
-                    
+
                     // Ensure stores are rendered and show stores button is available
                     setTimeout(() => {
                         renderStores();
-                        
+
                         // Make sure Show Stores button is fully functional
                         const showStoresBtn = document.getElementById('showStoresBtn');
                         const storePanel = document.getElementById('storeListPanel');
-                        
+
                         if (toyStores.length > 0 && showStoresBtn) {
                             // Reset button to full functionality when stores available
                             showStoresBtn.style.display = 'block';
                             showStoresBtn.disabled = false;
                             showStoresBtn.style.opacity = '1';
                             showStoresBtn.style.pointerEvents = 'auto';
-                            
+
                             // Ensure panel is hidden so button can show
                             if (!storePanel.classList.contains('translate-y-full')) {
                                 storePanel.classList.add('translate-y-full');
                             }
-                            
+
                             console.log(`Show Stores button restored with ${toyStores.length} stores available`);
 
                             // Ensure the event listener is working by re-attaching it
@@ -1733,14 +1749,14 @@
                     setTimeout(() => {
                         service.nearbySearch(request, (results, status) => {
                             completedSearches++;
-                            
+
                             if (status === google.maps.places.PlacesServiceStatus.OK) {
                                 console.log(`Found ${results.length} results for "${keyword}"`);
                                 allResults = allResults.concat(results);
                             } else {
                                 console.log(`Search failed for "${keyword}":`, status);
                             }
-                            
+
                             handleSearchCompletion();
                         });
                     }, index * 200); // 200ms delay between each search
@@ -1755,11 +1771,11 @@
         // Process toy store results from Google Places
         function processToyStores(places) {
             console.log('Processing', places.length, 'places from Google Places API');
-            
+
             // Protect UI elements during store processing
             console.log('🛡️ Protecting UI during store processing...');
             ensureUIElementsVisibleEnhanced();
-            
+
             // Clear existing data
             toyStores = [];
             storeMarkers = [];
@@ -1793,8 +1809,8 @@
                         icon: {
                             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
                                 `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                                    <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">📍</text>
-                                </svg>`
+                                        <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">📍</text>
+                                    </svg>`
                             ),
                             scaledSize: new google.maps.Size(32, 32),
                             anchor: new google.maps.Point(16, 32)
@@ -1825,11 +1841,11 @@
             setTimeout(() => {
                 renderStores();
                 console.log('Store list rendered with', toyStores.length, 'stores');
-                
+
                 // Double-check store list content
                 const nearbyContent = document.getElementById('nearbyTabContent');
                 console.log('Nearby content HTML length:', nearbyContent.innerHTML.length);
-                
+
                 if (nearbyContent.innerHTML.length === 0 && toyStores.length > 0) {
                     console.warn('Store list is empty despite having stores! Force re-rendering...');
                     forceRenderStores();
@@ -1851,11 +1867,11 @@
                         const now = new Date();
                         const day = now.getDay();
                         if (place.opening_hours.periods && place.opening_hours.periods[day]) {
-                            store.hours = place.opening_hours.isOpen() ? 
+                            store.hours = place.opening_hours.isOpen() ?
                                 'Open now' : 'Closed';
                         }
                     }
-                    
+
                     // Store additional details
                     store.phone = place.formatted_phone_number;
                     store.website = place.website;
@@ -1877,12 +1893,12 @@
             const R = 3959; // Earth's radius in miles
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                    Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             const distance = R * c;
-            
+
             return distance.toFixed(1) + ' miles';
         }
 
@@ -1899,7 +1915,7 @@
             } else if (nameUpper.includes('WALMART')) {
                 specialties.push('Budget Toys', 'Electronic Toys', 'Craft Supplies');
             }
-            
+
             // Hobby Store Specialties
             else if (nameUpper.includes('HOBBY') || nameUpper.includes('HOBBIES')) {
                 specialties.push('Model Kits', 'RC Vehicles', 'Crafts', 'Train Sets');
@@ -1908,7 +1924,7 @@
             } else if (nameUpper.includes('MODEL')) {
                 specialties.push('Scale Models', 'Model Trains', 'Model Cars', 'Model Planes');
             }
-            
+
             // Gaming & Collectibles Specialties
             else if (nameUpper.includes('GAMESTOP') || nameUpper.includes('GAME')) {
                 specialties.push('Video Games', 'Collectibles', 'Action Figures', 'Gaming Cards');
@@ -1917,8 +1933,8 @@
             } else if (nameUpper.includes('CARD') && nameUpper.includes('SHOP')) {
                 specialties.push('Trading Cards', 'Pokemon Cards', 'Board Games', 'Card Games');
             }
-            
-            // Anime & Manga Specialties  
+
+            // Anime & Manga Specialties
             else if (nameUpper.includes('ANIME') || nameUpper.includes('MANGA')) {
                 specialties.push('Anime Figures', 'Manga Books', 'Cosplay Items', 'Japanese Imports');
             } else if (nameUpper.includes('JAPAN') || nameUpper.includes('OTAKU')) {
@@ -1926,14 +1942,14 @@
             } else if (nameUpper.includes('FIGURINE') || nameUpper.includes('FIGURE')) {
                 specialties.push('Action Figures', 'Collectible Figures', 'Display Models', 'Statues');
             }
-            
+
             // Bookstores with toys
             else if (nameUpper.includes('BARNES') && nameUpper.includes('NOBLE')) {
                 specialties.push('Educational Toys', 'Books', 'Puzzles', 'Board Games');
             } else if (nameUpper.includes('BOOK') && (nameUpper.includes('STORE') || nameUpper.includes('SHOP'))) {
                 specialties.push('Educational Games', 'Puzzles', 'Learning Toys', 'Books');
             }
-            
+
             // Generic categorization based on keywords in name
             else if (nameUpper.includes('TOY') || nameUpper.includes('PLAY')) {
                 specialties.push('Toys', 'Games', 'Educational Toys');
@@ -1968,24 +1984,24 @@
         // Show store information in info window
         function showStoreInfo(store, marker) {
             const content = `
-                <div class="p-2">
-                    <h3 class="font-bold text-lg">${store.name}</h3>
-                    <p class="text-sm text-gray-600">${store.address}</p>
-                    <div class="flex items-center mt-1">
-                        <i class="fas fa-star text-yellow-500 mr-1"></i>
-                        <span class="text-sm">${store.rating}</span>
-                        <span class="mx-2">•</span>
-                        <span class="text-sm">${store.distance}</span>
+                    <div class="p-2">
+                        <h3 class="font-bold text-lg">${store.name}</h3>
+                        <p class="text-sm text-gray-600">${store.address}</p>
+                        <div class="flex items-center mt-1">
+                            <i class="fas fa-star text-yellow-500 mr-1"></i>
+                            <span class="text-sm">${store.rating}</span>
+                            <span class="mx-2">•</span>
+                            <span class="text-sm">${store.distance}</span>
+                        </div>
+                        <div class="mt-2">
+                            ${store.specialties.map(spec =>
+                `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">${spec}</span>`
+            ).join('')}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">${store.hours}</p>
                     </div>
-                    <div class="mt-2">
-                        ${store.specialties.map(spec => 
-                            `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">${spec}</span>`
-                        ).join('')}
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">${store.hours}</p>
-                </div>
-            `;
-            
+                `;
+
             infoWindow.setContent(content);
             infoWindow.open(map, marker);
         }
@@ -2010,11 +2026,11 @@
                 marker.setIcon({
                     url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
                         `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-                            <text x="${size/2}" y="${size*0.75}" font-size="${size*0.625}" text-anchor="middle" font-family="Arial, sans-serif">${emoji}</text>
-                        </svg>`
+                                <text x="${size / 2}" y="${size * 0.75}" font-size="${size * 0.625}" text-anchor="middle" font-family="Arial, sans-serif">${emoji}</text>
+                            </svg>`
                     ),
                     scaledSize: new google.maps.Size(size, size),
-                    anchor: new google.maps.Point(size/2, size)
+                    anchor: new google.maps.Point(size / 2, size)
                 });
             });
         }
@@ -2083,7 +2099,7 @@
                 }
             ];
             renderStores();
-            
+
             // Ensure Show Stores button is restored after loading mock data
             setTimeout(() => {
                 const showStoresBtn = document.getElementById('showStoresBtn');
@@ -2108,7 +2124,7 @@
             // Remove existing click handlers by cloning (this removes all event listeners)
             const newButton = showStoresBtn.cloneNode(true);
             showStoresBtn.parentNode.replaceChild(newButton, showStoresBtn);
-            
+
             // Ensure button is fully functional
             newButton.disabled = false;
             newButton.style.display = 'block';
@@ -2116,24 +2132,24 @@
             newButton.style.pointerEvents = 'auto';
             newButton.style.cursor = 'pointer';
             newButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            
+
             // Add fresh click event listener with robust element finding
-            newButton.addEventListener('click', function(e) {
+            newButton.addEventListener('click', function (e) {
                 console.log('Show Stores button clicked after relocation');
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // More robust element finding with fallback creation
                 let panel = document.getElementById('storeListPanel');
                 let overlay = document.getElementById('storeListOverlay');
                 const btn = document.getElementById('showStoresBtn');
-                
+
                 // Verify elements exist and create if missing
                 if (!panel) {
                     console.error('Store panel not found!');
                     return;
                 }
-                
+
                 if (!overlay) {
                     console.warn('Overlay not found, recreating...');
                     // Create overlay if it doesn't exist with LOWER z-index than header/search
@@ -2141,7 +2157,7 @@
                     overlay.id = 'storeListOverlay';
                     overlay.className = 'fixed inset-0 bg-black bg-opacity-25 z-30 hidden transition-opacity duration-300';
                     document.body.appendChild(overlay);
-                    
+
                     // Add click handler to close on overlay click
                     overlay.addEventListener('click', (e) => {
                         if (e.target.id === 'storeListOverlay') {
@@ -2149,25 +2165,25 @@
                         }
                     });
                 }
-                
+
                 if (!btn) {
                     console.error('Button reference lost!');
                     return;
                 }
-                
+
                 try {
                     console.log('Opening store panel...');
-                    
+
                     // Show overlay first
                     overlay.classList.remove('hidden');
                     overlay.style.opacity = '1';
-                    
+
                     // Show panel
                     panel.classList.remove('translate-y-full');
                     btn.style.display = 'none';
-                    
+
                     console.log('Store panel opened successfully');
-                    
+
                     // Ensure stores are rendered in the panel
                     setTimeout(() => {
                         if (toyStores.length > 0) {
@@ -2175,78 +2191,78 @@
                             console.log('Stores re-rendered in panel');
                         }
                     }, 100);
-                    
+
                 } catch (error) {
                     console.error('Error opening store panel:', error);
                 }
             });
-            
+
             // Add touch event for mobile devices
-            newButton.addEventListener('touchstart', function(e) {
+            newButton.addEventListener('touchstart', function (e) {
                 console.log('Show Stores button touched');
                 // Prevent touch delay on mobile
                 e.preventDefault();
                 newButton.click();
             }, { passive: false });
-            
+
             console.log('Show Stores button fully restored and functional');
         }
 
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const filteredStores = toyStores.filter(store => 
+            const filteredStores = toyStores.filter(store =>
                 store.name.toLowerCase().includes(searchTerm) ||
                 store.specialties.some(spec => spec.toLowerCase().includes(searchTerm))
             );
-            
+
             // Update nearby stores tab with filtered results
             const nearbyContent = document.getElementById('nearbyTabContent');
             nearbyContent.innerHTML = filteredStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
                 const isTopMatch = topMatchStore === store.id;
-                
+
                 let badgeHtml = '';
                 if (isTopMatch) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>';
                 } else if (isRecommended) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
                 }
-                
+
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
-                        ${badgeHtml}
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
-                            <div class="flex items-center text-yellow-500">
-                                <i class="fas fa-star mr-1"></i>
-                                <span class="text-sm">${store.rating}</span>
+                        <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                            ${badgeHtml}
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
+                                <div class="flex items-center text-yellow-500">
+                                    <i class="fas fa-star mr-1"></i>
+                                    <span class="text-sm">${store.rating}</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                            <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                ${store.specialties.map(spec => `
+                                    <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
+                                `).join('')}
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
+                            ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
+                            ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                            <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    <span>Click to view on map</span>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
-                        <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
-                        <div class="flex flex-wrap gap-1 mb-2">
-                            ${store.specialties.map(spec => `
-                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
-                            `).join('')}
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
-                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
-                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
-                        <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-                            <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                <span>Click to view on map</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    `;
             }).join('');
-            
+
             // Also filter Recommendations tab if search is active
             if (searchTerm.trim() && (recommendedStores.length > 0 || topMatchStore)) {
                 const aiRecommendedStores = [];
-                
+
                 // Add top match first if it matches search and exists
                 if (topMatchStore) {
                     const topStore = toyStores.find(s => s.id === topMatchStore);
@@ -2254,7 +2270,7 @@
                         aiRecommendedStores.push({ store: topStore, isTopMatch: true, isRecommended: false });
                     }
                 }
-                
+
                 // Add recommended stores that match search
                 recommendedStores.forEach(storeId => {
                     if (storeId !== topMatchStore) {
@@ -2264,20 +2280,20 @@
                         }
                     }
                 });
-                
+
                 // Update Recommendations list with filtered results
                 const aiRecommendationsList = document.getElementById('aiRecommendationsList');
                 if (aiRecommendedStores.length > 0) {
-                    aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isTopMatch, isRecommended }) => 
+                    aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isTopMatch, isRecommended }) =>
                         renderRecommendationCard(store, isTopMatch, isRecommended)
                     ).join('');
                 } else {
                     aiRecommendationsList.innerHTML = `
-                        <div class="text-center py-8">
-                            <i class="fas fa-search text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
-                            <p class="text-gray-600 dark:text-gray-400">No Recommendations match "${searchTerm}"</p>
-                        </div>
-                    `;
+                            <div class="text-center py-8">
+                                <i class="fas fa-search text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                                <p class="text-gray-600 dark:text-gray-400">No Recommendations match "${searchTerm}"</p>
+                            </div>
+                        `;
                 }
             }
         });
@@ -2286,15 +2302,15 @@
         function getCurrentLocation() {
             const locationBtn = document.getElementById('getCurrentLocationBtn');
             const originalText = locationBtn.innerHTML;
-            
+
             // Check if we're on HTTPS or localhost
             const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-            
+
             if (!isSecure) {
                 showLocationFixDialog();
                 return;
             }
-            
+
             // Show loading state
             locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Finding...';
             locationBtn.disabled = true;
@@ -2306,21 +2322,21 @@
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
                         };
-                        
+
                         // Update user location
                         userLocation = newLocation;
-                        
+
                         // Center map on new location
                         if (map) {
                             map.setCenter(newLocation);
-                            map.setZoom(13);
+                            map.setZoom(18);
                         }
-                        
+
                         // Remove existing user location marker if it exists
                         if (userLocationMarker) {
                             userLocationMarker.setMap(null);
                         }
-                        
+
                         // Add new user location marker
                         if (map) {
                             userLocationMarker = new google.maps.Marker({
@@ -2345,30 +2361,30 @@
                         });
                         toyStores = [];
                         storeMarkers = [];
-                        
+
                         // Reset Recommendations when location changes
                         recommendedStores = [];
                         topMatchStore = null;
-                        
+
                         // Search for toy stores near new location
                         searchToyStores(newLocation);
-                        
+
                         // Reset button
                         locationBtn.innerHTML = originalText;
                         locationBtn.disabled = false;
-                        
+
                         // Show success message
                         showAlert('Location updated! Finding toy stores near you...');
                     },
                     (error) => {
                         console.log('Geolocation error details:', error);
-                        
+
                         // Reset button first
                         locationBtn.innerHTML = originalText;
                         locationBtn.disabled = false;
-                        
+
                         // Handle specific geolocation errors
-                        switch(error.code) {
+                        switch (error.code) {
                             case error.PERMISSION_DENIED:
                                 showPermissionFixDialog();
                                 break;
@@ -2401,23 +2417,23 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">HTTPS Required</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">Location services require a secure connection. Please:</p>
-                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4">
-                            <p class="text-sm"><strong>Quick Fix:</strong></p>
-                            <p class="text-sm">1. Deploy to <strong>Netlify</strong> or <strong>GitHub Pages</strong></p>
-                            <p class="text-sm">2. Or use <strong>localhost</strong> for testing</p>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">HTTPS Required</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">Location services require a secure connection. Please:</p>
+                            <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4">
+                                <p class="text-sm"><strong>Quick Fix:</strong></p>
+                                <p class="text-sm">1. Deploy to <strong>Netlify</strong> or <strong>GitHub Pages</strong></p>
+                                <p class="text-sm">2. Or use <strong>localhost</strong> for testing</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -2425,24 +2441,24 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-location-arrow text-red-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Access Denied</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">To enable location access:</p>
-                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
-                            <p><strong>Chrome/Edge:</strong> Click 🔒 in address bar → Location → Allow</p>
-                            <p><strong>Firefox:</strong> Click 🛡️ → Clear permissions</p>
-                            <p><strong>Safari:</strong> Settings → Privacy → Location Services</p>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="window.location.reload()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Refresh & Try Again</button>
-                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-location-arrow text-red-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Access Denied</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">To enable location access:</p>
+                            <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                                <p><strong>Chrome/Edge:</strong> Click 🔒 in address bar → Location → Allow</p>
+                                <p><strong>Firefox:</strong> Click 🛡️ → Clear permissions</p>
+                                <p><strong>Safari:</strong> Settings → Privacy → Location Services</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="window.location.reload()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Refresh & Try Again</button>
+                                <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -2450,24 +2466,24 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-satellite-dish text-orange-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Unavailable</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">GPS signal not found. Try:</p>
-                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
-                            <p>• Move outdoors or near a window</p>
-                            <p>• Check if location services are enabled</p>
-                            <p>• Try again in a few moments</p>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="getCurrentLocation(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
-                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-satellite-dish text-orange-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Unavailable</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">GPS signal not found. Try:</p>
+                            <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                                <p>• Move outdoors or near a window</p>
+                                <p>• Check if location services are enabled</p>
+                                <p>• Try again in a few moments</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="getCurrentLocation(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
+                                <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -2475,19 +2491,19 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-clock text-yellow-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Timeout</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">Location request took too long. This can happen with poor GPS signal.</p>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="getCurrentLocation(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
-                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-clock text-yellow-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Timeout</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">Location request took too long. This can happen with poor GPS signal.</p>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="getCurrentLocation(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
+                                <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -2495,18 +2511,18 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-question-circle text-gray-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Error</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">Something went wrong with location detection.</p>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-question-circle text-gray-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Error</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">Something went wrong with location detection.</p>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -2515,37 +2531,37 @@
             document.querySelectorAll('.fixed').forEach(modal => {
                 if (modal.classList.contains('bg-black')) modal.remove();
             });
-            
+
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-map-pin text-blue-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Enter Your Location</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">Enter a city or address to find nearby toy stores:</p>
-                        <input type="text" id="manualLocationInput" placeholder="e.g., San Francisco, CA" 
-                               class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4">
-                        <div class="flex flex-col gap-2">
-                            <button onclick="searchManualLocation()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Search Stores</button>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="usePresetLocation('New York, NY')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">NYC</button>
-                                <button onclick="usePresetLocation('Los Angeles, CA')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">LA</button>
-                                <button onclick="usePresetLocation('Chicago, IL')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">Chicago</button>
-                                <button onclick="usePresetLocation('Houston, TX')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">Houston</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-map-pin text-blue-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Enter Your Location</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">Enter a city or address to find nearby toy stores:</p>
+                            <input type="text" id="manualLocationInput" placeholder="e.g., San Francisco, CA"
+                                   class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4">
+                            <div class="flex flex-col gap-2">
+                                <button onclick="searchManualLocation()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Search Stores</button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="usePresetLocation('New York, NY')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">NYC</button>
+                                    <button onclick="usePresetLocation('Los Angeles, CA')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">LA</button>
+                                    <button onclick="usePresetLocation('Chicago, IL')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">Chicago</button>
+                                    <button onclick="usePresetLocation('Houston, TX')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">Houston</button>
+                                </div>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Cancel</button>
                             </div>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Cancel</button>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
-            
+
             // Focus on input
             setTimeout(() => {
                 document.getElementById('manualLocationInput').focus();
             }, 100);
-            
+
             // Handle enter key
             document.getElementById('manualLocationInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -2562,16 +2578,16 @@
         function searchManualLocation() {
             const locationInput = document.getElementById('manualLocationInput');
             const location = locationInput.value.trim();
-            
+
             if (!location) {
                 showAlert('Please enter a location');
                 return;
             }
-            
+
             // STEP 1: Aggressive UI protection before ANY location changes
             console.log('🛡️ STEP 1: Pre-location UI protection');
             ensureUIElementsVisibleEnhanced();
-            
+
             // Use Google Geocoding to convert address to coordinates
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ address: location }, (results, status) => {
@@ -2580,19 +2596,19 @@
                         lat: results[0].geometry.location.lat(),
                         lng: results[0].geometry.location.lng()
                     };
-                    
+
                     // Update location and search for stores
                     userLocation = newLocation;
-                    
+
                     if (map) {
                         map.setCenter(newLocation);
-                        map.setZoom(13);
-                        
+                        map.setZoom(18);
+
                         // Remove existing user location marker
                         if (userLocationMarker) {
                             userLocationMarker.setMap(null);
                         }
-                        
+
                         // Add new location marker
                         userLocationMarker = new google.maps.Marker({
                             position: newLocation,
@@ -2609,55 +2625,55 @@
                             animation: google.maps.Animation.DROP
                         });
                     }
-                    
+
                     // Clear existing stores
                     storeMarkers.forEach(({ marker }) => {
                         marker.setMap(null);
                     });
                     toyStores = [];
                     storeMarkers = [];
-                    
+
                     // Reset Recommendations when location changes
                     recommendedStores = [];
                     topMatchStore = null;
-                    
+
                     // STEP 2: UI protection after map update
                     console.log('🛡️ STEP 2: Post-map-update UI protection');
                     ensureUIElementsVisibleEnhanced();
-                    
+
                     // Ensure UI elements remain visible after location update
                     setTimeout(() => {
                         console.log('🛡️ STEP 3: Pre-store-search UI protection');
                         ensureUIElementsVisibleEnhanced();
                     }, 100);
-                    
+
                     // Search for toy stores
                     searchToyStores(newLocation);
-                    
+
                     // Close modal properly by finding the specific modal
                     const modal = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-50');
                     if (modal) {
                         modal.remove();
                     }
-                    
+
                     // STEP 4: Final aggressive UI protection
                     setTimeout(() => {
                         console.log('🛡️ STEP 4: Final UI protection check');
                         ensureUIElementsVisibleEnhanced();
                     }, 500);
-                    
+
                     // STEP 5: Continuous monitoring for first 10 seconds
                     const monitoringInterval = setInterval(() => {
                         console.log('🛡️ MONITORING: Continuous UI protection');
                         ensureUIElementsVisibleEnhanced();
                     }, 1000);
-                    
+
                     // Stop monitoring after 10 seconds
                     setTimeout(() => {
                         clearInterval(monitoringInterval);
                         console.log('🛡️ MONITORING: UI protection monitoring stopped');
                     }, 10000);
-                    
+
                     showAlert(`Location set to ${results[0].formatted_address}. Finding toy stores...`);
                 } else {
                     showAlert('Location not found. Please try a different address or city.');
@@ -2686,64 +2702,64 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <img src="${currentUser.avatar}" alt="Profile" class="w-20 h-20 rounded-full mx-auto mb-4">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">User Profile</h3>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
-                                <input type="text" id="profileUsername" value="${currentUser.username}" 
-                                       class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Avatar URL</label>
-                                <input type="url" id="profileAvatar" value="${currentUser.avatar}" 
-                                       class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Toy Types</label>
-                                <input type="text" id="profileTypes" value="${currentUser.preferences.favoriteTypes.join(', ')}" 
-                                       placeholder="action-figures, vintage, lego"
-                                       class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <img src="${currentUser.avatar}" alt="Profile" class="w-20 h-20 rounded-full mx-auto mb-4">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">User Profile</h3>
+
+                            <div class="space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Budget</label>
-                                    <select id="profileBudget" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                        <option value="low" ${currentUser.preferences.budget === 'low' ? 'selected' : ''}>Low ($10-50)</option>
-                                        <option value="moderate" ${currentUser.preferences.budget === 'moderate' ? 'selected' : ''}>Moderate ($50-200)</option>
-                                        <option value="high" ${currentUser.preferences.budget === 'high' ? 'selected' : ''}>High ($200+)</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Age Range</label>
-                                    <input type="text" id="profileAge" value="${currentUser.preferences.ageRange}" 
-                                           placeholder="6-10"
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+                                    <input type="text" id="profileUsername" value="${currentUser.username}"
                                            class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Avatar URL</label>
+                                    <input type="url" id="profileAvatar" value="${currentUser.avatar}"
+                                           class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Toy Types</label>
+                                    <input type="text" id="profileTypes" value="${currentUser.preferences.favoriteTypes.join(', ')}"
+                                           placeholder="action-figures, vintage, lego"
+                                           class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Budget</label>
+                                        <select id="profileBudget" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                            <option value="low" ${currentUser.preferences.budget === 'low' ? 'selected' : ''}>Low ($10-50)</option>
+                                            <option value="moderate" ${currentUser.preferences.budget === 'moderate' ? 'selected' : ''}>Moderate ($50-200)</option>
+                                            <option value="high" ${currentUser.preferences.budget === 'high' ? 'selected' : ''}>High ($200+)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Age Range</label>
+                                        <input type="text" id="profileAge" value="${currentUser.preferences.ageRange}"
+                                               placeholder="6-10"
+                                               class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
+                                <button onclick="saveUserProfile()" class="flex-1 px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-lg transition-colors">Save Profile</button>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                                <p class="text-xs text-blue-600 dark:text-blue-300">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Note: This profile is stored locally in your browser. Poe user account integration is not available.
+                                </p>
                             </div>
                         </div>
-                        
-                        <div class="flex gap-3 mt-6">
-                            <button onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
-                            <button onclick="saveUserProfile()" class="flex-1 px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-lg transition-colors">Save Profile</button>
-                        </div>
-                        
-                        <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                            <p class="text-xs text-blue-600 dark:text-blue-300">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Note: This profile is stored locally in your browser. Poe user account integration is not available.
-                            </p>
-                        </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -2770,7 +2786,7 @@
             // Update UI (with null checks)
             const userNameElement = document.getElementById('userName');
             const userAvatarElement = document.getElementById('userAvatar');
-            
+
             if (userNameElement) {
                 userNameElement.textContent = username;
             }
@@ -2790,7 +2806,7 @@
 
             // Close modal
             document.querySelector('.fixed').remove();
-            
+
             showAlert('Profile updated successfully!');
         }
 
@@ -2800,7 +2816,7 @@
             // For demo, we'll use the default profile
             const userNameElement = document.getElementById('userName');
             const userAvatarElement = document.getElementById('userAvatar');
-            
+
             if (userNameElement) {
                 userNameElement.textContent = currentUser.username;
             }
@@ -2836,15 +2852,15 @@
             // Center map on store location with smooth animation
             map.panTo(new google.maps.LatLng(store.location.lat, store.location.lng));
 
-  
+
             // Zoom in to get a closer view of the store
             if (map.getZoom() < 18) {
                 map.setZoom(18);
             }
 
-	    // Highlight the marker temporarily
+            // Highlight the marker temporarily
             const originalIcon = storeMarker.marker.getIcon();
-            
+
             // Create pulsing effect
             //storeMarker.marker.setIcon({
             //    path: google.maps.SymbolPath.CIRCLE,
@@ -2861,14 +2877,14 @@
             // Show info window after a short delay
             setTimeout(() => {
                 showStoreInfo(store, storeMarker.marker);
-                
+
                 // Stop animation after showing info
                 storeMarker.marker.setAnimation(null);
-		
-		// Restore original icon after 3 seconds
+
+                // Restore original icon after 3 seconds
                 setTimeout(() => {
                     storeMarker.marker.setIcon(originalIcon);
-                }, 3000); 
+                }, 3000);
             }, 500);
 
             // For mobile devices, provide haptic feedback if available
@@ -2891,20 +2907,20 @@
             const toast = document.createElement('div');
             toast.className = 'location-toast fixed top-20 left-1/2 transform -translate-x-1/2 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
             toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span class="text-sm font-medium">Showing ${storeName} on map</span>
-                </div>
-            `;
-            
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="text-sm font-medium">Showing ${storeName} on map</span>
+                    </div>
+                `;
+
             document.body.appendChild(toast);
-            
+
             // Animate in
             setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translate(-50%, 0)';
             }, 10);
-            
+
             // Remove after 3 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -2921,60 +2937,60 @@
         function forceRenderStores() {
             console.log('Force rendering stores...');
             const nearbyContent = document.getElementById('nearbyTabContent');
-            
+
             if (toyStores.length === 0) {
                 nearbyContent.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-store text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
-                        <p class="text-gray-600 dark:text-gray-400">No toy stores found</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-500">Try a different location or check back later</p>
-                    </div>
-                `;
+                        <div class="text-center py-8">
+                            <i class="fas fa-store text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                            <p class="text-gray-600 dark:text-gray-400">No toy stores found</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500">Try a different location or check back later</p>
+                        </div>
+                    `;
                 return;
             }
-            
+
             // Force regenerate the store list HTML
             nearbyContent.innerHTML = toyStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
                 const isTopMatch = topMatchStore === store.id;
-                
+
                 let badgeHtml = '';
                 if (isTopMatch) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>';
                 } else if (isRecommended) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
                 }
-                
+
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
-                        ${badgeHtml}
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
-                            <div class="flex items-center text-yellow-500">
-                                <i class="fas fa-star mr-1"></i>
-                                <span class="text-sm">${store.rating}</span>
+                        <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                            ${badgeHtml}
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
+                                <div class="flex items-center text-yellow-500">
+                                    <i class="fas fa-star mr-1"></i>
+                                    <span class="text-sm">${store.rating}</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                            <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                ${store.specialties.map(spec => `
+                                    <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
+                                `).join('')}
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
+                            ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
+                            ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                            <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    <span>Click to view on map</span>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
-                        <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
-                        <div class="flex flex-wrap gap-1 mb-2">
-                            ${store.specialties.map(spec => `
-                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
-                            `).join('')}
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
-                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
-                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
-                        <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-                            <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                <span>Click to view on map</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    `;
             }).join('');
-            
+
             console.log('Force render complete, stores now showing:', nearbyContent.innerHTML.length > 0);
         }
 
@@ -2984,7 +3000,7 @@
             const header = document.querySelector('header');
             const searchOverlay = document.querySelector('.fixed.top-16');
             const mapLegend = document.querySelector('.mobile-landscape-legend-adaptive');
-            
+
             // Restore header visibility and styles
             if (header) {
                 header.style.display = 'block';
@@ -2998,7 +3014,7 @@
                 header.classList.remove('hidden');
                 console.log('Header visibility restored');
             }
-            
+
             // Restore search overlay visibility and styles
             if (searchOverlay) {
                 searchOverlay.style.display = 'block';
@@ -3009,7 +3025,7 @@
                 searchOverlay.classList.remove('hidden');
                 console.log('Search overlay visibility restored');
             }
-            
+
             // Restore map legend visibility
             if (mapLegend) {
                 mapLegend.style.display = 'block';
@@ -3018,7 +3034,7 @@
                 mapLegend.classList.remove('hidden');
                 console.log('Map legend visibility restored');
             }
-            
+
             // Force re-check of dark mode to ensure proper styling
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.documentElement.classList.add('dark');
@@ -3032,7 +3048,7 @@
             const header = document.querySelector('header');
             const searchOverlay = document.querySelector('.fixed.top-16');
             const mapLegend = document.querySelector('.mobile-landscape-legend-adaptive');
-            
+
             console.log('=== UI Elements Status Check ===');
             console.log('Header:', {
                 exists: !!header,
@@ -3042,16 +3058,16 @@
                 zIndex: header?.style.zIndex || 'default',
                 classes: header?.className || 'none'
             });
-            
+
             console.log('Search Overlay:', {
                 exists: !!searchOverlay,
                 display: searchOverlay?.style.display || 'default',
-                visibility: searchOverlay?.style.visibility || 'default', 
+                visibility: searchOverlay?.style.visibility || 'default',
                 opacity: searchOverlay?.style.opacity || 'default',
                 zIndex: searchOverlay?.style.zIndex || 'default',
                 classes: searchOverlay?.className || 'none'
             });
-            
+
             console.log('Map Legend:', {
                 exists: !!mapLegend,
                 display: mapLegend?.style.display || 'default',
@@ -3059,7 +3075,7 @@
                 opacity: mapLegend?.style.opacity || 'default',
                 classes: mapLegend?.className || 'none'
             });
-            
+
             // Check for conflicting elements
             const allFixedElements = document.querySelectorAll('.fixed');
             console.log('All fixed elements count:', allFixedElements.length);
@@ -3078,32 +3094,32 @@
         // Enhanced ensureUIElementsVisible with more aggressive restoration
         function ensureUIElementsVisibleEnhanced() {
             console.log('🔧 Running enhanced UI protection...');
-            
+
             // Check if DOM is ready
             if (document.readyState === 'loading') {
                 console.warn('⚠️ DOM still loading, deferring UI protection...');
                 document.addEventListener('DOMContentLoaded', ensureUIElementsVisibleEnhanced);
                 return;
             }
-            
+
             // Debug: Check all elements in DOM
             console.log('🔍 DOM Debug - All elements:');
             console.log('- Total elements:', document.querySelectorAll('*').length);
             console.log('- Header tags:', document.querySelectorAll('header').length);
             console.log('- Fixed elements:', document.querySelectorAll('.fixed').length);
             console.log('- Body children:', document.body.children.length);
-            
+
             // Get elements with detailed debugging
             const header = document.querySelector('header');
             const mapLegend = document.querySelector('.mobile-landscape-legend-adaptive');
             const collectionsBtn = document.getElementById('collectionsToggleBtn');
             const profileBtn = document.getElementById('profileBtn');
             const searchInput = document.getElementById('searchInput');
-            
+
             // Additional selectors to try if main ones fail
             const headerAlt = document.getElementsByTagName('header')[0];
             const legendAlt = document.querySelector('[class*="legend"]');
-            
+
             console.log('🔍 Element search results:');
             console.log('- header (querySelector):', !!header);
             console.log('- header (getElementsByTagName):', !!headerAlt);
@@ -3112,15 +3128,15 @@
             console.log('- collectionsBtn:', !!collectionsBtn);
             console.log('- profileBtn:', !!profileBtn);
             console.log('- searchInput:', !!searchInput);
-            
+
             // Check status before
             checkUIElementsStatus();
-            
+
             // Restore header with maximum priority
             if (header) {
                 // Remove any conflicting classes
                 header.classList.remove('hidden', 'invisible', 'opacity-0');
-                
+
                 // Force styles with !important equivalent
                 header.style.setProperty('display', 'block', 'important');
                 header.style.setProperty('visibility', 'visible', 'important');
@@ -3131,29 +3147,29 @@
                 header.style.setProperty('right', '0', 'important');
                 header.style.setProperty('z-index', '50', 'important');
                 header.style.setProperty('pointer-events', 'auto', 'important');
-                
+
                 console.log('✅ Header restored with priority styles');
             } else {
                 console.error('❌ Header element not found!');
             }
-            
+
             // Ensure search input functionality (now part of header)
             if (searchInput) {
                 searchInput.style.setProperty('pointer-events', 'auto', 'important');
                 searchInput.disabled = false;
                 console.log('✅ Search input functionality restored');
             }
-            
+
             // Restore map legend
             if (mapLegend) {
                 mapLegend.classList.remove('hidden', 'invisible', 'opacity-0');
                 mapLegend.style.setProperty('display', 'block', 'important');
                 mapLegend.style.setProperty('visibility', 'visible', 'important');
                 mapLegend.style.setProperty('opacity', '1', 'important');
-                
+
                 console.log('✅ Map legend restored');
             }
-            
+
             // CRITICAL: Ensure collections and profile buttons remain functional
             if (collectionsBtn) {
                 collectionsBtn.style.setProperty('pointer-events', 'auto', 'important');
@@ -3161,27 +3177,27 @@
                 collectionsBtn.disabled = false;
                 console.log('✅ Collections button functionality restored');
             }
-            
+
             if (profileBtn) {
                 profileBtn.style.setProperty('pointer-events', 'auto', 'important');
                 profileBtn.style.setProperty('z-index', '55', 'important'); // Higher than header
                 profileBtn.disabled = false;
                 console.log('✅ Profile button functionality restored');
             }
-            
+
             // Check for and remove any full-screen overlays that might be covering UI
             const suspiciousOverlays = document.querySelectorAll('.fixed.inset-0');
             suspiciousOverlays.forEach((overlay, index) => {
                 const computedStyle = window.getComputedStyle(overlay);
                 const zIndex = parseInt(computedStyle.zIndex) || 0;
-                
+
                 if (zIndex > 50 && !overlay.id.includes('modal') && !overlay.id.includes('loading') && !overlay.id.includes('collectionsOverlay')) {
                     console.warn(`🚨 Found suspicious overlay with z-index ${zIndex}:`, overlay);
                     // Optionally lower its z-index or hide it
                     overlay.style.setProperty('z-index', '25', 'important');
                 }
             });
-            
+
             // Final status check
             setTimeout(() => {
                 console.log('🔍 Post-restoration status:');
@@ -3204,7 +3220,7 @@
         function toggleLiveTracking() {
             const trackingBtn = document.getElementById('liveTrackingBtn');
             const trackingIcon = document.getElementById('trackingIcon');
-            
+
             if (isLiveTrackingEnabled) {
                 stopLiveTracking();
             } else {
@@ -3215,7 +3231,7 @@
         function startLiveTracking() {
             // Check if we're on HTTPS or localhost
             const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-            
+
             if (!isSecure) {
                 showLocationFixDialog();
                 return;
@@ -3244,11 +3260,11 @@
             isLiveTrackingEnabled = true;
             trackingIcon.className = 'fas fa-dot-circle text-green-500'; // Active tracking icon
             trackingBtn.style.background = 'linear-gradient(145deg, #10b981, #059669)'; // Green background
-            trackingBtn.title = 'Live Tracking Active - Click to Stop';
-            
+            trackingBtn.title = 'Live Tracking + Compass Active - Click to Stop';
+
             // Show tracking started notification
             showTrackingToast('Live location tracking started', 'success');
-            
+
             console.log('Live tracking started');
         }
 
@@ -3265,11 +3281,11 @@
             isLiveTrackingEnabled = false;
             trackingIcon.className = 'fas fa-crosshairs'; // Default icon
             trackingBtn.style.background = ''; // Reset to default
-            trackingBtn.title = 'Toggle Live Location Tracking';
-            
+            trackingBtn.title = 'Toggle Live Location + Direction Tracking';
+
             // Show tracking stopped notification
             showTrackingToast('Live location tracking stopped', 'info');
-            
+
             console.log('Live tracking stopped');
         }
 
@@ -3278,25 +3294,25 @@
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-            
+
             trackingAccuracy = position.coords.accuracy;
             locationUpdateCount++;
-            
+
             console.log(`Location update #${locationUpdateCount}:`, newLocation, `Accuracy: ${trackingAccuracy}m`);
-            
+
             // Check if location has changed significantly
             if (shouldUpdateStores(newLocation)) {
                 console.log('Significant location change detected, updating stores...');
-                
+
                 // Update user location
                 lastKnownLocation = userLocation;
                 userLocation = newLocation;
-                
+
                 // Update map center smoothly
                 if (map) {
                     map.panTo(newLocation);
                 }
-                
+
                 // Update user location marker with direction
                 if (userLocationMarker) {
                     userLocationMarker.setPosition(newLocation);
@@ -3305,13 +3321,13 @@
                     // Create marker if it doesn't exist
                     createUserLocationMarker(newLocation, true);
                 }
-                
+
                 // Add accuracy circle for live tracking
                 updateAccuracyCircle(newLocation, trackingAccuracy);
-                
+
                 // Clear existing stores and search for new ones
                 clearStoresAndSearch(newLocation);
-                
+
                 // Show location update notification
                 showLocationUpdateToast(trackingAccuracy);
             } else {
@@ -3326,9 +3342,9 @@
 
         function handleLocationError(error) {
             console.error('Live tracking error:', error);
-            
+
             let errorMessage = 'Location tracking error: ';
-            switch(error.code) {
+            switch (error.code) {
                 case error.PERMISSION_DENIED:
                     errorMessage += 'Permission denied';
                     stopLiveTracking();
@@ -3346,7 +3362,7 @@
                     errorMessage += 'Unknown error';
                     break;
             }
-            
+
             console.log(errorMessage);
         }
 
@@ -3354,10 +3370,10 @@
             if (!lastKnownLocation) {
                 return true; // First update
             }
-            
+
             const distance = calculateDistanceInMeters(lastKnownLocation, newLocation);
             console.log(`Distance moved: ${distance.toFixed(1)}m (threshold: ${LOCATION_UPDATE_THRESHOLD}m)`);
-            
+
             return distance > LOCATION_UPDATE_THRESHOLD;
         }
 
@@ -3365,10 +3381,10 @@
             const R = 6371000; // Earth's radius in meters
             const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
             const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
-                    Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
 
@@ -3376,12 +3392,12 @@
 
         function updateAccuracyCircle(location, accuracy) {
             if (!map) return;
-            
+
             // Remove existing circle
             if (accuracyCircle) {
                 accuracyCircle.setMap(null);
             }
-            
+
             // Create new accuracy circle
             accuracyCircle = new google.maps.Circle({
                 center: location,
@@ -3400,15 +3416,15 @@
             storeMarkers.forEach(({ marker }) => {
                 marker.setMap(null);
             });
-            
+
             // Clear store data
             toyStores = [];
             storeMarkers = [];
-            
+
             // Reset recommendations when location changes
             recommendedStores = [];
             topMatchStore = null;
-            
+
             // Search for stores at new location
             searchToyStores(newLocation);
         }
@@ -3420,31 +3436,31 @@
                 error: 'bg-red-500',
                 info: 'bg-blue-500'
             };
-            
+
             const icons = {
                 success: 'fas fa-check-circle',
                 warning: 'fas fa-exclamation-triangle',
                 error: 'fas fa-times-circle',
                 info: 'fas fa-info-circle'
             };
-            
+
             const toast = document.createElement('div');
             toast.className = `fixed top-24 left-1/2 transform -translate-x-1/2 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300`;
             toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <i class="${icons[type]}"></i>
-                    <span class="text-sm font-medium">${message}</span>
-                </div>
-            `;
-            
+                    <div class="flex items-center space-x-2">
+                        <i class="${icons[type]}"></i>
+                        <span class="text-sm font-medium">${message}</span>
+                    </div>
+                `;
+
             document.body.appendChild(toast);
-            
+
             // Animate in
             setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translate(-50%, 0)';
             }, 10);
-            
+
             // Remove after 3 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -3467,23 +3483,23 @@
         function updateMapLegend() {
             const mapLegend = document.querySelector('.mobile-landscape-legend-adaptive .space-y-0\\.5');
             if (!mapLegend) return;
-            
+
             // Check if live tracking status already exists
             let trackingStatus = mapLegend.querySelector('.tracking-status');
-            
+
             if (isLiveTrackingEnabled) {
                 if (!trackingStatus) {
                     trackingStatus = document.createElement('div');
                     trackingStatus.className = 'tracking-status flex items-center';
                     trackingStatus.innerHTML = `
-                        <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl 
-                                   mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5 
-                                   flex-shrink-0">🟢</span>
-                        <span class="vintage-text-primary truncate font-medium text-green-600">
-                            <span class="hidden sm:inline">Live Tracking</span>
-                            <span class="sm:hidden">Live</span>
-                        </span>
-                    `;
+                            <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl
+                                       mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5
+                                       flex-shrink-0">🟢</span>
+                            <span class="vintage-text-primary truncate font-medium text-green-600">
+                                <span class="hidden sm:inline">Live Tracking</span>
+                                <span class="sm:hidden">Live</span>
+                            </span>
+                        `;
                     mapLegend.appendChild(trackingStatus);
                 }
             } else {
@@ -3493,23 +3509,22 @@
             }
         }
 
-        // Add event listeners for live tracking
-        document.getElementById('liveTrackingBtn').addEventListener('click', toggleLiveTracking);
+        // Add event listener for remaining location button
         document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
 
         // Update legend when tracking status changes
         const originalStartTracking = startLiveTracking;
         const originalStopTracking = stopLiveTracking;
-        
-        startLiveTracking = function() {
+
+        startLiveTracking = function () {
             originalStartTracking();
             updateMapLegend();
         };
-        
-        stopLiveTracking = function() {
+
+        stopLiveTracking = function () {
             originalStopTracking();
             updateMapLegend();
-            
+
             // Remove accuracy circle when stopping
             if (accuracyCircle) {
                 accuracyCircle.setMap(null);
@@ -3542,7 +3557,7 @@
                 // Non-iOS devices or older iOS versions
                 enableCompassListener();
             }
-            
+
             return true;
         }
 
@@ -3550,35 +3565,66 @@
             deviceOrientationListener = (event) => {
                 // Get compass heading
                 let heading = event.webkitCompassHeading || event.alpha;
-                
+
+                console.log('Raw orientation data:', {
+                    webkitCompassHeading: event.webkitCompassHeading,
+                    alpha: event.alpha,
+                    beta: event.beta,
+                    gamma: event.gamma,
+                    accuracy: event.accuracy
+                });
+
                 if (heading !== null) {
                     // Convert to standard compass format (0° = North, clockwise)
-                    if (event.webkitCompassHeading) {
+                    if (event.webkitCompassHeading !== undefined) {
                         // iOS: webkitCompassHeading gives degrees from north (0-360)
                         currentHeading = heading;
-                    } else {
+                        console.log('Using iOS webkitCompassHeading:', currentHeading);
+                    } else if (event.alpha !== null) {
                         // Android: alpha gives rotation around z-axis, need to convert
-                        currentHeading = 360 - heading;
+                        currentHeading = (360 - heading) % 360;
+                        console.log('Using Android alpha (converted):', currentHeading);
                     }
-                    
+
                     // Update accuracy if available
                     compassAccuracy = event.accuracy || null;
-                    
-                    // Update user location marker with heading
+
+                    // Force update user location marker with heading
                     if (userLocationMarker && userLocation) {
+                        console.log('Updating marker with heading:', currentHeading);
                         updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
                     }
-                    
+
                     // Show compass info in console for debugging
-                    console.log(`Compass heading: ${currentHeading.toFixed(1)}° (accuracy: ${compassAccuracy})`);
+                    console.log(`🧭 Compass: ${currentHeading.toFixed(1)}° (${getCardinalDirection(currentHeading)}) accuracy: ${compassAccuracy}`);
+                } else {
+                    console.warn('No compass heading available from device');
                 }
             };
 
             window.addEventListener('deviceorientation', deviceOrientationListener, true);
             isCompassEnabled = true;
-            
-            showCompassToast('Compass tracking enabled', 'success');
-            console.log('Compass tracking started');
+
+            // Also try absolute orientation if available
+            if (window.DeviceOrientationEvent && 'requestPermission' in DeviceOrientationEvent) {
+                // iOS - also listen for absolute orientation
+                window.addEventListener('deviceorientationabsolute', deviceOrientationListener, true);
+            }
+
+            showCompassToast('Compass tracking enabled - Move your device to see direction', 'success');
+            console.log('🧭 Compass tracking started - listeners attached');
+
+            // Test the marker update immediately with a test heading
+            setTimeout(() => {
+                if (!currentHeading) {
+                    console.log('🧭 No compass data yet, testing with sample heading...');
+                    currentHeading = 45; // Test with NE direction
+                    if (userLocationMarker && userLocation) {
+                        updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
+                        console.log('🧭 Test arrow should now be visible pointing NE');
+                    }
+                }
+            }, 2000);
         }
 
         function stopCompassTracking() {
@@ -3586,16 +3632,16 @@
                 window.removeEventListener('deviceorientation', deviceOrientationListener, true);
                 deviceOrientationListener = null;
             }
-            
+
             isCompassEnabled = false;
             currentHeading = 0;
             compassAccuracy = null;
-            
+
             // Update marker to remove direction indicator
             if (userLocationMarker && userLocation) {
                 updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
             }
-            
+
             console.log('Compass tracking stopped');
         }
 
@@ -3603,22 +3649,22 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <div class="text-center">
-                        <i class="fas fa-compass text-blue-500 text-3xl mb-4"></i>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Compass Permission Required</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">To show your facing direction, please enable device orientation access.</p>
-                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
-                            <p><strong>iOS:</strong> Tap "Allow" when prompted</p>
-                            <p><strong>Android:</strong> Permission usually granted automatically</p>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="startCompassTracking(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
-                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Skip Compass</button>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <div class="text-center">
+                            <i class="fas fa-compass text-blue-500 text-3xl mb-4"></i>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Compass Permission Required</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">To show your facing direction, please enable device orientation access.</p>
+                            <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                                <p><strong>iOS:</strong> Tap "Allow" when prompted</p>
+                                <p><strong>Android:</strong> Permission usually granted automatically</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="startCompassTracking(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
+                                <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Skip Compass</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             document.body.appendChild(modal);
         }
 
@@ -3629,9 +3675,9 @@
         // Create user location marker with direction indicator
         function createUserLocationMarker(location, isLive = false) {
             if (!map) return;
-            
+
             const markerIcon = createDirectionalMarkerIcon(isLive);
-            
+
             userLocationMarker = new google.maps.Marker({
                 position: location,
                 map: map,
@@ -3647,7 +3693,7 @@
                 createUserLocationMarker(location, isLive);
                 return;
             }
-            
+
             const markerIcon = createDirectionalMarkerIcon(isLive);
             userLocationMarker.setIcon(markerIcon);
             userLocationMarker.setTitle(getLocationMarkerTitle(isLive));
@@ -3658,26 +3704,26 @@
             const size = 24;
             const color = isLive ? '#10b981' : '#4285F4'; // Green for live, blue for static
             const hasDirection = isCompassEnabled && currentHeading !== null;
-            
+
             if (hasDirection) {
                 // Create arrow pointing in the direction the user is facing
-                const arrowPath = `M ${size/2} 2 L ${size-4} ${size-2} L ${size/2} ${size-8} L 4 ${size-2} Z`;
-                
+                const arrowPath = `M ${size / 2} 2 L ${size - 4} ${size - 2} L ${size / 2} ${size - 8} L 4 ${size - 2} Z`;
+
                 return {
                     url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                        <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-                            <g transform="rotate(${currentHeading} ${size/2} ${size/2})">
-                                <!-- Outer ring for visibility -->
-                                <circle cx="${size/2}" cy="${size/2}" r="${size/2-1}" fill="white" stroke="#333" stroke-width="1"/>
-                                <!-- Direction arrow -->
-                                <path d="${arrowPath}" fill="${color}" stroke="white" stroke-width="1"/>
-                                <!-- Center dot -->
-                                <circle cx="${size/2}" cy="${size/2}" r="3" fill="white"/>
-                            </g>
-                        </svg>
-                    `),
+                            <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                                <g transform="rotate(${currentHeading} ${size / 2} ${size / 2})">
+                                    <!-- Outer ring for visibility -->
+                                    <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="white" stroke="#333" stroke-width="1"/>
+                                    <!-- Direction arrow -->
+                                    <path d="${arrowPath}" fill="${color}" stroke="white" stroke-width="1"/>
+                                    <!-- Center dot -->
+                                    <circle cx="${size / 2}" cy="${size / 2}" r="3" fill="white"/>
+                                </g>
+                            </svg>
+                        `),
                     scaledSize: new google.maps.Size(size, size),
-                    anchor: new google.maps.Point(size/2, size/2)
+                    anchor: new google.maps.Point(size / 2, size / 2)
                 };
             } else {
                 // Default circular marker
@@ -3694,20 +3740,20 @@
 
         function getLocationMarkerTitle(isLive = false) {
             let title = isLive ? 'Your Location (Live)' : 'Your Location';
-            
+
             if (isLive && trackingAccuracy) {
                 title += ` - Accuracy: ${Math.round(trackingAccuracy)}m`;
             }
-            
+
             if (isCompassEnabled && currentHeading !== null) {
                 const direction = getCardinalDirection(currentHeading);
                 title += ` - Facing: ${direction} (${Math.round(currentHeading)}°)`;
-                
+
                 if (compassAccuracy !== null) {
                     title += ` ±${Math.round(compassAccuracy)}°`;
                 }
             }
-            
+
             return title;
         }
 
@@ -3719,22 +3765,63 @@
 
         // Automatically start compass tracking when live tracking starts
         const originalStartLiveTracking = startLiveTracking;
-        
-        startLiveTracking = function() {
+
+        startLiveTracking = function () {
             originalStartLiveTracking();
-            
+
             // Start compass tracking if available
             setTimeout(() => {
-                startCompassTracking();
+                if (startCompassTracking()) {
+                    // Show compass indicator when compass is active
+                    const compassIcon = document.getElementById('compassIcon');
+                    if (compassIcon) {
+                        compassIcon.style.opacity = '1';
+                        compassIcon.classList.add('text-yellow-400');
+                    }
+                }
             }, 1000); // Small delay to avoid overwhelming the user with permission requests
         };
 
         const originalStopLiveTracking = stopLiveTracking;
-        
-        stopLiveTracking = function() {
+
+        stopLiveTracking = function () {
             originalStopLiveTracking();
             stopCompassTracking();
+
+            // Hide compass indicator when stopping
+            const compassIcon = document.getElementById('compassIcon');
+            if (compassIcon) {
+                compassIcon.style.opacity = '0';
+                compassIcon.classList.remove('text-yellow-400');
+            }
         };
+
+        // Auto-start live tracking function (used during initialization)
+        function autoStartLiveTracking() {
+            console.log('🚀 Auto-starting live tracking and compass...');
+
+            // Check if geolocation is available and we're in a secure context
+            const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+            if (!isSecure || !navigator.geolocation) {
+                console.log('⚠️ Auto-start skipped: Secure context or geolocation not available');
+                // Still try compass tracking if device supports it
+                if (window.DeviceOrientationEvent) {
+                    setTimeout(() => {
+                        startCompassTracking();
+                    }, 500);
+                }
+                return;
+            }
+
+            // Auto-start live tracking
+            startLiveTracking();
+
+            // Show auto-start notification
+            setTimeout(() => {
+                showTrackingToast('🎯 Live tracking + compass enabled automatically!', 'success');
+            }, 1500);
+        }
 
         // Stop live tracking when page is unloaded
         window.addEventListener('beforeunload', () => {
@@ -3751,10 +3838,10 @@
         renderCollectionFeed();
 
         // Make initMap globally available for Google Maps callback
-        window.initMap = initMap;
-    </script>
+        window.initMap = initMap;</script>
 
 
 
 
-</body></html>
+</body>
+</html>
