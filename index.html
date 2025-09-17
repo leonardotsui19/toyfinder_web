@@ -529,6 +529,13 @@
         let locationUpdateCount = 0;
         const LOCATION_UPDATE_THRESHOLD = 100; // meters - minimum distance to trigger update
 
+        // Compass/Direction tracking variables
+        let isCompassEnabled = false;
+        let currentHeading = 0; // degrees from north (0-360)
+        let compassAccuracy = null;
+        let deviceOrientationListener = null;
+        let compassCalibrationNeeded = false;
+
         const samplePosts = [
             {
                 id: 1,
@@ -3290,25 +3297,13 @@
                     map.panTo(newLocation);
                 }
                 
-                // Update user location marker
+                // Update user location marker with direction
                 if (userLocationMarker) {
                     userLocationMarker.setPosition(newLocation);
-                    userLocationMarker.setTitle(`Your Location (Live) - Accuracy: ${Math.round(trackingAccuracy)}m`);
+                    updateUserLocationMarker(newLocation, true);
                 } else {
                     // Create marker if it doesn't exist
-                    userLocationMarker = new google.maps.Marker({
-                        position: newLocation,
-                        map: map,
-                        title: `Your Location (Live) - Accuracy: ${Math.round(trackingAccuracy)}m`,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 10,
-                            fillColor: '#10b981', // Green for live tracking
-                            fillOpacity: 1,
-                            strokeColor: '#ffffff',
-                            strokeWeight: 3
-                        }
-                    });
+                    createUserLocationMarker(newLocation, true);
                 }
                 
                 // Add accuracy circle for live tracking
@@ -3522,10 +3517,232 @@
             }
         };
 
+        // Compass/Direction tracking functions
+        function startCompassTracking() {
+            if (!window.DeviceOrientationEvent) {
+                console.warn('Device orientation not supported');
+                return false;
+            }
+
+            // Request permission for iOS 13+
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            enableCompassListener();
+                        } else {
+                            console.warn('Device orientation permission denied');
+                            showCompassPermissionDialog();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error requesting device orientation permission:', error);
+                    });
+            } else {
+                // Non-iOS devices or older iOS versions
+                enableCompassListener();
+            }
+            
+            return true;
+        }
+
+        function enableCompassListener() {
+            deviceOrientationListener = (event) => {
+                // Get compass heading
+                let heading = event.webkitCompassHeading || event.alpha;
+                
+                if (heading !== null) {
+                    // Convert to standard compass format (0° = North, clockwise)
+                    if (event.webkitCompassHeading) {
+                        // iOS: webkitCompassHeading gives degrees from north (0-360)
+                        currentHeading = heading;
+                    } else {
+                        // Android: alpha gives rotation around z-axis, need to convert
+                        currentHeading = 360 - heading;
+                    }
+                    
+                    // Update accuracy if available
+                    compassAccuracy = event.accuracy || null;
+                    
+                    // Update user location marker with heading
+                    if (userLocationMarker && userLocation) {
+                        updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
+                    }
+                    
+                    // Show compass info in console for debugging
+                    console.log(`Compass heading: ${currentHeading.toFixed(1)}° (accuracy: ${compassAccuracy})`);
+                }
+            };
+
+            window.addEventListener('deviceorientation', deviceOrientationListener, true);
+            isCompassEnabled = true;
+            
+            showCompassToast('Compass tracking enabled', 'success');
+            console.log('Compass tracking started');
+        }
+
+        function stopCompassTracking() {
+            if (deviceOrientationListener) {
+                window.removeEventListener('deviceorientation', deviceOrientationListener, true);
+                deviceOrientationListener = null;
+            }
+            
+            isCompassEnabled = false;
+            currentHeading = 0;
+            compassAccuracy = null;
+            
+            // Update marker to remove direction indicator
+            if (userLocationMarker && userLocation) {
+                updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
+            }
+            
+            console.log('Compass tracking stopped');
+        }
+
+        function showCompassPermissionDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-compass text-blue-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Compass Permission Required</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">To show your facing direction, please enable device orientation access.</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                            <p><strong>iOS:</strong> Tap "Allow" when prompted</p>
+                            <p><strong>Android:</strong> Permission usually granted automatically</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="startCompassTracking(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Skip Compass</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showCompassToast(message, type = 'info') {
+            showTrackingToast(message, type);
+        }
+
+        // Create user location marker with direction indicator
+        function createUserLocationMarker(location, isLive = false) {
+            if (!map) return;
+            
+            const markerIcon = createDirectionalMarkerIcon(isLive);
+            
+            userLocationMarker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: getLocationMarkerTitle(isLive),
+                icon: markerIcon,
+                zIndex: 1000 // Ensure it appears above other markers
+            });
+        }
+
+        // Update user location marker with current heading
+        function updateUserLocationMarker(location, isLive = false) {
+            if (!userLocationMarker) {
+                createUserLocationMarker(location, isLive);
+                return;
+            }
+            
+            const markerIcon = createDirectionalMarkerIcon(isLive);
+            userLocationMarker.setIcon(markerIcon);
+            userLocationMarker.setTitle(getLocationMarkerTitle(isLive));
+        }
+
+        // Create directional marker icon based on compass heading
+        function createDirectionalMarkerIcon(isLive = false) {
+            const size = 24;
+            const color = isLive ? '#10b981' : '#4285F4'; // Green for live, blue for static
+            const hasDirection = isCompassEnabled && currentHeading !== null;
+            
+            if (hasDirection) {
+                // Create arrow pointing in the direction the user is facing
+                const arrowPath = `M ${size/2} 2 L ${size-4} ${size-2} L ${size/2} ${size-8} L 4 ${size-2} Z`;
+                
+                return {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                            <g transform="rotate(${currentHeading} ${size/2} ${size/2})">
+                                <!-- Outer ring for visibility -->
+                                <circle cx="${size/2}" cy="${size/2}" r="${size/2-1}" fill="white" stroke="#333" stroke-width="1"/>
+                                <!-- Direction arrow -->
+                                <path d="${arrowPath}" fill="${color}" stroke="white" stroke-width="1"/>
+                                <!-- Center dot -->
+                                <circle cx="${size/2}" cy="${size/2}" r="3" fill="white"/>
+                            </g>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(size, size),
+                    anchor: new google.maps.Point(size/2, size/2)
+                };
+            } else {
+                // Default circular marker
+                return {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: color,
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 3
+                };
+            }
+        }
+
+        function getLocationMarkerTitle(isLive = false) {
+            let title = isLive ? 'Your Location (Live)' : 'Your Location';
+            
+            if (isLive && trackingAccuracy) {
+                title += ` - Accuracy: ${Math.round(trackingAccuracy)}m`;
+            }
+            
+            if (isCompassEnabled && currentHeading !== null) {
+                const direction = getCardinalDirection(currentHeading);
+                title += ` - Facing: ${direction} (${Math.round(currentHeading)}°)`;
+                
+                if (compassAccuracy !== null) {
+                    title += ` ±${Math.round(compassAccuracy)}°`;
+                }
+            }
+            
+            return title;
+        }
+
+        function getCardinalDirection(heading) {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(heading / 22.5) % 16;
+            return directions[index];
+        }
+
+        // Automatically start compass tracking when live tracking starts
+        const originalStartLiveTracking = startLiveTracking;
+        
+        startLiveTracking = function() {
+            originalStartLiveTracking();
+            
+            // Start compass tracking if available
+            setTimeout(() => {
+                startCompassTracking();
+            }, 1000); // Small delay to avoid overwhelming the user with permission requests
+        };
+
+        const originalStopLiveTracking = stopLiveTracking;
+        
+        stopLiveTracking = function() {
+            originalStopLiveTracking();
+            stopCompassTracking();
+        };
+
         // Stop live tracking when page is unloaded
         window.addEventListener('beforeunload', () => {
             if (isLiveTrackingEnabled) {
                 stopLiveTracking();
+            }
+            if (isCompassEnabled) {
+                stopCompassTracking();
             }
         });
 
