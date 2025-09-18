@@ -2051,9 +2051,6 @@
                             <button class="travel-mode-btn" data-mode="TRANSIT" title="Transit" onclick="calculateRoute('TRANSIT')">
                                 <i class="fas fa-bus text-xs"></i>
                             </button>
-                            <button class="travel-mode-btn" data-mode="BICYCLING" title="Bicycling" onclick="calculateRoute('BICYCLING')">
-                                <i class="fas fa-bicycle text-xs"></i>
-                            </button>
                         </div>
                         
                         <!-- Route Info -->
@@ -2083,10 +2080,10 @@
             // Set selected store for navigation
             selectedStore = store;
             
-            // Calculate initial route with default mode (driving)
-            setTimeout(() => {
-                calculateRoute('DRIVING');
-            }, 100);
+            // Calculate initial route with default mode (WALKING)
+            //setTimeout(() => {
+            //    calculateRoute('WALKING');
+            //}, 100);
         }
 
         // Update marker styles based on Recommendations
@@ -2936,7 +2933,6 @@
 
             // Set selected store and show navigation panel
             selectedStore = store;
-            showNavigationPanel();
 
             // For mobile devices, provide haptic feedback if available
             if ('vibrate' in navigator) {
@@ -2945,23 +2941,6 @@
 
             // Show a toast notification for better UX
             showLocationToast(store.name);
-        }
-
-        // Navigation Panel Functions
-        function showNavigationPanel() {
-            if (!selectedStore) return;
-            
-            const navigationPanel = document.getElementById('navigationPanel');
-            const selectedStoreName = document.getElementById('selectedStoreName');
-            
-            // Update store name
-            selectedStoreName.textContent = selectedStore.name;
-            
-            // Show the panel
-            navigationPanel.classList.remove('hidden');
-            
-            // Calculate initial route with default mode (driving)
-            calculateRoute('DRIVING');
         }
 
         function hideNavigationPanel() {
@@ -2974,7 +2953,7 @@
         }
 
         // Calculate and display route
-        function calculateRoute(travelMode = 'DRIVING') {
+        function calculateRoute(travelMode = 'WALKING') {
             if (!selectedStore || !userLocation || !directionsService) {
                 console.error('Missing required data for route calculation');
                 return;
@@ -3755,12 +3734,10 @@
                     trackingStatus = document.createElement('div');
                     trackingStatus.className = 'tracking-status flex items-center';
                     trackingStatus.innerHTML = `
-                        <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl 
-                                   mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5 
-                                   flex-shrink-0">🟢</span>
                         <span class="vintage-text-primary truncate font-medium text-green-600">
-                            <span class="hidden sm:inline">Live Tracking</span>
-                            <span class="sm:hidden">Live</span>
+							<span class="fas fa-location-arrow"></span>
+                            <span class="hidden sm:inline">Current Location</span>
+                            <span class="sm:hidden">Current</span>
                         </span>
                     `;
                     mapLegend.appendChild(trackingStatus);
