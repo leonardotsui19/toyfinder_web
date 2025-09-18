@@ -2315,11 +2315,15 @@
                         if (map) {
                             map.setCenter(newLocation);
                             map.setZoom(18);
-                        }
-
-                        // Update user location marker
-                        if (map) {
-							updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
+							
+							// Update existing user location marker
+							if (userLocationMarker) {
+								updateUserLocationMarker(newLocation, isLiveTrackingEnabled);
+							}
+							else {
+								// Create new location marker using proper compass-enabled function
+								createUserLocationMarker(newLocation, isLiveTrackingEnabled);
+							}
                         }
 
                         // Clear existing stores and markers
@@ -2572,7 +2576,13 @@
                         map.setZoom(18);
                         
                         // Update location marker
-						updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
+						if (userLocationMarker) {
+							updateUserLocationMarker(newLocation, isLiveTrackingEnabled);
+						}
+						else {
+							// Create new location marker using proper compass-enabled function
+							createUserLocationMarker(newLocation, isLiveTrackingEnabled);
+						}
                     }
                     
                     // Clear existing stores
@@ -3191,9 +3201,6 @@
                 return;
             }
 
-            const trackingBtn = document.getElementById('liveTrackingBtn');
-            const trackingIcon = document.getElementById('trackingIcon');
-
             // Start watching position
             watchPositionId = navigator.geolocation.watchPosition(
                 handleLocationUpdate,
@@ -3205,12 +3212,8 @@
                 }
             );
 
-            // Update UI
             isLiveTrackingEnabled = true;
-            trackingIcon.className = 'fas fa-dot-circle text-green-500'; // Active tracking icon
-            trackingBtn.style.background = 'linear-gradient(145deg, #10b981, #059669)'; // Green background
-            trackingBtn.title = 'Live Tracking + Compass Active - Click to Stop';
-            
+
             // Show tracking started notification
             showTrackingToast('Live location tracking started', 'success');
             
@@ -3264,7 +3267,6 @@
                 
                 // Update user location marker with direction
                 if (userLocationMarker) {
-                    userLocationMarker.setPosition(newLocation);
                     updateUserLocationMarker(newLocation, true);
                 } else {
                     // Create marker if it doesn't exist
@@ -3462,11 +3464,17 @@
         document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
 
         // Update legend when tracking status changes
+        const originalStartTracking = startLiveTracking;
+
         startLiveTracking = function() {
+            originalStartTracking();
             updateMapLegend();
         };
-        
+		
+		const originalStopTracking = stopLiveTracking;
+		
         stopLiveTracking = function() {
+			originalStopTracking();
             updateMapLegend();
             
             // Remove accuracy circle when stopping
@@ -3641,6 +3649,7 @@
             const markerIcon = createDirectionalMarkerIcon(isLive);
             userLocationMarker.setIcon(markerIcon);
             userLocationMarker.setTitle(getLocationMarkerTitle(isLive));
+			userLocationMarker.setPosition(location);
         }
 
         // Create directional marker icon based on compass heading
