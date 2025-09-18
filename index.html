@@ -333,6 +333,11 @@
     </div>
 
     <div class="fixed bottom-5 right-5 z-30 flex flex-col space-y-3">
+        <!-- Compass Button for iOS -->
+        <button id="compassToggleBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border hidden" title="Enable Compass Direction">
+            <i class="fas fa-compass"></i>
+        </button>
+        
         <!-- Location Button -->
         <button id="getCurrentLocationBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Update Current Location">
             <i class="fas fa-location-arrow"></i>
@@ -3486,15 +3491,29 @@
 
         // Compass/Direction tracking functions
         function startCompassTracking() {
+            console.log('🧭 Starting compass tracking...');
+            
             if (!window.DeviceOrientationEvent) {
                 console.warn('Device orientation not supported');
+                showCompassNotSupportedDialog();
                 return false;
             }
 
-            // Request permission for iOS 13+
+            // Check for HTTPS requirement on iOS
+            const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            if (!isSecure && /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                console.warn('iOS requires HTTPS for compass');
+                showCompassHTTPSDialog();
+                return false;
+            }
+
+            // Request permission for iOS 13+ (requires user gesture)
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                console.log('🧭 iOS device detected, requesting permission...');
+                
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
+                        console.log('🧭 Permission state:', permissionState);
                         if (permissionState === 'granted') {
                             enableCompassListener();
                         } else {
@@ -3504,9 +3523,11 @@
                     })
                     .catch(error => {
                         console.error('Error requesting device orientation permission:', error);
+                        showCompassPermissionErrorDialog();
                     });
             } else {
                 // Non-iOS devices or older iOS versions
+                console.log('🧭 Non-iOS device or older iOS, enabling directly...');
                 enableCompassListener();
             }
             
@@ -3515,31 +3536,42 @@
 
         function enableCompassListener() {
             deviceOrientationListener = (event) => {
-                // Get compass heading
-                let heading = event.webkitCompassHeading || event.alpha;
+                // Get compass heading with better iOS handling
+                let heading = null;
                 
                 console.log('Raw orientation data:', {
                     webkitCompassHeading: event.webkitCompassHeading,
                     alpha: event.alpha,
                     beta: event.beta,
                     gamma: event.gamma,
-                    accuracy: event.accuracy
+                    accuracy: event.accuracy,
+                    absolute: event.absolute
                 });
                 
-                if (heading !== null) {
-                    // Convert to standard compass format (0° = North, clockwise)
-                    if (event.webkitCompassHeading !== undefined) {
-                        // iOS: webkitCompassHeading gives degrees from north (0-360)
-                        currentHeading = heading;
-                        console.log('Using iOS webkitCompassHeading:', currentHeading);
-                    } else if (event.alpha !== null) {
-                        // Android: alpha gives rotation around z-axis, need to convert
-                        currentHeading = (360 - heading) % 360;
-                        console.log('Using Android alpha (converted):', currentHeading);
+                // Better iOS compass handling
+                if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+                    // iOS Safari: webkitCompassHeading gives degrees from north (0-360)
+                    heading = event.webkitCompassHeading;
+                    console.log('🍎 Using iOS webkitCompassHeading:', heading);
+                } else if (event.alpha !== null && event.alpha !== undefined) {
+                    // Android Chrome or iOS without webkitCompassHeading
+                    // Alpha is rotation around Z-axis, but needs conversion
+                    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                        // iOS without webkitCompassHeading - use alpha directly
+                        heading = event.alpha;
+                        console.log('🍎 Using iOS alpha directly:', heading);
+                    } else {
+                        // Android - convert alpha
+                        heading = (360 - event.alpha) % 360;
+                        console.log('🤖 Using Android alpha (converted):', heading);
                     }
+                }
+                
+                if (heading !== null && !isNaN(heading)) {
+                    currentHeading = heading;
                     
                     // Update accuracy if available
-                    compassAccuracy = event.accuracy || null;
+                    compassAccuracy = event.accuracy || event.webkitCompassAccuracy || null;
                     
                     // Force update user location marker with heading
                     if (userLocationMarker && userLocation) {
@@ -3547,36 +3579,57 @@
                         updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
                     }
                     
+                    // Update compass button if on iOS
+                    const compassBtn = document.getElementById('compassToggleBtn');
+                    if (compassBtn && compassBtn.classList.contains('visible')) {
+                        compassBtn.innerHTML = `<i class="fas fa-compass text-green-500"></i>`;
+                        compassBtn.title = `Compass Active: ${getCardinalDirection(currentHeading)} (${Math.round(currentHeading)}°)`;
+                    }
+                    
                     // Show compass info in console for debugging
                     console.log(`🧭 Compass: ${currentHeading.toFixed(1)}° (${getCardinalDirection(currentHeading)}) accuracy: ${compassAccuracy}`);
                 } else {
-                    console.warn('No compass heading available from device');
+                    console.warn('No valid compass heading available from device');
                 }
             };
 
-            window.addEventListener('deviceorientation', deviceOrientationListener, true);
-            isCompassEnabled = true;
+            // Add event listeners with better iOS support
+            window.addEventListener('deviceorientation', deviceOrientationListener, { capture: true, passive: true });
             
-            // Also try absolute orientation if available
-            if (window.DeviceOrientationEvent && 'requestPermission' in DeviceOrientationEvent) {
-                // iOS - also listen for absolute orientation
-                window.addEventListener('deviceorientationabsolute', deviceOrientationListener, true);
+            // Try absolute orientation for better iOS support
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientationabsolute', deviceOrientationListener, { capture: true, passive: true });
+                console.log('🧭 Added absolute orientation listener for iOS');
             }
             
-            showCompassToast('Compass tracking enabled - Move your device to see direction', 'success');
+            isCompassEnabled = true;
+            
+            showCompassToast('🧭 Compass tracking enabled - Rotate your device to see direction', 'success');
             console.log('🧭 Compass tracking started - listeners attached');
             
-            // Test the marker update immediately with a test heading
+            // Give iOS more time to start providing compass data
             setTimeout(() => {
-                if (!currentHeading) {
-                    console.log('🧭 No compass data yet, testing with sample heading...');
-                    currentHeading = 45; // Test with NE direction
-                    if (userLocationMarker && userLocation) {
-                        updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
-                        console.log('🧭 Test arrow should now be visible pointing NE');
+                if (currentHeading === null || currentHeading === 0) {
+                    console.log('🧭 No compass data received yet on iOS - checking device capabilities...');
+                    
+                    // Show helpful message for iOS users
+                    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                        showCompassToast('📱 Tilt your iOS device to activate compass', 'info');
                     }
+                    
+                    // Set a test heading for development/testing
+                    setTimeout(() => {
+                        if (currentHeading === null || currentHeading === 0) {
+                            console.log('🧭 Still no compass data - using test heading for demo');
+                            currentHeading = 45; // Test with NE direction
+                            if (userLocationMarker && userLocation) {
+                                updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
+                                console.log('🧭 Test arrow should now be visible pointing NE');
+                            }
+                        }
+                    }, 3000);
                 }
-            }, 2000);
+            }, 1000);
         }
 
         function stopCompassTracking() {
@@ -3613,6 +3666,73 @@
                         <div class="flex flex-col gap-2">
                             <button onclick="startCompassTracking(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
                             <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Skip Compass</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showCompassNotSupportedDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-mobile-alt text-red-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Compass Not Supported</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Your device doesn't support compass/orientation features.</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                            <p><strong>Location tracking will work normally</strong></p>
+                            <p>Only compass direction features are unavailable</p>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Continue</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showCompassHTTPSDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-shield-alt text-yellow-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">iOS Compass Requires HTTPS</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">iOS devices require a secure connection for compass features.</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                            <p><strong>To enable compass on iOS:</strong></p>
+                            <p>1. Deploy to <strong>HTTPS</strong> domain</p>
+                            <p>2. Or use <strong>localhost</strong> for testing</p>
+                            <p>3. Regular location tracking still works</p>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Continue without Compass</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showCompassPermissionErrorDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Compass Permission Error</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">There was an error requesting compass permission.</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                            <p><strong>Possible solutions:</strong></p>
+                            <p>• Refresh the page and try again</p>
+                            <p>• Check iOS Settings → Privacy → Motion & Fitness</p>
+                            <p>• Ensure app is running on HTTPS</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="window.location.reload()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Refresh & Try Again</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Continue without Compass</button>
                         </div>
                     </div>
                 </div>
@@ -3736,6 +3856,31 @@
             stopCompassTracking();
         };
 
+        // Show iOS compass button when needed
+        function showCompassButtonForIOS() {
+            const compassBtn = document.getElementById('compassToggleBtn');
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
+            if (isIOS && compassBtn) {
+                compassBtn.classList.remove('hidden');
+                compassBtn.addEventListener('click', () => {
+                    if (isCompassEnabled) {
+                        stopCompassTracking();
+                        compassBtn.innerHTML = '<i class="fas fa-compass"></i>';
+                        compassBtn.title = 'Enable Compass Direction';
+                    } else {
+                        startCompassTracking();
+                        if (isCompassEnabled) {
+                            compassBtn.innerHTML = '<i class="fas fa-compass text-green-500"></i>';
+                            compassBtn.title = 'Disable Compass Direction';
+                        }
+                    }
+                });
+                
+                console.log('🧭 iOS compass button shown and configured');
+            }
+        }
+
         // Auto-start live tracking function (used during initialization)
         function autoStartLiveTracking() {
             console.log('🚀 Auto-starting live tracking and compass...');
@@ -3752,11 +3897,17 @@
                         startCompassTracking();
                     }, 1000);
                 }
+                
+                // Show iOS compass button regardless
+                showCompassButtonForIOS();
                 return;
             }
             
             // Auto-start live tracking (which will also trigger compass)
             startLiveTracking();
+            
+            // Show iOS compass button
+            showCompassButtonForIOS();
             
             // Show auto-start notification
             setTimeout(() => {
@@ -3781,7 +3932,6 @@
         // Make initMap globally available for Google Maps callback
         window.initMap = initMap;
     </script>
-
 
 
 
