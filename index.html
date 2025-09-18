@@ -333,11 +333,6 @@
     </div>
 
     <div class="fixed bottom-5 right-5 z-30 flex flex-col space-y-3">
-        <!-- Compass Button for iOS -->
-        <button id="compassToggleBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border hidden" title="Enable Compass Direction">
-            <i class="fas fa-compass"></i>
-        </button>
-        
         <!-- Location Button -->
         <button id="getCurrentLocationBtn" class="flex items-center justify-center px-4 py-4 vintage-legend vintage-shadow hover:scale-105 rounded-full transition-all vintage-border" title="Update Current Location">
             <i class="fas fa-location-arrow"></i>
@@ -1440,7 +1435,7 @@
                 map = new google.maps.Map(document.getElementById('map'), {
                     zoom: 18,
                     center: defaultLocation,
-		    disableDefaultUI: true,
+					disableDefaultUI: true,
                     styles: [
                         // Hide modern POI labels for clean vintage look
                         {
@@ -3579,13 +3574,6 @@
                         updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
                     }
                     
-                    // Update compass button if on iOS
-                    const compassBtn = document.getElementById('compassToggleBtn');
-                    if (compassBtn && compassBtn.classList.contains('visible')) {
-                        compassBtn.innerHTML = `<i class="fas fa-compass text-green-500"></i>`;
-                        compassBtn.title = `Compass Active: ${getCardinalDirection(currentHeading)} (${Math.round(currentHeading)}°)`;
-                    }
-                    
                     // Show compass info in console for debugging
                     console.log(`🧭 Compass: ${currentHeading.toFixed(1)}° (${getCardinalDirection(currentHeading)}) accuracy: ${compassAccuracy}`);
                 } else {
@@ -3603,7 +3591,7 @@
             }
             
             isCompassEnabled = true;
-            
+			 
             showCompassToast('🧭 Compass tracking enabled - Rotate your device to see direction', 'success');
             console.log('🧭 Compass tracking started - listeners attached');
             
@@ -3641,7 +3629,7 @@
             isCompassEnabled = false;
             currentHeading = 0;
             compassAccuracy = null;
-            
+			
             // Update marker to remove direction indicator
             if (userLocationMarker && userLocation) {
                 updateUserLocationMarker(userLocation, isLiveTrackingEnabled);
@@ -3790,8 +3778,6 @@
                                 <circle cx="${size/2}" cy="${size/2}" r="${size/2-1}" fill="white" stroke="#333" stroke-width="1"/>
                                 <!-- Direction arrow -->
                                 <path d="${arrowPath}" fill="${color}" stroke="white" stroke-width="1"/>
-                                <!-- Center dot -->
-                                <circle cx="${size/2}" cy="${size/2}" r="3" fill="white"/>
                             </g>
                         </svg>
                     `),
@@ -3856,31 +3842,6 @@
             stopCompassTracking();
         };
 
-        // Show iOS compass button when needed
-        function showCompassButtonForIOS() {
-            const compassBtn = document.getElementById('compassToggleBtn');
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            
-            if (isIOS && compassBtn) {
-                compassBtn.classList.remove('hidden');
-                compassBtn.addEventListener('click', () => {
-                    if (isCompassEnabled) {
-                        stopCompassTracking();
-                        compassBtn.innerHTML = '<i class="fas fa-compass"></i>';
-                        compassBtn.title = 'Enable Compass Direction';
-                    } else {
-                        startCompassTracking();
-                        if (isCompassEnabled) {
-                            compassBtn.innerHTML = '<i class="fas fa-compass text-green-500"></i>';
-                            compassBtn.title = 'Disable Compass Direction';
-                        }
-                    }
-                });
-                
-                console.log('🧭 iOS compass button shown and configured');
-            }
-        }
-
         // Auto-start live tracking function (used during initialization)
         function autoStartLiveTracking() {
             console.log('🚀 Auto-starting live tracking and compass...');
@@ -3897,17 +3858,12 @@
                         startCompassTracking();
                     }, 1000);
                 }
-                
-                // Show iOS compass button regardless
-                showCompassButtonForIOS();
+
                 return;
             }
             
             // Auto-start live tracking (which will also trigger compass)
             startLiveTracking();
-            
-            // Show iOS compass button
-            showCompassButtonForIOS();
             
             // Show auto-start notification
             setTimeout(() => {
