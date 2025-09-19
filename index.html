@@ -219,6 +219,63 @@
                 border: 1px solid rgba(0, 0, 0, 0.1);
             }
         }
+
+        /* Store Info Bottom Sheet - 50% Screen Height */
+        .store-info-sheet {
+            /* Fixed 50% of screen height for all devices */
+            height: 50vh;
+            max-height: 50vh;
+            min-height: 50vh;
+        }
+
+        /* Content area with scrolling */
+        .store-info-content {
+            height: calc(50vh - 60px); /* Account for handle */
+            max-height: calc(50vh - 60px);
+            overflow-y: auto;
+        }
+
+        /* Desktop enhancements while maintaining 50% height */
+        @media (min-width: 1024px) {
+            .store-info-sheet {
+                max-width: 500px;
+                margin: 0 auto;
+                border-radius: 16px;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                /* Height remains 50vh */
+            }
+        }
+
+        /* Ultra-wide screens - limit width but keep 50% height */
+        @media (min-width: 1440px) {
+            .store-info-sheet {
+                max-width: 600px;
+                /* Height remains 50vh */
+            }
+        }
+
+        /* Custom scrollbar for store info content */
+        .store-info-content {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+        }
+
+        .store-info-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .store-info-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .store-info-content::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+        }
+
+        .store-info-content::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(156, 163, 175, 0.8);
+        }
         
         /* Google Maps Style Category Pills */
         .category-pill {
@@ -334,13 +391,12 @@
     </header>
     
     <!-- Floating Action Buttons -->
-    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 flex space-x-3 sm:space-x-4 z-30">
+    <!-- <div class="fixed top-20 left-1/2 transform -translate-x-1/2 flex space-x-3 sm:space-x-4 z-30"> -->
         <!-- Recommendations Button -->
-        <button id="getRecommendationsBtn" class="flex items-center justify-center px-4 py-2 vintage-button vintage-shadow rounded-full transition-all hover:scale-105" title="Get Recommendations">
-            <i class="fas fa-star text-sm mr-2"></i>
-            <span class="text-sm font-medium">Recommendations</span>
-        </button>
-    </div>
+        <!-- <button id="getRecommendationsBtn" class="flex items-center justify-center px-4 py-2 vintage-button vintage-shadow rounded-full transition-all hover:scale-105" title="Get Recommendations"> -->
+            <!-- <span class="text-sm font-medium">⭐ Recommendations</span> -->
+        <!-- </button> -->
+    <!-- </div> -->
 
     <div class="fixed bottom-5 right-5 z-30 flex flex-col space-y-3">
         <!-- Location Button -->
@@ -350,6 +406,21 @@
     </div>
 
 
+
+    <!-- Store Info Bottom Sheet -->
+    <div id="storeInfoOverlay" class="fixed inset-0 bg-black bg-opacity-0 z-40 hidden transition-opacity duration-300"></div>
+    
+    <!-- Store Info Sheet -->
+    <div id="storeInfoSheet" class="store-info-sheet fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-40 transform translate-y-full transition-transform duration-300 rounded-t-2xl shadow-2xl">
+        <!-- Sheet Handle -->
+        <div class="flex justify-center pt-3 pb-2">
+            <div id="storeInfoHandle" class="w-10 h-1 bg-gradient-to-r from-amber-600 to-amber-800 rounded-full mx-auto mb-4 cursor-pointer"></div>
+        </div>
+        <!-- Sheet Content -->
+        <div id="storeInfoContent" class="store-info-content pb-safe">
+            <!-- Content will be populated by showStoreInfo -->
+        </div>
+    </div>
 
     <!-- Route Instructions Panel -->
     <div id="instructionsPanel" class="fixed bottom-20 left-4 right-4 vintage-card vintage-shadow z-40 p-3 transition-all duration-300 hidden max-h-48 overflow-y-auto">
@@ -393,28 +464,24 @@
     </div>
 
     <!-- Store List Panel Overlay -->
-    <div id="storeListOverlay" class="fixed inset-0 bg-black bg-opacity-25 z-40 hidden transition-opacity duration-300"></div>
+    <div id="storeListOverlay" class="fixed inset-0 bg-black bg-opacity-0 z-40 hidden transition-opacity duration-300"></div>
     
     <!-- Store List Panel -->
-    <div id="storeListPanel" class="fixed bottom-0 left-0 right-0 vintage-panel vintage-shadow z-40 transform translate-y-full transition-transform duration-300">
+    <div id="storeListPanel" class="store-info-sheet fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-40 transform translate-y-full transition-transform duration-300 rounded-t-2xl shadow-2xl">
         <div class="p-4">
             <!-- Panel Handle (Draggable) -->
-            <div id="panelHandle" class="w-12 h-2 bg-gradient-to-r from-amber-600 to-amber-800 rounded-full mx-auto mb-4 cursor-pointer"></div>
+            <div id="panelHandle" class="w-10 h-1 bg-gradient-to-r from-amber-600 to-amber-800 rounded-full mx-auto mb-4 cursor-pointer"></div>
             
             <!-- Tabs and Close Button -->
             <div class="flex items-center gap-3 mb-4">
-                <div class="flex flex-1 vintage-border p-1">
-                    <button id="nearbyTab" class="flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-active vintage-shadow">
+                <div class="flex flex-1 vintage-border p-1 rounded-full">
+                    <button id="nearbyTab" class="flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-active rounded-full">
                         📍 Nearby Stores
                     </button>
-                    <button id="aiTab" class="flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-inactive">
+                    <button id="aiTab" class="flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-inactive rounded-full">
                         ⭐ Recommendations
-                        <span id="aiTabBadge" class="ml-2 bg-amber-700 text-white text-xs px-2 py-1 rounded hidden">2</span>
                     </button>
                 </div>
-                <button id="closeStorePanel" class="vintage-button p-2 transition-all flex-shrink-0">
-                    <i class="fas fa-times"></i>
-                </button>
             </div>
             
             <!-- Tab Content -->
@@ -426,15 +493,14 @@
                 
                 <!-- Recommendations Tab -->
                 <div id="aiTabContent" class="hidden">
-                    <div id="aiRecommendationsEmpty" class="text-center py-12">
-                        <i class="fas fa-compass text-4xl vintage-text-secondary mb-4"></i>
-                        <h4 class="text-lg font-semibold vintage-text-primary mb-2">📍 No Locations Analyzed Yet</h4>
-                        <p class="text-sm vintage-text-muted mb-4">Let our analysis find the most notable historical locations for you!</p>
-                        <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="vintage-button px-4 py-2 text-sm font-medium transition-all">
-                            <i class="fas fa-map mr-2"></i>
-                            🗺️ Analyze Locations
+                    <div id="aiRecommendationsEmpty" class="text-center py-2">
+                        <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                        <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Yet</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">Click "Get Recommendations" button to get personalized store suggestions based on your preferences.</p>
+                        <button onclick="getRecommendations()" class="px-4 py-2 vintage-button rounded-full transition-all hover:scale-105" title="Get Recommendations">
+							<span class="text-sm font-medium">⭐ Recommendations</span>
                         </button>
-                    </div>
+                     </div>
                     <div id="aiRecommendationsList" class="space-y-3 hidden">
                         <!-- Recommended stores will be populated here -->
                     </div>
@@ -607,25 +673,18 @@
 
         // Store recommendation tracking
         let recommendedStores = [];
-        let topMatchStore = null;
 
         // Render recommendation card similar to store list cards
-        function renderRecommendationCard(store, isTopMatch, isRecommended) {
+        function renderRecommendationCard(store, isRecommended) {
             if (!store) {
                 return '<div class="text-gray-500 dark:text-gray-400 text-sm">Store information not available</div>';
             }
 
-            const badgeHtml = isTopMatch 
-                ? '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>'
-                : '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
+            const badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
             
-            const borderClass = isTopMatch 
-                ? 'ring-2 ring-green-200 dark:ring-green-600 border-green-200 dark:border-green-600'
-                : 'ring-2 ring-yellow-200 dark:ring-yellow-600 border-yellow-200 dark:border-yellow-600';
+            const borderClass = 'ring-2 ring-yellow-200 dark:ring-yellow-600 border-yellow-200 dark:border-yellow-600';
 
-            const reasoningText = isTopMatch
-                ? 'Perfect for vintage collectibles and unique finds. Their handmade toys section and personalized service make this store ideal for your interests. Highest customer satisfaction rating.'
-                : 'Great selection of action figures and LEGO sets. Family-friendly environment with competitive prices and extensive inventory for current collectibles.';
+            const reasoningText = 'Great selection of action figures and LEGO sets. Family-friendly environment with competitive prices and extensive inventory for current collectibles.';
 
             return `
                 <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border ${borderClass} hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer">
@@ -660,7 +719,7 @@
                     <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                         <div class="flex items-center justify-between">
                             <span><i class="fas fa-clock mr-1"></i>${store.hours}</span>
-                            ${isTopMatch ? '<span class="text-green-600 dark:text-green-400 font-medium">🎯 Best Match</span>' : '<span class="text-yellow-600 dark:text-yellow-400 font-medium">🤖 AI Pick</span>'}
+                            ${'<span class="text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommendations</span>'}
                         </div>
                     </div>
                     
@@ -672,10 +731,7 @@
                                 <span>Click to view on map</span>
                             </div>
                             <div class="text-xs">
-                                ${isTopMatch 
-                                    ? '<span class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded-full">Perfect Match</span>'
-                                    : '<span class="bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full">Recommended</span>'
-                                }
+                                ${'<span class="bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full">Recommended</span>'}
                             </div>
                         </div>
                     </div>
@@ -706,16 +762,16 @@
             
             if (tabName === 'nearby') {
                 // Activate nearby tab
-                nearbyTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm';
-                aiTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white';
+                nearbyTab.className = 'flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-active rounded-full';
+                aiTab.className = 'flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-inactive rounded-full';
                 
                 // Show/hide content
                 nearbyContent.classList.remove('hidden');
                 aiContent.classList.add('hidden');
             } else {
                 // Activate AI tab
-                aiTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm';
-                nearbyTab.className = 'flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white';
+                aiTab.className = 'flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-active rounded-full';
+                nearbyTab.className = 'flex-1 py-2 px-4 text-sm font-medium transition-all duration-200 vintage-tab-inactive rounded-full';
                 
                 // Show/hide content
                 aiContent.classList.remove('hidden');
@@ -738,17 +794,15 @@
             
             nearbyContent.innerHTML = toyStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
-                const isTopMatch = topMatchStore === store.id;
-                
+
                 let badgeHtml = '';
-                if (isTopMatch) {
-                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>';
-                } else if (isRecommended) {
+				
+                if (isRecommended) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
                 }
                 
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''}">
                         ${badgeHtml}
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
@@ -765,8 +819,7 @@
                             `).join('')}
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
-                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
-                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                        ${isRecommended ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended</p></div>' : ''}
                         <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
                             <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
                                 <i class="fas fa-map-marker-alt mr-1"></i>
@@ -781,42 +834,38 @@
         function renderAIRecommendations() {
             const aiRecommendationsList = document.getElementById('aiRecommendationsList');
             const aiRecommendationsEmpty = document.getElementById('aiRecommendationsEmpty');
-            const aiTabBadge = document.getElementById('aiTabBadge');
             
-            if (!aiRecommendationsList || !aiRecommendationsEmpty || !aiTabBadge) {
+            if (!aiRecommendationsList || !aiRecommendationsEmpty) {
                 console.error('Recommendations elements not found');
                 return;
             }
             
             // Check if we have Recommendations
-            if (recommendedStores.length === 0 && !topMatchStore) {
+            if (recommendedStores.length === 0) {
                 // No recommendations - show empty state
                 aiRecommendationsEmpty.classList.remove('hidden');
                 aiRecommendationsList.classList.add('hidden');
-                aiTabBadge.classList.add('hidden');
                 
                 // Update empty state message based on whether AI was attempted
                 if (window.aiRecommendationsAttempted) {
                     aiRecommendationsEmpty.innerHTML = `
-                        <div class="text-center py-12">
+                        <div class="text-center py-2">
                             <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
                             <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Found</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">AI analysis completed but couldn't find suitable recommendations based on your preferences and nearby stores.</p>
-                            <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
-                                <i class="fas fa-redo mr-2"></i>
-                                Try Recommendations Again
+                            <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">Couldn't find suitable recommendations based on your preferences and nearby stores.</p>
+                            <button onclick="getRecommendations()" class="px-4 py-2 vintage-button rounded-full transition-all hover:scale-105" title="Get Recommendations">
+								<span class="text-sm font-medium">⭐ Recommendations</span>
                             </button>
                         </div>
                     `;
                 } else {
                     aiRecommendationsEmpty.innerHTML = `
-                        <div class="text-center py-12">
+                        <div class="text-center py-2">
                             <i class="fas fa-robot text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
                             <h4 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">No Recommendations Yet</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">Click "Get Recommendations" button to get personalized store suggestions based on your preferences.</p>
-                            <button onclick="document.getElementById('getRecommendationsBtn').click(); document.getElementById('closeStorePanel').click();" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">
-                                <i class="fas fa-sparkles mr-2"></i>
-                                Get Recommendations
+                            <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">Click "⭐ Recommendations" button to get personalized store suggestions based on your preferences.</p>
+                            <button onclick="getRecommendations()" class="px-4 py-2 vintage-button rounded-full transition-all hover:scale-105" title="Get Recommendations">
+								<span class="text-sm font-medium">⭐ Recommendations</span>
                             </button>
                         </div>
                     `;
@@ -829,36 +878,25 @@
             aiRecommendationsList.classList.remove('hidden');
             
             // Update badge count
-            const totalRecommendations = recommendedStores.length + (topMatchStore ? 1 : 0);
+            const totalRecommendations = recommendedStores.length;
             if (totalRecommendations > 0) {
-                aiTabBadge.textContent = totalRecommendations;
-                aiTabBadge.classList.remove('hidden');
+
             }
             
             // Get recommended stores
             const aiRecommendedStores = [];
-            
-            // Add top match first if exists
-            if (topMatchStore) {
-                const topStore = toyStores.find(s => s.id === topMatchStore);
-                if (topStore) {
-                    aiRecommendedStores.push({ store: topStore, isTopMatch: true, isRecommended: false });
-                }
-            }
-            
+                       
             // Add recommended stores
             recommendedStores.forEach(storeId => {
-                if (storeId !== topMatchStore) { // Don't duplicate top match
-                    const store = toyStores.find(s => s.id === storeId);
-                    if (store) {
-                        aiRecommendedStores.push({ store, isTopMatch: false, isRecommended: true });
-                    }
+                const store = toyStores.find(s => s.id === storeId);
+                if (store) {
+                    aiRecommendedStores.push({ store, isRecommended: true });
                 }
             });
             
             // Render Recommendations with enhanced cards
-            aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isTopMatch, isRecommended }) => 
-                renderRecommendationCard(store, isTopMatch, isRecommended)
+            aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isRecommended }) => 
+                renderRecommendationCard(store, isRecommended)
             ).join('');
         }
 
@@ -1004,8 +1042,6 @@
             
             btn.style.display = 'block';
         }
-
-        document.getElementById('closeStorePanel').addEventListener('click', closeStorePanel);
 
         // Tap outside to close
         document.getElementById('storeListOverlay').addEventListener('click', (e) => {
@@ -1155,7 +1191,7 @@
         });
 
         // Recommendations Button
-        document.getElementById('getRecommendationsBtn').addEventListener('click', async () => {
+        async function getRecommendations() {
             // Show loading overlay
             document.getElementById('recommendationsLoading').classList.remove('hidden');
 
@@ -1178,7 +1214,7 @@
                     });
 
                     await window.Poe.sendUserMessage(
-                        "@Claude-Sonnet-4 As a toy store recommendation AI, analyze these nearby stores and provide personalized recommendations: 1) Toys R Us (action figures, LEGO, board games), 2) Target Toys (dolls, educational toys, outdoor toys), 3) Walmart Toys (budget toys, electronic toys, craft supplies), 4) Little Dreamers Toy Shop (handmade toys, vintage collectibles, puzzles). User preferences: loves action figures, collects vintage toys, enjoys LEGO builds, has children aged 6-10, budget is moderate ($50-200 per item). Which stores should they prioritize and why? Mention specific store names. Provide ONLY raw JSON in your response with no explanations, additional text, or code block formatting (no ```) with this structure: {\"topMatch\": \"store_name\", \"recommended\": [\"store1\", \"store2\"], \"reasoning\": \"explanation\"}",
+                        "@Claude-Sonnet-4 As a toy store recommendation AI, analyze these nearby stores and provide personalized recommendations: 1) Toys R Us (action figures, LEGO, board games), 2) Target Toys (dolls, educational toys, outdoor toys), 3) Walmart Toys (budget toys, electronic toys, craft supplies), 4) Little Dreamers Toy Shop (handmade toys, vintage collectibles, puzzles). User preferences: loves action figures, collects vintage toys, enjoys LEGO builds, has children aged 6-10, budget is moderate ($50-200 per item). Which stores should they prioritize and why? Mention specific store names. Provide ONLY raw JSON in your response with no explanations, additional text, or code block formatting (no ```) with this structure: {\"recommended\": [\"store1\", \"store2\"], \"reasoning\": \"explanation\"}",
                         {
                             handler: 'toy-recommendations',
                             stream: false,
@@ -1189,9 +1225,8 @@
                     // Fallback mock recommendations with map integration
                     setTimeout(() => {
                         // Set mock recommendations
-                        recommendedStores = ['local', 'toysrus'];
-                        topMatchStore = 'local';
-                        
+                        //recommendedStores = ['local', 'toysrus'];
+
                         // Update map and store list
                         updateMapPins();
                         renderStores();
@@ -1207,7 +1242,7 @@
                 document.getElementById('recommendationsLoading').classList.add('hidden');
                 showAlert('Unable to get Recommendations at this time. Please try again later.');
             }
-        });
+        }
 
         // Show stores panel with Recommendations highlighted
         function showStoresPanelWithRecommendations() {
@@ -1277,8 +1312,7 @@
             
             // Clear the recommendations data
             recommendedStores = [];
-            topMatchStore = null;
-            
+
             // Reset panel header
             resetStorePanelHeader();
             
@@ -1401,11 +1435,6 @@
                     'Little Dreamers Toy Shop': 'local'
                 };
                 
-                // Set top match
-                if (aiResponse.topMatch && storeNameToId[aiResponse.topMatch]) {
-                    topMatchStore = storeNameToId[aiResponse.topMatch];
-                }
-                
                 // Set recommended stores
                 if (aiResponse.recommended && Array.isArray(aiResponse.recommended)) {
                     recommendedStores = aiResponse.recommended
@@ -1414,7 +1443,7 @@
                 }
                 
                 // If AI response has no valid recommendations, clear everything
-                if (!topMatchStore && recommendedStores.length === 0) {
+                if (recommendedStores.length === 0) {
                     console.log('AI returned no valid recommendations');
                 }
                 
@@ -1425,8 +1454,7 @@
             } catch (error) {
                 console.log('Failed to parse AI response as JSON, using fallback recommendations');
                 // Fallback to mock recommendations
-                recommendedStores = ['local', 'toysrus'];
-                topMatchStore = 'local';
+                //recommendedStores = ['local', 'toysrus'];
                 updateMapPins();
                 renderStores();
             }
@@ -1724,7 +1752,6 @@
                         storeMarkers = [];
                         // Reset Recommendations when no stores found
                         recommendedStores = [];
-                        topMatchStore = null;
                     }
                     
                     // Ensure stores are rendered and show stores button is available
@@ -2008,97 +2035,269 @@
             return specialties;
         }
 
-        // Show store information with navigation controls in info window
+        // Show store information in bottom sheet (Google Maps style)
         function showStoreInfo(store, marker) {
+            // Set selected store for navigation
+            selectedStore = store;
+            
+            // Center the store in the upper 50% of the screen (visible map area)
+            centerStoreInVisibleArea(store);
+            
+            // Generate store content for bottom sheet
             const content = `
-                <div class="p-3 min-w-[280px] max-w-[320px]">
-                    <!-- Store Header -->
-                    <div class="border-b border-gray-200 pb-3 mb-3">
-                        <h3 class="font-bold text-lg text-gray-900">${store.name}</h3>
-                        <p class="text-sm text-gray-600">${store.address}</p>
-                        <div class="flex items-center mt-2">
-                            <i class="fas fa-star text-yellow-500 mr-1"></i>
-                            <span class="text-sm font-medium">${store.rating}</span>
-                            <span class="mx-2 text-gray-400">•</span>
-                            <span class="text-sm text-blue-600 font-medium">${store.distance}</span>
-                        </div>
+                <!-- Store Header -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-xl text-gray-900 dark:text-white">${store.name}</h3>
+                        </button>
+                    </div>
+                    
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-star text-yellow-500 mr-1"></i>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">${store.rating}</span>
+                        <span class="mx-2 text-gray-400">•</span>
+                        <span class="text-sm text-blue-600 dark:text-blue-400 font-medium">${store.distance}</span>
+                        <span class="mx-2 text-gray-400">•</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">${store.hours}</span>
                     </div>
                     
                     <!-- Store Specialties -->
-                    <div class="mb-3">
-                        <div class="flex flex-wrap gap-1">
-                            ${store.specialties.map(spec => 
-                                `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${spec}</span>`
-                            ).join('')}
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">${store.hours}</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${store.specialties.map(spec => 
+                            `<span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-3 py-1 rounded-full">${spec}</span>`
+                        ).join('')}
                     </div>
                     
-                    <!-- Navigation Section -->
-                    <div class="border-t border-gray-200 pt-3">
-                        <div class="text-center mb-3">
-                            <h4 class="text-sm font-bold text-gray-800 mb-1">🗺️ Navigation</h4>
+                    <!-- Quick Actions -->
+                    <div class="flex space-x-3">
+                        <button onclick="calculateRoute('WALKING')" class="flex-1 items-center justify-center px-4 py-2 vintage-button rounded-full transition-all hover:scale-105">
+                            <i class="fas fa-walking mr-2"></i>
+                            <span class="font-medium">Walking</span>
+                        </button>
+						<button onclick="calculateRoute('DRIVING')" class="flex-1 items-center justify-center px-4 py-2 vintage-button rounded-full transition-all hover:scale-105">
+                            <i class="fas fa-car mr-2"></i>
+                            <span class="font-medium">Driving</span>
+                        </button>
+						<button onclick="calculateRoute('TRANSIT')" class="flex-1 items-center justify-center px-4 py-2 vintage-button rounded-full transition-all hover:scale-105">
+                            <i class="fas fa-bus mr-2"></i>
+                            <span class="font-medium">Transit</span>
+                        </button>
+                    </div>
+					<!-- Route Info -->
+					<div id="routeInfo" class="p-4 hidden">
+						<div class="vintage-card p-4 rounded-lg">
+							<div class="flex items-center justify-between">
+								<div>
+									<div id="routeDistance" class="font-semibold text-gray-900 dark:text-white"></div>
+									<div id="routeDuration" class="text-sm text-gray-600 dark:text-gray-400"></div>
+								</div>
+								<i class="fas fa-route text-brown-300 text-xl"></i>
+							</div>
+							<!-- Navigation Controls -->
+							<div class="flex space-x-3 p-4">
+								<button id="startNavigationBtn" class="flex-1 items-center justify-center px-4 py-2 vintage-button rounded-full transition-all hover:scale-105" onclick="toggleNavigation()">
+									<i class="fas fa-navigation mr-2"></i>
+									Navigation
+								</button>
+								<button id="clearNavigationBtn" class="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-full transition-colors font-medium" onclick="clearCurrentRoute()">
+									<i class="fas fa-times mr-2"></i>
+									Clear Route
+								</button>
+							</div>
+						</div>
+					</div>
+                </div>
+				
+				<!-- Store Details (Scrollable section) -->
+                <div class="p-4 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Store Details</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-gray-500 dark:text-gray-400 mr-3 w-5"></i>
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-white">${store.hours}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Hours may vary</div>
+                            </div>
                         </div>
-                        
-                        <!-- Travel Mode Selection -->
-                        <div class="flex justify-center space-x-1 mb-3">
-                            <button class="travel-mode-btn active" data-mode="DRIVING" title="Driving" onclick="calculateRoute('DRIVING')">
-                                <i class="fas fa-car text-xs"></i>
-                            </button>
-                            <button class="travel-mode-btn" data-mode="WALKING" title="Walking" onclick="calculateRoute('WALKING')">
-                                <i class="fas fa-walking text-xs"></i>
-                            </button>
-                            <button class="travel-mode-btn" data-mode="TRANSIT" title="Transit" onclick="calculateRoute('TRANSIT')">
-                                <i class="fas fa-bus text-xs"></i>
-                            </button>
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-gray-500 dark:text-gray-400 mr-3 w-5"></i>
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-white">${store.distance} away</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">From your location</div>
+                            </div>
                         </div>
-                        
-                        <!-- Route Info -->
-                        <div id="routeInfo" class="text-xs text-gray-600 text-center mb-3 hidden">
-                            <div id="routeDistance" class="font-medium"></div>
-                            <div id="routeDuration" class="text-xs"></div>
+                        ${store.phone ? `
+                        <div onclick="//ToDo" class="flex items-center">
+                            <i class="fas fa-phone text-gray-500 dark:text-gray-400 mr-3 w-5"></i>
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-white">${store.phone}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Tap to call</div>
+                            </div>
                         </div>
-                        
-                        <!-- Action Buttons -->
-                        <div class="flex space-x-2">
-                            <button id="clearNavigationBtn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 text-xs rounded transition-colors" title="Clear Route" onclick="clearCurrentRoute()">
-                                <i class="fas fa-times mr-1"></i>
-                                Clear
-                            </button>
-                            <button id="startNavigationBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs rounded transition-colors" title="Start Navigation" onclick="toggleNavigation()">
-                                <i class="fas fa-navigation mr-1"></i>
-                                Start
-                            </button>
+                        ` : ''}
+                        ${store.website ? `
+                        <div class="flex items-center">
+                            <i class="fas fa-globe text-gray-500 dark:text-gray-400 mr-3 w-5"></i>
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-white">Visit Website</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">View online store</div>
+                            </div>
                         </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
             
-            infoWindow.setContent(content);
-            infoWindow.open(map, marker);
-            
-            // Set selected store for navigation
-            selectedStore = store;
-            
-            // Calculate initial route with default mode (WALKING)
-            //setTimeout(() => {
-            //    calculateRoute('WALKING');
-            //}, 100);
+            // Show bottom sheet with store info
+            showStoreInfoSheet(content);
         }
+        
+        // Center store in the upper 50% of the screen (visible map area when bottom sheet is open)
+        function centerStoreInVisibleArea(store) {
+            if (!map || !store.location) return;
+            
+            // Get the current map bounds and center
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            
+            // Calculate the offset needed to position store in upper 50% of screen
+            // Since bottom sheet takes up 50% of screen height, we need to offset the center point
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            
+            // Calculate the latitude range of the current view
+            const latRange = ne.lat() - sw.lat();
+            
+            // Offset the latitude by 20% of the range to center in upper half
+            // This moves the store to appear in the center of the upper 50% visible area
+            const offsetLat = latRange * -0.20;
+            
+            // Create the adjusted center point
+            const adjustedCenter = {
+                lat: store.location.lat + offsetLat,
+                lng: store.location.lng
+            };
+            
+            // Smoothly pan to the adjusted center
+            map.panTo(adjustedCenter);
+            
+            console.log(`Centered ${store.name} in upper 50% of screen with ${offsetLat.toFixed(6)} lat offset`);
+        }
+
+        // Show store info bottom sheet
+        function showStoreInfoSheet(content) {
+            const overlay = document.getElementById('storeInfoOverlay');
+            const sheet = document.getElementById('storeInfoSheet');
+            const contentDiv = document.getElementById('storeInfoContent');
+            
+            // Set content
+            contentDiv.innerHTML = content;
+            
+            // Show overlay
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+            }, 10);
+            
+            // Show sheet
+            sheet.classList.remove('translate-y-full');
+        }
+        
+        // Close store info bottom sheet
+        function closeStoreInfoSheet() {
+            const overlay = document.getElementById('storeInfoOverlay');
+            const sheet = document.getElementById('storeInfoSheet');
+            
+            // Hide sheet
+            sheet.classList.add('translate-y-full');
+            
+            // Hide overlay
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+        
+        // Handle sheet dragging
+        let isSheetDragging = false;
+        let sheetStartY = 0;
+        let sheetCurrentY = 0;
+        
+        // Sheet drag functionality
+        const storeInfoHandle = document.getElementById('storeInfoHandle');
+        const storeInfoSheet = document.getElementById('storeInfoSheet');
+        
+        storeInfoHandle.addEventListener('touchstart', handleSheetDragStart);
+        storeInfoHandle.addEventListener('touchmove', handleSheetDragMove);
+        storeInfoHandle.addEventListener('touchend', handleSheetDragEnd);
+        
+        storeInfoHandle.addEventListener('mousedown', handleSheetDragStart);
+        document.addEventListener('mousemove', handleSheetDragMove);
+        document.addEventListener('mouseup', handleSheetDragEnd);
+        
+        function handleSheetDragStart(e) {
+            isSheetDragging = true;
+            sheetStartY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            storeInfoSheet.style.transition = 'none';
+            e.preventDefault();
+        }
+        
+        function handleSheetDragMove(e) {
+            if (!isSheetDragging) return;
+            
+            sheetCurrentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            const deltaY = sheetCurrentY - sheetStartY;
+            
+            if (deltaY > 0) {
+                storeInfoSheet.style.transform = `translateY(${deltaY}px)`;
+                
+                // Update overlay opacity
+                const overlay = document.getElementById('storeInfoOverlay');
+                const opacity = Math.max(0, 1 - (deltaY / 200));
+                overlay.style.opacity = opacity;
+            }
+            
+            e.preventDefault();
+        }
+        
+        function handleSheetDragEnd(e) {
+            if (!isSheetDragging) return;
+            
+            isSheetDragging = false;
+            storeInfoSheet.style.transition = 'transform 0.3s ease-in-out';
+            
+            const deltaY = sheetCurrentY - sheetStartY;
+            
+            if (deltaY > 100) {
+                closeStoreInfoSheet();
+            } else {
+                storeInfoSheet.style.transform = 'translateY(0)';
+                document.getElementById('storeInfoOverlay').style.opacity = '1';
+            }
+            
+            setTimeout(() => {
+                storeInfoSheet.style.transition = '';
+                storeInfoSheet.style.transform = '';
+            }, 300);
+        }
+        
+        // Close sheet when clicking overlay
+        document.getElementById('storeInfoOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'storeInfoOverlay') {
+                closeStoreInfoSheet();
+            }
+        });
 
         // Update marker styles based on Recommendations
         function updateMarkerStyles() {
             storeMarkers.forEach(({ marker, store }) => {
                 const isRecommended = recommendedStores.includes(store.id);
-                const isTopMatch = topMatchStore === store.id;
 
                 let emoji = '📍'; // Default pin marker
                 let size = 32;
 
-                if (isTopMatch) {
-                    emoji = '🎯'; // Top match
-                    size = 40;
-                } else if (isRecommended) {
+                if (isRecommended) {
                     emoji = '🤖'; // Recommended
                     size = 36;
                 }
@@ -2300,17 +2499,14 @@
             const nearbyContent = document.getElementById('nearbyTabContent');
             nearbyContent.innerHTML = filteredStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
-                const isTopMatch = topMatchStore === store.id;
                 
                 let badgeHtml = '';
-                if (isTopMatch) {
-                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>';
-                } else if (isRecommended) {
+                if (isRecommended) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
                 }
                 
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''}">
                         ${badgeHtml}
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
@@ -2327,8 +2523,7 @@
                             `).join('')}
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
-                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
-                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                        ${isRecommended ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended</p></div>' : ''}
                         <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
                             <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
                                 <i class="fas fa-map-marker-alt mr-1"></i>
@@ -2340,32 +2535,22 @@
             }).join('');
             
             // Also filter Recommendations tab if search is active
-            if (searchTerm.trim() && (recommendedStores.length > 0 || topMatchStore)) {
+            if (searchTerm.trim() && (recommendedStores.length > 0)) {
                 const aiRecommendedStores = [];
-                
-                // Add top match first if it matches search and exists
-                if (topMatchStore) {
-                    const topStore = toyStores.find(s => s.id === topMatchStore);
-                    if (topStore && (topStore.name.toLowerCase().includes(searchTerm) || topStore.specialties.some(spec => spec.toLowerCase().includes(searchTerm)))) {
-                        aiRecommendedStores.push({ store: topStore, isTopMatch: true, isRecommended: false });
-                    }
-                }
-                
+                              
                 // Add recommended stores that match search
                 recommendedStores.forEach(storeId => {
-                    if (storeId !== topMatchStore) {
-                        const store = toyStores.find(s => s.id === storeId);
-                        if (store && (store.name.toLowerCase().includes(searchTerm) || store.specialties.some(spec => spec.toLowerCase().includes(searchTerm)))) {
-                            aiRecommendedStores.push({ store, isTopMatch: false, isRecommended: true });
-                        }
+                    const store = toyStores.find(s => s.id === storeId);
+                    if (store && (store.name.toLowerCase().includes(searchTerm) || store.specialties.some(spec => spec.toLowerCase().includes(searchTerm)))) {
+						aiRecommendedStores.push({ store, isRecommended: true });
                     }
                 });
                 
                 // Update Recommendations list with filtered results
                 const aiRecommendationsList = document.getElementById('aiRecommendationsList');
                 if (aiRecommendedStores.length > 0) {
-                    aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isTopMatch, isRecommended }) => 
-                        renderRecommendationCard(store, isTopMatch, isRecommended)
+                    aiRecommendationsList.innerHTML = aiRecommendedStores.map(({ store, isRecommended }) => 
+                        renderRecommendationCard(store, isRecommended)
                     ).join('');
                 } else {
                     aiRecommendationsList.innerHTML = `
@@ -2430,8 +2615,7 @@
                         
                         // Reset Recommendations when location changes
                         recommendedStores = [];
-                        topMatchStore = null;
-                        
+
                         // Search for toy stores near new location
                         searchToyStores(newLocation);
                         
@@ -2689,8 +2873,7 @@
                     
                     // Reset Recommendations when location changes
                     recommendedStores = [];
-                    topMatchStore = null;
-                    
+
                     // STEP 2: UI protection after map update
                     console.log('🛡️ STEP 2: Post-map-update UI protection');
                     ensureUIElementsVisibleEnhanced();
@@ -2903,10 +3086,6 @@
             // Close store panel when clicking on a store (with proper overlay handling)
             closeStorePanel();
 
-            // Center map on store location with smooth animation
-            map.panTo(new google.maps.LatLng(store.location.lat, store.location.lng));
-
-  
             // Zoom in to get a closer view of the store
             if (map.getZoom() < 18) {
                 map.setZoom(18);
@@ -3202,17 +3381,14 @@
             // Force regenerate the store list HTML
             nearbyContent.innerHTML = toyStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
-                const isTopMatch = topMatchStore === store.id;
-                
+
                 let badgeHtml = '';
-                if (isTopMatch) {
-                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top Match</span></div>';
-                } else if (isRecommended) {
+                if (isRecommended) {
                     badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>Recommended</span></div>';
                 }
                 
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''}">
                         ${badgeHtml}
                         <div class="flex justify-between items-start mb-2">
                             <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
@@ -3229,8 +3405,7 @@
                             `).join('')}
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
-                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
-                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                        ${isRecommended ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended</p></div>' : ''}
                         <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
                             <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
                                 <i class="fas fa-map-marker-alt mr-1"></i>
@@ -3665,8 +3840,7 @@
             
             // Reset recommendations when location changes
             recommendedStores = [];
-            topMatchStore = null;
-            
+
             // Search for stores at new location
             searchToyStores(newLocation);
         }
