@@ -1046,7 +1046,7 @@
     <!-- Map Controls -->
     <div class="fixed bottom-6 right-6 z-30 flex flex-col space-y-3">
         <!-- Compass -->
-        <div class="google-fab" id="compassBtn" title="Compass" style="display: none;">
+        <div class="google-fab" id="compassBtn" title="Compass" style="display: flex;">
             <div class="relative">
                 <div id="compassNeedle" class="absolute inset-0 flex items-center justify-center transition-transform duration-300">
                     <i class="fas fa-location-arrow text-red-500 text-lg"></i>
@@ -1058,9 +1058,9 @@
         </div>
         
         <!-- Current Location Button -->
-        <div class="google-fab" id="getCurrentLocationBtn" title="Your location">
+        <!--<div class="google-fab" id="getCurrentLocationBtn" title="Your location">
             <i class="fas fa-location-arrow text-gray-600 dark:text-gray-400"></i>
-        </div>
+        </div>-->
     </div>
 
     <!-- Store Info Panel -->
@@ -1923,7 +1923,8 @@
             });
 
             // Get current location button
-            document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+            //document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+			document.getElementById('compassBtn').addEventListener('click', getCurrentLocation);
 
             // Search functionality
             document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -1961,11 +1962,11 @@
         }
 
         function getCurrentLocation() {
-            const locationBtn = document.getElementById('getCurrentLocationBtn');
-            const originalHtml = locationBtn.innerHTML;
+            //const locationBtn = document.getElementById('getCurrentLocationBtn');
+            //const originalHtml = locationBtn.innerHTML;
             
-            locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-gray-600"></i>';
-            locationBtn.style.pointerEvents = 'none';
+            //locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-gray-600"></i>';
+            //locationBtn.style.pointerEvents = 'none';
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -1997,20 +1998,20 @@
 
                         searchToyStores(newLocation);
                         
-                        locationBtn.innerHTML = originalHtml;
-                        locationBtn.style.pointerEvents = 'auto';
+                        //locationBtn.innerHTML = originalHtml;
+                        //locationBtn.style.pointerEvents = 'auto';
                         
                         showCustomAlert('Location updated! Finding toy stores near you...');
                     },
                     (error) => {
-                        locationBtn.innerHTML = originalHtml;
-                        locationBtn.style.pointerEvents = 'auto';
+                        //locationBtn.innerHTML = originalHtml;
+                        //locationBtn.style.pointerEvents = 'auto';
                         showCustomAlert('Unable to get your location. Please try again.');
                     }
                 );
             } else {
-                locationBtn.innerHTML = originalHtml;
-                locationBtn.style.pointerEvents = 'auto';
+                //locationBtn.innerHTML = originalHtml;
+                //locationBtn.style.pointerEvents = 'auto';
                 showCustomAlert('Geolocation is not supported by this browser.');
             }
         }
@@ -2737,19 +2738,21 @@
 
         // Compass Functions
         function showCompass() {
-            const compassBtn = document.getElementById('compassBtn');
-            if (compassBtn) {
-                compassBtn.style.display = 'flex';
-                initializeCompass();
-            }
+            //const compassBtn = document.getElementById('compassBtn');
+            //if (compassBtn) {
+            //    compassBtn.style.display = 'flex';
+            //}
+			
+			initializeCompass();
         }
 
         function hideCompass() {
-            const compassBtn = document.getElementById('compassBtn');
-            if (compassBtn) {
-                compassBtn.style.display = 'none';
-                stopCompass();
-            }
+            //const compassBtn = document.getElementById('compassBtn');
+            //if (compassBtn) {
+            //    compassBtn.style.display = 'none';
+            //}
+			
+			stopCompass();
         }
 
         function initializeCompass() {
