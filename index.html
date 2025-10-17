@@ -1270,19 +1270,6 @@
 				
 				<div id="preferencesPanel" class="hidden mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
 					<div class="space-y-3">
-						<!-- Age Group -->
-						<div>
-							<label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Age Group</label>
-							<select id="ageGroup" class="google-input text-sm w-full" onchange="updatePreferences()">
-								<option value="">Any age</option>
-								<option value="toddler">Toddler (0-2 years)</option>
-								<option value="preschool">Preschool (3-5 years)</option>
-								<option value="school">School age (6-12 years)</option>
-								<option value="teen">Teen (13+ years)</option>
-								<option value="adult">Adult collector</option>
-							</select>
-						</div>
-						
 						<!-- Interests -->
 						<div>
 							<label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Interests</label>
@@ -1294,17 +1281,6 @@
 								<button onclick="toggleInterest('collectibles')" data-interest="collectibles" class="interest-tag">Collectibles</button>
 								<button onclick="toggleInterest('building')" data-interest="building" class="interest-tag">Building/LEGO</button>
 							</div>
-						</div>
-						
-						<!-- Budget -->
-						<div>
-							<label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Budget Range</label>
-							<select id="budget" class="google-input text-sm w-full" onchange="updatePreferences()">
-								<option value="">Any budget</option>
-								<option value="low">Budget-friendly ($1-25)</option>
-								<option value="medium">Moderate ($25-100)</option>
-								<option value="high">Premium ($100+)</option>
-							</select>
 						</div>
 					</div>
 				</div>
@@ -1370,9 +1346,7 @@
 
         // User preferences for auto-recommendations
         let userPreferences = {
-            ageGroup: '',
-            interests: [],
-            budget: ''
+            interests: []
         };
 
         // Tab Management
@@ -1536,7 +1510,7 @@
                         renderStores();
                         
                         // Auto-generate recommendations when stores are updated
-                        if (toyStores.length > 0 && (userPreferences.ageGroup || userPreferences.interests.length > 0 || userPreferences.budget)) {
+                        if (toyStores.length > 0 && userPreferences.interests.length > 0) {
                             autoGenerateRecommendations();
                         }
                         
@@ -1814,29 +1788,7 @@
 
         function generateRecommendationReason(store, preferences) {
             const reasons = [];
-            
-            // Age-based recommendations
-            if (preferences.ageGroup) {
-                switch (preferences.ageGroup) {
-                    case 'toddler':
-                        if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
-                            reasons.push('Great for early learning toys');
-                        }
-                        break;
-                    case 'school':
-                        if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('building'))) {
-                            reasons.push('Perfect for building and STEM toys');
-                        }
-                        break;
-                    case 'teen':
-                    case 'adult':
-                        if (store.specialties.some(s => s.toLowerCase().includes('collectibles'))) {
-                            reasons.push('Excellent collectibles selection');
-                        }
-                        break;
-                }
-            }
-            
+
             // Interest-based recommendations
             preferences.interests.forEach(interest => {
                 switch (interest) {
@@ -1857,13 +1809,6 @@
                         break;
                 }
             });
-            
-            // Budget-based recommendations
-            if (preferences.budget === 'low' && store.name.toLowerCase().includes('walmart')) {
-                reasons.push('Budget-friendly options');
-            } else if (preferences.budget === 'high' && store.name.toLowerCase().includes('specialty')) {
-                reasons.push('Premium quality selection');
-            }
             
             // Default reasoning
             if (reasons.length === 0) {
@@ -3028,10 +2973,7 @@
         }
 
         function updatePreferences() {
-            // Get current values
-            userPreferences.ageGroup = document.getElementById('ageGroup').value;
-            userPreferences.budget = document.getElementById('budget').value;
-            
+
             console.log('Updated preferences:', userPreferences);
             
             // Auto-generate recommendations based on preferences
@@ -3050,38 +2992,7 @@
             const scoredStores = toyStores.map(store => {
                 let score = 0;
                 const reasons = [];
-                
-                // Age group scoring
-                if (userPreferences.ageGroup) {
-                    switch (userPreferences.ageGroup) {
-                        case 'toddler':
-                            if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
-                                score += 10;
-                                reasons.push('educational');
-                            }
-                            break;
-                        case 'preschool':
-                            if (store.specialties.some(s => s.toLowerCase().includes('educational') || s.toLowerCase().includes('toys'))) {
-                                score += 8;
-                                reasons.push('age-appropriate');
-                            }
-                            break;
-                        case 'school':
-                            if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('games'))) {
-                                score += 10;
-                                reasons.push('building');
-                            }
-                            break;
-                        case 'teen':
-                        case 'adult':
-                            if (store.specialties.some(s => s.toLowerCase().includes('collectibles'))) {
-                                score += 12;
-                                reasons.push('collectibles');
-                            }
-                            break;
-                    }
-                }
-                
+
                 // Interest scoring
                 userPreferences.interests.forEach(interest => {
                     switch (interest) {
@@ -3123,25 +3034,7 @@
                             break;
                     }
                 });
-                
-                // Budget scoring
-                if (userPreferences.budget) {
-                    switch (userPreferences.budget) {
-                        case 'low':
-                            if (store.name.toLowerCase().includes('walmart') || store.name.toLowerCase().includes('target')) {
-                                score += 6;
-                                reasons.push('budget');
-                            }
-                            break;
-                        case 'high':
-                            if (store.name.toLowerCase().includes('specialty') || store.rating > 4.5) {
-                                score += 5;
-                                reasons.push('premium');
-                            }
-                            break;
-                    }
-                }
-                
+                            
                 // Distance bonus (closer stores get slight preference)
                 const distance = parseFloat(store.distance);
                 if (distance < 1) score += 3;
