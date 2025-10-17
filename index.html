@@ -678,6 +678,29 @@
             font-weight: 500;
         }
 
+        /* Interest Tags */
+        .interest-tag {
+            background: #F1F3F4;
+            color: #5F6368;
+            border: 1px solid #E8EAED;
+            border-radius: var(--border-radius-xl);
+            padding: var(--spacing-1) var(--spacing-3);
+            font-size: var(--font-xs);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .interest-tag:hover {
+            background: #E8EAED;
+        }
+
+        .interest-tag.active {
+            background: #E8F0FE;
+            color: #1A73E8;
+            border-color: #1A73E8;
+        }
+
         /* Navigation styles with responsive sizing */
         .travel-mode-option {
             background: #F8F9FA;
@@ -958,7 +981,7 @@
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4&amp;libraries=places&amp;callback=initMap"></script>
-<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.3f7572448765332f3047.js"></script></head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300 font-google">
     <!-- Dark mode detection -->
     <script>
@@ -1022,6 +1045,18 @@
 
     <!-- Map Controls -->
     <div class="fixed bottom-6 right-6 z-30 flex flex-col space-y-3">
+        <!-- Compass -->
+        <div class="google-fab" id="compassBtn" title="Compass" style="display: none;">
+            <div class="relative">
+                <div id="compassNeedle" class="absolute inset-0 flex items-center justify-center transition-transform duration-300">
+                    <i class="fas fa-location-arrow text-red-500 text-lg"></i>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="compassDirection" class="text-xs font-bold text-gray-700 dark:text-gray-300 mt-6">N</span>
+                </div>
+            </div>
+        </div>
+        
         <!-- Current Location Button -->
         <div class="google-fab" id="getCurrentLocationBtn" title="Your location">
             <i class="fas fa-location-arrow text-gray-600 dark:text-gray-400"></i>
@@ -1208,44 +1243,79 @@
         <!-- Panel Handle -->
         <div class="google-panel-handle"></div>
             
-        <!-- Tabs -->
-		<div class="p-6">
-			<div class="flex items-center justify-between">
-				<div class="flex space-x-2 mb-6">
-					<button id="nearbyTab" class="google-tab active">
-						📍 Nearby stores
-					</button>
-					<button id="recommendationsTab" class="google-tab">
-						⭐ Recommended
-					</button>
+        <div class="p-6">
+			<div class="flex items-center justify-between mb-6">
+				<div class="flex items-center space-x-3">
+					<h2 class="text-xl font-medium text-gray-900 dark:text-white">📍 Nearby Stores</h2>
+					<div id="recommendationsBadge" class="hidden">
+						<span class="google-badge recommended text-xs">
+							<i class="fas fa-sparkles mr-1"></i>Smart Picks
+						</span>
+					</div>
 				</div>
-				<div class="google-fab mb-6" onclick="closeStorePanel()">
+				<div class="google-fab" onclick="closeStorePanel()">
 					<i class="fas fa-times text-gray-600 dark:text-gray-400 text-sm"></i>
 				</div>
-			</div>	
+			</div>
 
-			<!-- Tab Content -->
+			<!-- User Preferences (Collapsible) -->
+			<div class="mb-4">
+				<button onclick="togglePreferences()" class="flex items-center justify-between w-full text-left google-button p-3">
+					<div class="flex items-center">
+						<i class="fas fa-user-cog text-primary mr-2"></i>
+						<span class="text-sm font-medium">Preferences</span>
+					</div>
+					<i class="fas fa-chevron-down text-xs transition-transform" id="preferencesIcon"></i>
+				</button>
+				
+				<div id="preferencesPanel" class="hidden mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+					<div class="space-y-3">
+						<!-- Age Group -->
+						<div>
+							<label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Age Group</label>
+							<select id="ageGroup" class="google-input text-sm w-full" onchange="updatePreferences()">
+								<option value="">Any age</option>
+								<option value="toddler">Toddler (0-2 years)</option>
+								<option value="preschool">Preschool (3-5 years)</option>
+								<option value="school">School age (6-12 years)</option>
+								<option value="teen">Teen (13+ years)</option>
+								<option value="adult">Adult collector</option>
+							</select>
+						</div>
+						
+						<!-- Interests -->
+						<div>
+							<label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Interests</label>
+							<div class="flex flex-wrap gap-2">
+								<button onclick="toggleInterest('educational')" data-interest="educational" class="interest-tag">Educational</button>
+								<button onclick="toggleInterest('creative')" data-interest="creative" class="interest-tag">Creative/Arts</button>
+								<button onclick="toggleInterest('sports')" data-interest="sports" class="interest-tag">Sports/Outdoor</button>
+								<button onclick="toggleInterest('tech')" data-interest="tech" class="interest-tag">Tech/Electronic</button>
+								<button onclick="toggleInterest('collectibles')" data-interest="collectibles" class="interest-tag">Collectibles</button>
+								<button onclick="toggleInterest('building')" data-interest="building" class="interest-tag">Building/LEGO</button>
+							</div>
+						</div>
+						
+						<!-- Budget -->
+						<div>
+							<label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Budget Range</label>
+							<select id="budget" class="google-input text-sm w-full" onchange="updatePreferences()">
+								<option value="">Any budget</option>
+								<option value="low">Budget-friendly ($1-25)</option>
+								<option value="medium">Moderate ($25-100)</option>
+								<option value="high">Premium ($100+)</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Store List -->
 			<div class="max-h-96 overflow-y-auto">
-				<!-- Nearby Stores Tab -->
-				<div id="nearbyTabContent" class="space-y-3">
+				<div id="storeListContent" class="space-y-3">
 					<!-- Stores will be populated here -->
 				</div>
-					
-				<!-- Recommendations Tab -->
-				<div id="recommendationsTabContent" class="hidden">
-					<div id="recommendationsEmpty" class="text-center py-8">
-						<i class="fas fa-lightbulb text-4xl text-gray-400 mb-4"></i>
-						<h4 class="text-lg font-medium text-gray-600 dark:text-gray-400 mb-2">Get personalized recommendations</h4>
-						<p class="text-sm text-gray-500 dark:text-gray-500 mb-6">We'll suggest the best toy stores based on your preferences</p>
-						<button onclick="getRecommendations()" class="google-button-primary px-6 py-2 rounded-full">
-							Get recommendations
-						</button>
-					</div>
-					<div id="recommendationsList" class="space-y-3 hidden">
-						<!-- Recommended stores will be populated here -->
-					</div>
-				</div>
-            </div>
+			</div>
         </div>
     </div>
 
@@ -1289,8 +1359,21 @@
         let locationUpdateCount = 0;
         const LOCATION_UPDATE_THRESHOLD = 100; // meters
 
+        // Compass variables
+        let isCompassEnabled = false;
+        let currentHeading = 0;
+        let lastOrientationUpdate = 0;
+        const ORIENTATION_UPDATE_THRESHOLD = 50; // milliseconds
+
         // Store recommendation tracking
         let recommendedStores = [];
+
+        // User preferences for auto-recommendations
+        let userPreferences = {
+            ageGroup: '',
+            interests: [],
+            budget: ''
+        };
 
         // Tab Management
         let activeTab = 'nearby';
@@ -1451,6 +1534,11 @@
                     
                     setTimeout(() => {
                         renderStores();
+                        
+                        // Auto-generate recommendations when stores are updated
+                        if (toyStores.length > 0 && (userPreferences.ageGroup || userPreferences.interests.length > 0 || userPreferences.budget)) {
+                            autoGenerateRecommendations();
+                        }
                         
                         const showStoresBtn = document.getElementById('showStoresBtn');
                         if (toyStores.length > 0 && showStoresBtn) {
@@ -1655,26 +1743,35 @@
         // Render store lists
         function renderStores() {
             renderNearbyStores();
-            renderRecommendations();
         }
 
         function renderNearbyStores() {
-            const nearbyContent = document.getElementById('nearbyTabContent');
-            if (!nearbyContent) return;
+            const storeListContent = document.getElementById('storeListContent');
+            if (!storeListContent) return;
             
-            nearbyContent.innerHTML = toyStores.map(store => {
+            // Update recommendations badge
+            const recommendationsBadge = document.getElementById('recommendationsBadge');
+            if (recommendationsBadge) {
+                if (recommendedStores.length > 0) {
+                    recommendationsBadge.classList.remove('hidden');
+                } else {
+                    recommendationsBadge.classList.add('hidden');
+                }
+            }
+            
+            storeListContent.innerHTML = toyStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
                 
                 let badgeHtml = '';
                 if (isRecommended) {
-                    badgeHtml = '<div class="mb-3"><span class="google-badge recommended"><i class="fas fa-star mr-1"></i>Recommended</span></div>';
+                    badgeHtml = '<div class="mb-3"><span class="google-badge recommended"><i class="fas fa-sparkles mr-1"></i>Smart Pick</span></div>';
                 }
 				
 				const isOpen = store.hours && store.hours.toLowerCase().includes('open');
 				const statusColor = isOpen ? 'text-google-green' : 'text-google-red';
                 
                 return `
-                    <div onclick="focusStoreOnMap('${store.id}')" class="google-store-card">
+                    <div onclick="focusStoreOnMap('${store.id}')" class="google-store-card ${isRecommended ? 'border-2 border-green-200 dark:border-green-700' : ''}">
                         ${badgeHtml}
                         <div class="flex justify-between items-start mb-3">
                             <h4 class="font-medium text-gray-900 dark:text-white text-lg">${store.name}</h4>
@@ -1690,6 +1787,7 @@
                                 <span class="google-specialty-tag">${spec}</span>
                             `).join('')}
                         </div>
+                        ${isRecommended ? getRecommendationReason(store) : ''}
                         <div class="flex items-center justify-between text-sm">
                             <span class="text-gray-600 ${statusColor}">${store.hours}</span>
                             <span class="text-primary font-medium">Tap to view</span>
@@ -1699,70 +1797,80 @@
             }).join('');
         }
 
-        function renderRecommendations() {
-            const recommendationsList = document.getElementById('recommendationsList');
-            const recommendationsEmpty = document.getElementById('recommendationsEmpty');
+        function getRecommendationReason(store) {
+            const reasons = generateRecommendationReason(store, userPreferences);
+            if (!reasons) return '';
             
-            if (recommendedStores.length === 0) {
-                recommendationsEmpty.classList.remove('hidden');
-                recommendationsList.classList.add('hidden');
-                return;
+            return `
+                <div class="bg-green-50 dark:bg-green-900 rounded-lg p-3 mb-3">
+                    <div class="text-xs font-medium text-green-800 dark:text-green-200 mb-1 flex items-center">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Perfect for you
+                    </div>
+                    <p class="text-xs text-green-700 dark:text-green-300">${reasons}</p>
+                </div>
+            `;
+        }
+
+        function generateRecommendationReason(store, preferences) {
+            const reasons = [];
+            
+            // Age-based recommendations
+            if (preferences.ageGroup) {
+                switch (preferences.ageGroup) {
+                    case 'toddler':
+                        if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
+                            reasons.push('Great for early learning toys');
+                        }
+                        break;
+                    case 'school':
+                        if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('building'))) {
+                            reasons.push('Perfect for building and STEM toys');
+                        }
+                        break;
+                    case 'teen':
+                    case 'adult':
+                        if (store.specialties.some(s => s.toLowerCase().includes('collectibles'))) {
+                            reasons.push('Excellent collectibles selection');
+                        }
+                        break;
+                }
             }
             
-            recommendationsEmpty.classList.add('hidden');
-            recommendationsList.classList.remove('hidden');
-            
-            const recommendations = [];
-            recommendedStores.forEach(storeId => {
-                const store = toyStores.find(s => s.id === storeId);
-                if (store) {
-                    recommendations.push(store);
+            // Interest-based recommendations
+            preferences.interests.forEach(interest => {
+                switch (interest) {
+                    case 'educational':
+                        if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
+                            reasons.push('Specializes in educational toys');
+                        }
+                        break;
+                    case 'building':
+                        if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('building'))) {
+                            reasons.push('Top choice for building sets');
+                        }
+                        break;
+                    case 'tech':
+                        if (store.specialties.some(s => s.toLowerCase().includes('electronic'))) {
+                            reasons.push('Great tech toy selection');
+                        }
+                        break;
                 }
             });
             
-            recommendationsList.innerHTML = recommendations.map(store => 
-                renderRecommendationCard(store)
-            ).join('');
-        }
-
-        function renderRecommendationCard(store) {
-            return `
-                <div onclick="focusStoreOnMap('${store.id}')" class="google-store-card border-2 border-google-green">
-                    <div class="mb-3">
-                        <span class="google-badge recommended">
-                            <i class="fas fa-lightbulb mr-1"></i>Recommended
-                        </span>
-                    </div>
-                    <div class="flex justify-between items-start mb-3">
-                        <h4 class="font-medium text-gray-900 dark:text-white text-lg">${store.name}</h4>
-                        <div class="flex items-center text-google-yellow">
-                            <i class="fas fa-star mr-1 text-sm"></i>
-                            <span class="text-sm font-medium">${store.rating}</span>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
-                    <p class="text-sm text-primary font-medium mb-3">${store.distance} away</p>
-                    
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        ${store.specialties.map(spec => `
-                            <span class="google-specialty-tag">${spec}</span>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="bg-green-50 dark:bg-green-900 rounded-lg p-3 mb-3">
-                        <h6 class="text-sm font-medium text-green-800 dark:text-green-200 mb-1 flex items-center">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            Why we recommend this
-                        </h6>
-                        <p class="text-sm text-green-700 dark:text-green-300">Great selection and family-friendly environment with competitive prices.</p>
-                    </div>
-                    
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600 dark:text-gray-400">${store.hours}</span>
-                        <span class="text-google-green font-medium">AI Recommended</span>
-                    </div>
-                </div>
-            `;
+            // Budget-based recommendations
+            if (preferences.budget === 'low' && store.name.toLowerCase().includes('walmart')) {
+                reasons.push('Budget-friendly options');
+            } else if (preferences.budget === 'high' && store.name.toLowerCase().includes('specialty')) {
+                reasons.push('Premium quality selection');
+            }
+            
+            // Default reasoning
+            if (reasons.length === 0) {
+                reasons.push('Highly rated with great variety');
+            }
+            
+            return reasons.slice(0, 2).join(' • ');
         }
 
         // Show store information
@@ -2499,7 +2607,15 @@
         function autoStartLiveTracking() {
             const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
             
-            if (!isSecure || !navigator.geolocation) {
+            console.log('Auto-starting live tracking. Secure:', isSecure, 'Geolocation available:', !!navigator.geolocation);
+            
+            if (!isSecure) {
+                console.warn('Live tracking requires HTTPS or localhost');
+                return;
+            }
+            
+            if (!navigator.geolocation) {
+                console.warn('Geolocation not supported');
                 return;
             }
             
@@ -2508,22 +2624,29 @@
 
         function startLiveTracking() {
             if (!navigator.geolocation) {
-                showCustomAlert('Geolocation is not supported by this browser.');
+                console.error('Geolocation is not supported by this browser.');
                 return;
             }
+
+            if (isLiveTrackingEnabled) {
+                console.log('Live tracking already enabled');
+                return;
+            }
+
+            console.log('Starting live tracking...');
 
             watchPositionId = navigator.geolocation.watchPosition(
                 handleLocationUpdate,
                 handleLocationError,
                 {
                     enableHighAccuracy: true,
-                    timeout: 30000,
-                    maximumAge: 60000
+                    timeout: 15000,
+                    maximumAge: 5000
                 }
             );
 
             isLiveTrackingEnabled = true;
-            console.log('Live tracking started');
+            console.log('Live tracking started successfully');
         }
 
         function handleLocationUpdate(position) {
@@ -2535,20 +2658,41 @@
             trackingAccuracy = position.coords.accuracy;
             locationUpdateCount++;
             
+            console.log(`Location update #${locationUpdateCount}:`, newLocation, 'Accuracy:', trackingAccuracy + 'm');
+            
+            // Always update the user location marker position for live tracking
+            if (userLocationMarker) {
+                userLocationMarker.setPosition(newLocation);
+                // Update marker to show it's live tracking
+                userLocationMarker.setIcon({
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#34A853',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 3
+                });
+            } else {
+                createUserLocationMarker(newLocation, true);
+            }
+            
+            // Show compass when live tracking starts
+            if (locationUpdateCount === 1) {
+                showCompass();
+            }
+            
+            // Check if we should update stores (less frequent)
             if (shouldUpdateStores(newLocation)) {
+                console.log('Updating stores due to significant location change');
                 lastKnownLocation = userLocation;
                 userLocation = newLocation;
                 
-                if (map) {
+                // Only pan map occasionally to avoid constant movement
+                if (map && locationUpdateCount % 3 === 0) {
                     map.panTo(newLocation);
                 }
                 
-                if (userLocationMarker) {
-                    userLocationMarker.setPosition(newLocation);
-                } else {
-                    createUserLocationMarker(newLocation, true);
-                }
-                
+                // Clear old stores and search for new ones
                 storeMarkers.forEach(({ marker }) => {
                     marker.setMap(null);
                 });
@@ -2557,20 +2701,63 @@
                 recommendedStores = [];
 
                 searchToyStores(newLocation);
+            } else {
+                // Still update userLocation for other functions that might need it
+                userLocation = newLocation;
             }
         }
 
         function handleLocationError(error) {
             console.error('Live tracking error:', error);
+            let errorMessage = 'Location tracking error: ';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += 'Permission denied. Please enable location access.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += 'Position unavailable.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += 'Location request timed out.';
+                    break;
+                default:
+                    errorMessage += 'Unknown error occurred.';
+                    break;
+            }
+            
+            console.warn(errorMessage);
+            
+            // Stop live tracking on repeated errors
+            if (isLiveTrackingEnabled) {
+                stopLiveTracking();
+            }
+        }
+
+        function stopLiveTracking() {
+            if (watchPositionId !== null) {
+                navigator.geolocation.clearWatch(watchPositionId);
+                watchPositionId = null;
+            }
+            isLiveTrackingEnabled = false;
+            console.log('Live tracking stopped');
+            
+            // Hide compass when live tracking stops
+            hideCompass();
         }
 
         function shouldUpdateStores(newLocation) {
             if (!lastKnownLocation) {
+                console.log('No previous location, updating stores');
                 return true;
             }
             
             const distance = calculateDistanceInMeters(lastKnownLocation, newLocation);
-            return distance > LOCATION_UPDATE_THRESHOLD;
+            const shouldUpdate = distance > LOCATION_UPDATE_THRESHOLD;
+            
+            console.log(`Distance moved: ${distance.toFixed(1)}m, Threshold: ${LOCATION_UPDATE_THRESHOLD}m, Should update: ${shouldUpdate}`);
+            
+            return shouldUpdate;
         }
 
         function calculateDistanceInMeters(pos1, pos2) {
@@ -2600,6 +2787,420 @@
                     strokeWeight: 3
                 },
                 zIndex: 1000
+            });
+        }
+
+        // Compass Functions
+        function showCompass() {
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                compassBtn.style.display = 'flex';
+                initializeCompass();
+            }
+        }
+
+        function hideCompass() {
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                compassBtn.style.display = 'none';
+                stopCompass();
+            }
+        }
+
+        function initializeCompass() {
+            console.log('Initializing compass...');
+            
+            // Check if device orientation is supported
+            if (!window.DeviceOrientationEvent) {
+                console.warn('Device orientation not supported');
+                return;
+            }
+            
+            // Request permission for iOS 13+
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            startCompassListening();
+                        } else {
+                            console.warn('Device orientation permission denied');
+                            showCompassError();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error requesting device orientation permission:', error);
+                        showCompassError();
+                    });
+            } else {
+                // For non-iOS devices or older iOS versions
+                startCompassListening();
+            }
+        }
+
+        function startCompassListening() {
+            console.log('Starting compass listening...');
+            isCompassEnabled = true;
+            
+            // Add both event listeners for maximum compatibility
+            window.addEventListener('deviceorientationabsolute', handleCompassReading, true);
+            window.addEventListener('deviceorientation', handleCompassReading, true);
+            
+            // Add compass click handler
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                compassBtn.addEventListener('click', centerMapToNorth);
+            }
+            
+            console.log('Compass listening started');
+        }
+
+        function handleCompassReading(event) {
+            if (!isCompassEnabled) return;
+            
+            const now = Date.now();
+            if (now - lastOrientationUpdate < ORIENTATION_UPDATE_THRESHOLD) {
+                return; // Throttle updates
+            }
+            lastOrientationUpdate = now;
+            
+            let heading = null;
+            
+            // Try to get absolute heading first (more accurate)
+            if (event.absolute && event.alpha !== null) {
+                heading = event.alpha;
+            } else if (event.webkitCompassHeading !== undefined) {
+                // iOS Safari fallback
+                heading = event.webkitCompassHeading;
+            } else if (event.alpha !== null) {
+                // Standard fallback
+                heading = 360 - event.alpha;
+            }
+            
+            if (heading !== null) {
+                // Normalize heading to 0-360 degrees
+                heading = (heading + 360) % 360;
+                updateCompass(heading);
+            }
+        }
+
+        function updateCompass(heading) {
+            currentHeading = heading;
+            
+            // Update needle rotation
+            const needle = document.getElementById('compassNeedle');
+            if (needle) {
+                needle.style.transform = `rotate(${heading}deg)`;
+            }
+            
+            // Update direction text
+            const direction = getCompassDirection(heading);
+            const directionElement = document.getElementById('compassDirection');
+            if (directionElement) {
+                directionElement.textContent = direction;
+            }
+            
+            // Update compass button title
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                compassBtn.title = `Compass - ${direction} (${Math.round(heading)}°)`;
+            }
+            
+            console.log(`Compass: ${direction} (${Math.round(heading)}°)`);
+        }
+
+        function getCompassDirection(heading) {
+            const directions = [
+                { name: 'N', min: 0, max: 11.25 },
+                { name: 'NNE', min: 11.25, max: 33.75 },
+                { name: 'NE', min: 33.75, max: 56.25 },
+                { name: 'ENE', min: 56.25, max: 78.75 },
+                { name: 'E', min: 78.75, max: 101.25 },
+                { name: 'ESE', min: 101.25, max: 123.75 },
+                { name: 'SE', min: 123.75, max: 146.25 },
+                { name: 'SSE', min: 146.25, max: 168.75 },
+                { name: 'S', min: 168.75, max: 191.25 },
+                { name: 'SSW', min: 191.25, max: 213.75 },
+                { name: 'SW', min: 213.75, max: 236.25 },
+                { name: 'WSW', min: 236.25, max: 258.75 },
+                { name: 'W', min: 258.75, max: 281.25 },
+                { name: 'WNW', min: 281.25, max: 303.75 },
+                { name: 'NW', min: 303.75, max: 326.25 },
+                { name: 'NNW', min: 326.25, max: 348.75 },
+                { name: 'N', min: 348.75, max: 360 }
+            ];
+            
+            for (const dir of directions) {
+                if (heading >= dir.min && heading < dir.max) {
+                    return dir.name;
+                }
+            }
+            
+            return 'N'; // Default fallback
+        }
+
+        function centerMapToNorth() {
+            if (!map) return;
+            
+            // Rotate map to face north (heading 0)
+            map.setHeading(0);
+            
+            // Provide feedback
+            showCustomAlert('Map oriented to North');
+            
+            // Add visual feedback to compass
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                compassBtn.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    compassBtn.style.transform = 'scale(1)';
+                }, 150);
+            }
+        }
+
+        function showCompassError() {
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                // Show error state
+                const needle = document.getElementById('compassNeedle');
+                const direction = document.getElementById('compassDirection');
+                
+                if (needle) {
+                    needle.innerHTML = '<i class="fas fa-exclamation-triangle text-yellow-500 text-lg"></i>';
+                }
+                if (direction) {
+                    direction.textContent = '?';
+                }
+                
+                compassBtn.title = 'Compass unavailable - Permission required';
+                
+                // Add click handler for permission retry
+                compassBtn.removeEventListener('click', centerMapToNorth);
+                compassBtn.addEventListener('click', () => {
+                    initializeCompass();
+                });
+            }
+        }
+
+        function stopCompass() {
+            console.log('Stopping compass...');
+            isCompassEnabled = false;
+            
+            // Remove event listeners
+            window.removeEventListener('deviceorientationabsolute', handleCompassReading, true);
+            window.removeEventListener('deviceorientation', handleCompassReading, true);
+            
+            // Remove click handler
+            const compassBtn = document.getElementById('compassBtn');
+            if (compassBtn) {
+                compassBtn.removeEventListener('click', centerMapToNorth);
+            }
+        }
+
+        // Preferences functionality
+        function togglePreferences() {
+            const panel = document.getElementById('preferencesPanel');
+            const icon = document.getElementById('preferencesIcon');
+            
+            if (panel && icon) {
+                if (panel.classList.contains('hidden')) {
+                    panel.classList.remove('hidden');
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    panel.classList.add('hidden');
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+
+        function toggleInterest(interest) {
+            const button = document.querySelector(`[data-interest="${interest}"]`);
+            const isActive = button.classList.contains('active');
+            
+            if (isActive) {
+                button.classList.remove('active');
+                userPreferences.interests = userPreferences.interests.filter(i => i !== interest);
+            } else {
+                button.classList.add('active');
+                userPreferences.interests.push(interest);
+            }
+            
+            updatePreferences();
+        }
+
+        function updatePreferences() {
+            // Get current values
+            userPreferences.ageGroup = document.getElementById('ageGroup').value;
+            userPreferences.budget = document.getElementById('budget').value;
+            
+            console.log('Updated preferences:', userPreferences);
+            
+            // Auto-generate recommendations based on preferences
+            if (toyStores.length > 0) {
+                autoGenerateRecommendations();
+            }
+        }
+
+        function autoGenerateRecommendations() {
+            console.log('Auto-generating recommendations based on preferences:', userPreferences);
+            
+            // Reset recommendations
+            recommendedStores = [];
+            
+            // Score each store based on preferences
+            const scoredStores = toyStores.map(store => {
+                let score = 0;
+                const reasons = [];
+                
+                // Age group scoring
+                if (userPreferences.ageGroup) {
+                    switch (userPreferences.ageGroup) {
+                        case 'toddler':
+                            if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
+                                score += 10;
+                                reasons.push('educational');
+                            }
+                            break;
+                        case 'preschool':
+                            if (store.specialties.some(s => s.toLowerCase().includes('educational') || s.toLowerCase().includes('toys'))) {
+                                score += 8;
+                                reasons.push('age-appropriate');
+                            }
+                            break;
+                        case 'school':
+                            if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('games'))) {
+                                score += 10;
+                                reasons.push('building');
+                            }
+                            break;
+                        case 'teen':
+                        case 'adult':
+                            if (store.specialties.some(s => s.toLowerCase().includes('collectibles'))) {
+                                score += 12;
+                                reasons.push('collectibles');
+                            }
+                            break;
+                    }
+                }
+                
+                // Interest scoring
+                userPreferences.interests.forEach(interest => {
+                    switch (interest) {
+                        case 'educational':
+                            if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
+                                score += 8;
+                                reasons.push('educational');
+                            }
+                            break;
+                        case 'creative':
+                            if (store.specialties.some(s => s.toLowerCase().includes('craft') || s.toLowerCase().includes('art'))) {
+                                score += 7;
+                                reasons.push('creative');
+                            }
+                            break;
+                        case 'building':
+                            if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('building'))) {
+                                score += 10;
+                                reasons.push('building');
+                            }
+                            break;
+                        case 'tech':
+                            if (store.specialties.some(s => s.toLowerCase().includes('electronic'))) {
+                                score += 9;
+                                reasons.push('tech');
+                            }
+                            break;
+                        case 'collectibles':
+                            if (store.specialties.some(s => s.toLowerCase().includes('collectibles'))) {
+                                score += 10;
+                                reasons.push('collectibles');
+                            }
+                            break;
+                        case 'sports':
+                            if (store.specialties.some(s => s.toLowerCase().includes('outdoor'))) {
+                                score += 7;
+                                reasons.push('outdoor');
+                            }
+                            break;
+                    }
+                });
+                
+                // Budget scoring
+                if (userPreferences.budget) {
+                    switch (userPreferences.budget) {
+                        case 'low':
+                            if (store.name.toLowerCase().includes('walmart') || store.name.toLowerCase().includes('target')) {
+                                score += 6;
+                                reasons.push('budget');
+                            }
+                            break;
+                        case 'high':
+                            if (store.name.toLowerCase().includes('specialty') || store.rating > 4.5) {
+                                score += 5;
+                                reasons.push('premium');
+                            }
+                            break;
+                    }
+                }
+                
+                // Distance bonus (closer stores get slight preference)
+                const distance = parseFloat(store.distance);
+                if (distance < 1) score += 3;
+                else if (distance < 2) score += 2;
+                else if (distance < 5) score += 1;
+                
+                // Rating bonus
+                if (store.rating > 4.5) score += 2;
+                else if (store.rating > 4.0) score += 1;
+                
+                return { store, score, reasons };
+            });
+            
+            // Sort by score and select top recommendations
+            scoredStores.sort((a, b) => b.score - a.score);
+            
+            // Select stores with score > 5 as recommendations (up to 3)
+            const topStores = scoredStores.filter(item => item.score > 5).slice(0, 3);
+            recommendedStores = topStores.map(item => item.store.id);
+            
+            console.log('Generated recommendations:', recommendedStores, 'Scores:', topStores.map(item => ({id: item.store.id, score: item.score, reasons: item.reasons})));
+            
+            // Update markers to show recommendations
+            updateMarkersForRecommendations();
+            
+            // Re-render the store list
+            renderStores();
+            
+            // Show notification if recommendations were generated
+            if (recommendedStores.length > 0) {
+                showCustomAlert(`Found ${recommendedStores.length} personalized recommendation${recommendedStores.length > 1 ? 's' : ''} based on your preferences!`);
+            }
+        }
+
+        function updateMarkersForRecommendations() {
+            storeMarkers.forEach(({ marker, store }) => {
+                const isRecommended = recommendedStores.includes(store.id);
+                
+                if (isRecommended) {
+                    marker.setIcon({
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                                <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">⭐</text>
+                            </svg>`
+                        ),
+                        scaledSize: new google.maps.Size(32, 32),
+                        anchor: new google.maps.Point(16, 32)
+                    });
+                } else {
+                    marker.setIcon({
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                                <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">📍</text>
+                            </svg>`
+                        ),
+                        scaledSize: new google.maps.Size(32, 32),
+                        anchor: new google.maps.Point(16, 32)
+                    });
+                }
             });
         }
 
