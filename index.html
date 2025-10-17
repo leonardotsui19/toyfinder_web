@@ -2001,7 +2001,7 @@
                         //locationBtn.innerHTML = originalHtml;
                         //locationBtn.style.pointerEvents = 'auto';
                         
-                        showCustomAlert('Location updated! Finding toy stores near you...');
+                        //showCustomAlert('Location updated! Finding toy stores near you...');
                     },
                     (error) => {
                         //locationBtn.innerHTML = originalHtml;
@@ -2889,11 +2889,9 @@
         function centerMapToNorth() {
             if (!map) return;
             
-            // Rotate map to face north (heading 0)
+            // Rotate compass and map to face north (heading 0)
+			updateCompass(0);
             map.setHeading(0);
-            
-            // Provide feedback
-            showCustomAlert('Map oriented to North');
             
             // Add visual feedback to compass
             const compassBtn = document.getElementById('compassBtn');
