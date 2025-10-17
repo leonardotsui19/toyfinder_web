@@ -1049,7 +1049,7 @@
         <div class="google-fab" id="compassBtn" title="Compass" style="display: flex;">
             <div class="relative">
                 <div id="compassNeedle" class="absolute inset-0 flex items-center justify-center transition-transform duration-300">
-                    <i class="fas fa-location-arrow text-red-500 text-lg"></i>
+                    <i class="fas fa-arrow-up text-red-500 text-lg"></i>
                 </div>
                 <div class="absolute inset-0 flex items-center justify-center">
                     <span id="compassDirection" class="text-xs font-bold text-gray-700 dark:text-gray-300 mt-6">N</span>
@@ -1976,28 +1976,30 @@
                             lng: position.coords.longitude
                         };
                         
-                        userLocation = newLocation;
-                        
+					    
                         if (map) {
                             map.setCenter(newLocation);
                             map.setZoom(15);
-                            
-                            if (userLocationMarker) {
-                                userLocationMarker.setPosition(newLocation);
-                            } else {
-                                createUserLocationMarker(newLocation, false);
-                            }
                         }
 
-                        storeMarkers.forEach(({ marker }) => {
-                            marker.setMap(null);
-                        });
-                        toyStores = [];
-                        storeMarkers = [];
-                        recommendedStores = [];
+						if(userLocation != newLocation) {
+							userLocation = newLocation;
+							if (userLocationMarker) {
+								userLocationMarker.setPosition(userLocation);
+							} else {
+								createUserLocationMarker(userLocation, false);
+							}
+							
+							storeMarkers.forEach(({ marker }) => {
+								marker.setMap(null);
+							});
+							toyStores = [];
+							storeMarkers = [];
+							recommendedStores = [];
 
-                        searchToyStores(newLocation);
-                        
+							searchToyStores(userLocation);									
+						}
+
                         //locationBtn.innerHTML = originalHtml;
                         //locationBtn.style.pointerEvents = 'auto';
                         
