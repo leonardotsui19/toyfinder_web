@@ -1982,7 +1982,7 @@
                             map.setZoom(15);
                         }
 
-						if(userLocation != newLocation) {
+						if(userLocation.lat != newLocation.lat && userLocation.lng != newLocation.lng) {
 							userLocation = newLocation;
 							if (userLocationMarker) {
 								userLocationMarker.setPosition(userLocation);
@@ -1997,7 +1997,12 @@
 							storeMarkers = [];
 							recommendedStores = [];
 
-							searchToyStores(userLocation);									
+							searchToyStores(userLocation);		
+							
+							console.log('Location updated! Finding toy stores near you...');
+						}
+						else {
+							console.log('Same Location!');
 						}
 
                         //locationBtn.innerHTML = originalHtml;
