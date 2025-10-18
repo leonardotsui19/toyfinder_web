@@ -2843,6 +2843,11 @@
                 compassBtn.title = `Compass - ${direction} (${Math.round(heading)}°)`;
             }
             
+            // Rotate map to follow compass direction
+            if (map && isCompassEnabled) {
+                map.setHeading(heading);
+            }
+            
             console.log(`Compass: ${direction} (${Math.round(heading)}°)`);
         }
 
