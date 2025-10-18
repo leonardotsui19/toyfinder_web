@@ -1056,11 +1056,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Current Location Button -->
-        <!--<div class="google-fab" id="getCurrentLocationBtn" title="Your location">
-            <i class="fas fa-location-arrow text-gray-600 dark:text-gray-400"></i>
-        </div>-->
     </div>
 
     <!-- Store Info Panel -->
@@ -1733,7 +1728,22 @@
                 }
             }
             
-            storeListContent.innerHTML = toyStores.map(store => {
+            // Sort stores: recommended first, then by distance within each group
+            const sortedStores = [...toyStores].sort((a, b) => {
+                const aIsRecommended = recommendedStores.includes(a.id);
+                const bIsRecommended = recommendedStores.includes(b.id);
+                
+                // If one is recommended and the other isn't, recommended comes first
+                if (aIsRecommended && !bIsRecommended) return -1;
+                if (!aIsRecommended && bIsRecommended) return 1;
+                
+                // If both have same recommendation status, sort by distance
+                const aDistance = parseFloat(a.distance.replace(' miles', ''));
+                const bDistance = parseFloat(b.distance.replace(' miles', ''));
+                return aDistance - bDistance;
+            });
+            
+            storeListContent.innerHTML = sortedStores.map(store => {
                 const isRecommended = recommendedStores.includes(store.id);
                 
                 let badgeHtml = '';
@@ -1922,8 +1932,7 @@
                 }
             });
 
-            // Get current location button
-            //document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+            // Compass button now acts as location button
 			document.getElementById('compassBtn').addEventListener('click', getCurrentLocation);
 
             // Search functionality
@@ -1962,12 +1971,6 @@
         }
 
         function getCurrentLocation() {
-            //const locationBtn = document.getElementById('getCurrentLocationBtn');
-            //const originalHtml = locationBtn.innerHTML;
-            
-            //locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-gray-600"></i>';
-            //locationBtn.style.pointerEvents = 'none';
-
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -1976,7 +1979,6 @@
                             lng: position.coords.longitude
                         };
                         
-					    
                         if (map) {
                             map.setCenter(newLocation);
                             map.setZoom(15);
@@ -2004,21 +2006,12 @@
 						else {
 							console.log('Same Location!');
 						}
-
-                        //locationBtn.innerHTML = originalHtml;
-                        //locationBtn.style.pointerEvents = 'auto';
-                        
-                        //showCustomAlert('Location updated! Finding toy stores near you...');
                     },
                     (error) => {
-                        //locationBtn.innerHTML = originalHtml;
-                        //locationBtn.style.pointerEvents = 'auto';
                         showCustomAlert('Unable to get your location. Please try again.');
                     }
                 );
             } else {
-                //locationBtn.innerHTML = originalHtml;
-                //locationBtn.style.pointerEvents = 'auto';
                 showCustomAlert('Geolocation is not supported by this browser.');
             }
         }
@@ -2745,20 +2738,10 @@
 
         // Compass Functions
         function showCompass() {
-            //const compassBtn = document.getElementById('compassBtn');
-            //if (compassBtn) {
-            //    compassBtn.style.display = 'flex';
-            //}
-			
 			initializeCompass();
         }
 
         function hideCompass() {
-            //const compassBtn = document.getElementById('compassBtn');
-            //if (compassBtn) {
-            //    compassBtn.style.display = 'none';
-            //}
-			
 			stopCompass();
         }
 
@@ -2981,7 +2964,6 @@
         }
 
         function updatePreferences() {
-
             console.log('Updated preferences:', userPreferences);
             
             // Auto-generate recommendations based on preferences
