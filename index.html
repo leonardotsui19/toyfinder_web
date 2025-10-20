@@ -1934,7 +1934,10 @@
             });
 
             // Compass button now acts as location button
-			document.getElementById('compassBtn').addEventListener('click', getCurrentLocation);
+			document.getElementById('compassBtn').addEventListener('click', () =>{
+				map.panTo(userLocation);
+                map.setZoom(15);
+			});
 
             // Search functionality
             document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -2826,10 +2829,10 @@
             window.addEventListener('deviceorientation', handleCompassReading, true);
             
             // Add compass click handler
-            const compassBtn = document.getElementById('compassBtn');
-            if (compassBtn) {
-                compassBtn.addEventListener('click', centerMapToNorth);
-            }
+            //const compassBtn = document.getElementById('compassBtn');
+            //if (compassBtn) {
+            //    compassBtn.addEventListener('click', centerMapToNorth);
+            //}
             
             console.log('Compass listening started');
         }
@@ -2921,22 +2924,22 @@
             return 'N'; // Default fallback
         }
 
-        function centerMapToNorth() {
-            if (!map) return;
-            
-            // Rotate compass and map to face north (heading 0)
-			updateCompass(0);
-            map.setHeading(0);
-            
-            // Add visual feedback to compass
-            const compassBtn = document.getElementById('compassBtn');
-            if (compassBtn) {
-                compassBtn.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                    compassBtn.style.transform = 'scale(1)';
-                }, 150);
-            }
-        }
+        //function centerMapToNorth() {
+        //    if (!map) return;
+        //    
+        //    // Rotate compass and map to face north (heading 0)
+		//	updateCompass(0);
+        //    map.setHeading(0);
+        //    
+        //    // Add visual feedback to compass
+        //    const compassBtn = document.getElementById('compassBtn');
+        //    if (compassBtn) {
+        //        compassBtn.style.transform = 'scale(0.9)';
+        //        setTimeout(() => {
+        //            compassBtn.style.transform = 'scale(1)';
+        //        }, 150);
+        //    }
+        //}
 
         function showCompassError() {
             const compassBtn = document.getElementById('compassBtn');
@@ -2955,10 +2958,10 @@
                 compassBtn.title = 'Compass unavailable - Permission required';
                 
                 // Add click handler for permission retry
-                compassBtn.removeEventListener('click', centerMapToNorth);
-                compassBtn.addEventListener('click', () => {
-                    initializeCompass();
-                });
+                //compassBtn.removeEventListener('click', centerMapToNorth);
+                //compassBtn.addEventListener('click', () => {
+                //    initializeCompass();
+                //});
             }
         }
 
@@ -2971,10 +2974,10 @@
             window.removeEventListener('deviceorientation', handleCompassReading, true);
             
             // Remove click handler
-            const compassBtn = document.getElementById('compassBtn');
-            if (compassBtn) {
-                compassBtn.removeEventListener('click', centerMapToNorth);
-            }
+            //const compassBtn = document.getElementById('compassBtn');
+            //if (compassBtn) {
+            //    compassBtn.removeEventListener('click', centerMapToNorth);
+            //}
         }
 
         // Preferences functionality
