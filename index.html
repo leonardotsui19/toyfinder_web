@@ -1049,7 +1049,7 @@
         <div class="google-fab" id="compassBtn" title="Compass" style="display: flex;">
             <div class="relative">
                 <div id="compassNeedle" class="absolute inset-0 flex items-center justify-center transition-transform duration-300">
-                    <i class="fa-solid fa-location-arrow text-gray-500 text-lg"></i>
+                    <i class="fa-solid fa-arrows-up-down-left-right text-gray-500 text-base"></i>
                 </div>
 
                 <div class="absolute inset-0 flex items-center justify-center">
@@ -2821,7 +2821,7 @@
             const needle = document.getElementById('compassNeedle');
      
             if (needle) {
-                needle.innerHTML = '<i class="fa-solid fa-location-arrow text-green-500 text-lg"></i>';
+                needle.innerHTML = '<i class="fa-solid fa-arrows-up-down-left-right text-green-500 text-base"></i>';
             }
 
             // Add both event listeners for maximum compatibility
@@ -2870,10 +2870,10 @@
             currentHeading = heading;
             
             // Update needle rotation
-            //const needle = document.getElementById('compassNeedle');
-            //if (needle) {
-            //    needle.style.transform = `rotate(${heading}deg)`;
-            //}
+            const needle = document.getElementById('compassNeedle');
+            if (needle) {
+                needle.style.transform = `rotate(${heading}deg)`;
+            }
             
             // Update direction text
             const direction = getCompassDirection(heading);
