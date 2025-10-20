@@ -1049,7 +1049,7 @@
         <div class="google-fab" id="compassBtn" title="Compass" style="display: flex;">
             <div class="relative">
                 <div id="compassNeedle" class="absolute inset-0 flex items-center justify-center transition-transform duration-300">
-                    <i class="fas fa-arrow-up text-red-500 text-lg"></i>
+                    <i class="fa-solid fa-location-arrow-up text-red-500 text-lg"></i>
                 </div>
                 <div class="absolute inset-0 flex items-center justify-center">
                     <span id="compassDirection" class="text-xs font-bold text-gray-700 dark:text-gray-300 mt-6">N</span>
@@ -2750,9 +2750,9 @@
                 map: map,
                 icon: {
                     path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, // Arrow/triangle shape pointing up
-                    scale: 10,
+                    scale: 5,
                     fillColor: '#4285F4',
-                    fillOpacity: 0.9,
+                    fillOpacity: 1,
                     strokeColor: '#ffffff',
                     strokeWeight: 1,
                     rotation: currentHeading // Start with current heading
@@ -2817,7 +2817,7 @@
             const needle = document.getElementById('compassNeedle');
      
             if (needle) {
-                needle.innerHTML = '<i class="fas fa-arrow-up text-red-500 text-lg"></i>';
+                needle.innerHTML = '<i class="fa-solid fa-location-arrow-up text-red-500 text-lg"></i>';
             }
 
             // Add both event listeners for maximum compatibility
