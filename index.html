@@ -1989,7 +1989,7 @@
 							if (userLocationMarker) {
 								userLocationMarker.setPosition(userLocation);
 							} else {
-								createUserLocationMarker(userLocation, false);
+								createUserLocationMarker(userLocation, true);
 							}
 							
 							storeMarkers.forEach(({ marker }) => {
@@ -2609,16 +2609,7 @@
             // Always update the user location marker position for live tracking
             if (userLocationMarker) {
                 userLocationMarker.setPosition(newLocation);
-                // Update marker to show it's live tracking
-                userLocationMarker.setIcon({
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
-                    fillColor: '#4285F4',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2
-                });
-                
+
                 // Update direction marker position if it exists
                 if (window.userDirectionMarker) {
                     window.userDirectionMarker.setPosition(newLocation);
@@ -2741,9 +2732,8 @@
                 zIndex: 1000
             });
 
-            // Create directional indicator (arrow/cone) if live tracking
-            if (isLive) {
-                createDirectionalIndicator(location);
+            // Create directional indicator
+            createDirectionalIndicator(location);
             }
         }
 
