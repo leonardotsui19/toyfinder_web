@@ -2724,7 +2724,7 @@
                 title: isLive ? 'Your Location (Live)' : 'Your Location',
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
+                    scale: 4,
                     fillColor: '#4285F4',
                     fillOpacity: 1,
                     strokeColor: '#ffffff',
@@ -2751,14 +2751,14 @@
                 map: map,
                 icon: {
                     path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, // Arrow/triangle shape pointing up
-                    scale: 8,
+                    scale: 6,
                     fillColor: '#4285F4',
                     fillOpacity: 1,
                     strokeColor: '#ffffff',
                     strokeWeight: 1,
-                    rotation: currentHeading // Start with current heading
+                    rotation: currentHeading, // Start with current heading
+					offset: '50%'
                 },
-				offset: '50%',
                 zIndex: 999 // Slightly below the main dot
             });
         }
