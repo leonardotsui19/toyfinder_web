@@ -2725,7 +2725,7 @@
         function createUserLocationMarker(location, isLive = false) {
             if (!map) return;
             
-            // Create the main blue dot marker (like Google Maps)
+            // Create the main blue dot marker
             userLocationMarker = new google.maps.Marker({
                 position: location,
                 map: map,
@@ -2760,8 +2760,8 @@
                 position: location,
                 map: map,
                 icon: {
-                    path: 'M 0,-24 12,12 0,6 -12,12 z', // Arrow/triangle shape pointing up
-                    scale: 0.8,
+                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, // Arrow/triangle shape pointing up
+                    scale: 10,
                     fillColor: '#4285F4',
                     fillOpacity: 0.9,
                     strokeColor: '#ffffff',
@@ -2823,7 +2823,14 @@
         function startCompassListening() {
             console.log('Starting compass listening...');
             isCompassEnabled = true;
-            
+			
+			// Show error state
+            const needle = document.getElementById('compassNeedle');
+     
+            if (needle) {
+                needle.innerHTML = '<i class="fas fa-arrow-up text-red-500 text-lg"></i>';
+            }
+
             // Add both event listeners for maximum compatibility
             window.addEventListener('deviceorientationabsolute', handleCompassReading, true);
             window.addEventListener('deviceorientation', handleCompassReading, true);
