@@ -2612,12 +2612,17 @@
                 // Update marker to show it's live tracking
                 userLocationMarker.setIcon({
                     path: google.maps.SymbolPath.CIRCLE,
-                    scale: 12,
-                    fillColor: '#34A853',
+                    scale: 8,
+                    fillColor: '#4285F4',
                     fillOpacity: 1,
                     strokeColor: '#ffffff',
-                    strokeWeight: 3
+                    strokeWeight: 2
                 });
+                
+                // Update direction marker position if it exists
+                if (window.userDirectionMarker) {
+                    window.userDirectionMarker.setPosition(newLocation);
+                }
             } else {
                 createUserLocationMarker(newLocation, true);
             }
@@ -2720,20 +2725,60 @@
         function createUserLocationMarker(location, isLive = false) {
             if (!map) return;
             
+            // Create the main blue dot marker (like Google Maps)
             userLocationMarker = new google.maps.Marker({
                 position: location,
                 map: map,
                 title: isLive ? 'Your Location (Live)' : 'Your Location',
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
-                    fillColor: isLive ? '#34A853' : '#1A73E8',
+                    scale: 8,
+                    fillColor: '#4285F4',
                     fillOpacity: 1,
                     strokeColor: '#ffffff',
-                    strokeWeight: 3
+                    strokeWeight: 2
                 },
                 zIndex: 1000
             });
+
+            // Create directional indicator (arrow/cone) if live tracking
+            if (isLive) {
+                createDirectionalIndicator(location);
+            }
+        }
+
+        function createDirectionalIndicator(location) {
+            if (!map) return;
+            
+            // Remove existing directional indicator if it exists
+            if (window.userDirectionMarker) {
+                window.userDirectionMarker.setMap(null);
+            }
+            
+            // Create directional arrow marker
+            window.userDirectionMarker = new google.maps.Marker({
+                position: location,
+                map: map,
+                icon: {
+                    path: 'M 0,-24 12,12 0,6 -12,12 z', // Arrow/triangle shape pointing up
+                    scale: 0.8,
+                    fillColor: '#4285F4',
+                    fillOpacity: 0.9,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 1,
+                    rotation: currentHeading // Start with current heading
+                },
+                zIndex: 999 // Slightly below the main dot
+            });
+        }
+
+        function updateUserLocationDirection(heading) {
+            // Update the directional indicator rotation
+            if (window.userDirectionMarker) {
+                const icon = window.userDirectionMarker.getIcon();
+                icon.rotation = heading;
+                window.userDirectionMarker.setIcon(icon);
+            }
         }
 
         // Compass Functions
@@ -2842,6 +2887,9 @@
             if (compassBtn) {
                 compassBtn.title = `Compass - ${direction} (${Math.round(heading)}°)`;
             }
+            
+            // Update user location marker direction
+            updateUserLocationDirection(heading);
             
             console.log(`Compass: ${direction} (${Math.round(heading)}°)`);
         }
