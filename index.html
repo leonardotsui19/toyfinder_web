@@ -1054,7 +1054,7 @@
             </div>
             
             <!-- Search Input -->
-            <input type="text" id="searchInput" placeholder="Search for toys or products..." class="flex-1 text-base sm:text-lg text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:outline-none">
+            <input type="text" id="searchInput" placeholder="Search for toys..." class="flex-1 text-base sm:text-lg text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:outline-none">
             
             <!-- Photo Search Button - Fixed to right inside search bar -->
             <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
@@ -1381,7 +1381,7 @@
         let currentSearchQuery = '';
         let currentSearchImage = null;
         let searchRecommendedStores = [];
-        let searchResultType = 'text'; // 'text', 'image', or 'mixed'
+        let searchResultType = 'text'; // 'text' or 'image'
 
         // Tab Management
         let activeTab = 'nearby';
@@ -2120,8 +2120,12 @@
                 return;
             }
 
+			if (currentSearchQuery) {
+				currentSearchQuery = '';
+			}
+			
             currentSearchImage = file;
-            searchResultType = currentSearchQuery ? 'mixed' : 'image';
+            searchResultType = 'image';
             
             // Show preview of selected image
             const reader = new FileReader();
@@ -2179,7 +2183,7 @@
             }
             
             const searchInput = document.getElementById('searchInput');
-            searchInput.placeholder = 'Search for toys or products...';
+            searchInput.placeholder = 'Search for toys...';
             
             // Clear file inputs
             document.getElementById('photoInput').value = '';
@@ -2559,7 +2563,7 @@
             
             // Reset search input
             const searchInput = document.getElementById('searchInput');
-            searchInput.placeholder = 'Search for toys or products...';
+            searchInput.placeholder = 'Search for toys...';
             
             // Reset header title
             const headerTitle = document.querySelector('#storeListPanel h2');
