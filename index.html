@@ -3480,20 +3480,20 @@
             }
             
             // Request permission for iOS 13+
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
+            if (typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+                window.DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === 'granted') {
                             startCompassListening();
                         } else {
                             console.warn('Device orientation permission denied');
-							showCustomAlert('Device orientation permission denied: ${permissionState}');
+							showCustomAlert('Device orientation permission denied: "${permissionState}"');
                             showCompassError();
                         }
                     })
                     .catch(error => {
                         console.error('Error requesting device orientation permission:', error);
-						showCustomAlert('Error requesting device orientation permission: ${error}');
+						showCustomAlert('Error requesting device orientation permission: "${error}"');
                         showCompassError();
                     });
             } else {
