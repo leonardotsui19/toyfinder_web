@@ -3458,6 +3458,7 @@
         // Compass Functions
         function showCompass() {
 			if (isCompassEnabled) {
+				console.log('Compass is already enabled...');
 				return;
 			}
 			
@@ -3474,6 +3475,7 @@
             // Check if device orientation is supported
             if (!window.DeviceOrientationEvent) {
                 console.warn('Device orientation not supported');
+				showCustomAlert('Device orientation not supported');
                 return;
             }
             
@@ -3485,11 +3487,13 @@
                             startCompassListening();
                         } else {
                             console.warn('Device orientation permission denied');
+							showCustomAlert('Device orientation permission denied: ${permissionState}');
                             showCompassError();
                         }
                     })
                     .catch(error => {
                         console.error('Error requesting device orientation permission:', error);
+						showCustomAlert('Error requesting device orientation permission: ${error}');
                         showCompassError();
                     });
             } else {
