@@ -1029,63 +1029,53 @@
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-40">
-        <!-- Main Search Bar (Google Maps Style) -->
-        <div class="px-3 sm:px-4 py-3 sm:py-4 relative">
-            <!-- User Controls (Top Right of Header) -->
-            <div class="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center space-x-2 sm:space-x-3 z-10">
-                <!-- Collections Button -->
-                <button id="collectionsBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center transition-colors shadow-lg border border-gray-200 dark:border-gray-600" title="Collections">
-                    <i class="fas fa-archive text-gray-600 dark:text-gray-400 text-sm sm:text-lg"></i>
+    <!-- Search Bar - Fixed to top left -->
+    <div class="fixed top-4 left-4 right-4 z-40">
+        <!-- User Controls (Top Right) -->
+        <div class="absolute top-0 right-0 flex items-center space-x-2 sm:space-x-3 z-10">
+            <!-- Collections Button -->
+            <button id="collectionsBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center transition-colors shadow-lg border border-gray-200 dark:border-gray-600" title="Collections">
+                <i class="fas fa-archive text-gray-600 dark:text-gray-400 text-sm sm:text-lg"></i>
+            </button>
+            
+            <!-- Profile Button -->
+            <button id="profileBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-primary transition-colors shadow-lg" title="Profile">
+                <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&amp;h=40&amp;fit=crop&amp;crop=face" alt="Profile" class="w-full h-full object-cover">
+            </button>
+        </div>
+        
+        <!-- Search Bar Container -->
+        <div class="bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 flex items-center px-4 py-3 mr-[120px] sm:mr-[136px] relative">
+            <!-- App Icon/Logo -->
+            <div class="flex items-center mr-3">
+                <div class="w-6 h-6 sm:w-7 sm:h-7 bg-primary from-amber-600 to-amber-800 rounded-full flex items-center justify-center">
+                    <i class="fas fa-search text-white text-xs sm:text-sm"></i>
+                </div>
+            </div>
+            
+            <!-- Search Input -->
+            <input type="text" id="searchInput" placeholder="Search for toys or products..." class="flex-1 text-base sm:text-lg text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:outline-none">
+            
+            <!-- Photo Search Button - Fixed to right inside search bar -->
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                <!-- Photo Library Button -->
+                <button id="photoBtn" class="p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Choose Photo">
+                    <i class="fas fa-image text-sm"></i>
                 </button>
                 
-                <!-- Profile Button -->
-                <button id="profileBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-primary transition-colors shadow-lg" title="Profile">
-                    <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&amp;h=40&amp;fit=crop&amp;crop=face" alt="Profile" class="w-full h-full object-cover">
+                <!-- Search Button -->
+                <button id="searchBtn" class="p-2 text-primary hover:text-primary-dark transition-colors rounded-full hover:bg-blue-50 dark:hover:bg-blue-900" title="Search">
+                    <i class="fas fa-search text-sm"></i>
                 </button>
             </div>
             
-            <div class="relative">
-                <!-- Search Bar Container -->
-                <div class="bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 flex items-center px-4 py-3 mr-[100px] sm:mr-[136px]">
-                    <!-- App Icon/Logo -->
-                    <div class="flex items-center mr-3">
-                        <div class="w-6 h-6 sm:w-7 sm:h-7 bg-primary from-amber-600 to-amber-800 rounded-full flex items-center justify-center">
-                            <i class="fas fa-search text-white text-xs sm:text-sm"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Search Input -->
-                    <input type="text" id="searchInput" placeholder="Search for toys or products..." class="flex-1 text-base sm:text-lg text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:outline-none">
-                    
-                    <!-- Search Options -->
-                    <div class="flex items-center space-x-2 ml-3">
-                        <!-- Camera Button -->
-                        <button id="cameraBtn" class="p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Take Photo">
-                            <i class="fas fa-camera text-sm"></i>
-                        </button>
-                        
-                        <!-- Photo Library Button -->
-                        <button id="photoBtn" class="p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Choose Photo">
-                            <i class="fas fa-image text-sm"></i>
-                        </button>
-                        
-                        <!-- Search Button -->
-                        <button id="searchBtn" class="p-2 text-primary hover:text-primary-dark transition-colors rounded-full hover:bg-blue-50 dark:hover:bg-blue-900" title="Search">
-                            <i class="fas fa-search text-sm"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Hidden File Input -->
-                    <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
-                    <input type="file" id="galleryInput" accept="image/*" class="hidden">
-                </div>
-            </div>
-        </div> 
-    </header>
+            <!-- Hidden File Input -->
+            <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+            <input type="file" id="galleryInput" accept="image/*" class="hidden">
+        </div>
+    </div>
 
-    <!-- Map Controls -->
+    <!-- Map Controls - Compass anchored to bottom right -->
     <div class="fixed bottom-6 right-6 z-30 flex flex-col space-y-3">
         <!-- Compass -->
         <div class="google-fab" id="compassBtn" title="Compass" style="display: flex;">
@@ -1243,7 +1233,7 @@
         </div>
     </div>
 
-    <!-- Map Legend -->
+    <!-- Map Legend - Anchored to bottom left -->
     <div class="fixed bottom-5 left-5 google-card rounded-x1
                 p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 xl:p-4
                 z-30 
@@ -1333,7 +1323,7 @@
         </div>
     </div>
 
-    <!-- Show Stores Button -->
+    <!-- Nearby Store Button - Anchored to bottom center -->
     <button id="showStoresBtn" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 google-button-primary px-4 py-2 rounded-full z-30 shadow-google-lg transition-all" style="display: none;">
         <span class="font-medium">📍 View nearby stores</span>
     </button>
@@ -2589,8 +2579,8 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize search functionality
-            initializeSearchFunctionality();
+            // Initialize search functionality without camera button
+            initializeSearchFunctionalityUpdated();
             
             // Collections functionality
             document.getElementById('collectionsBtn').addEventListener('click', () => {
@@ -2621,6 +2611,25 @@
                 map.setZoom(15);
             });
         });
+
+        // Updated search functionality without camera button
+        function initializeSearchFunctionalityUpdated() {
+            // Search input event
+            document.getElementById('searchInput').addEventListener('input', handleTextSearch);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Search buttons (removed camera button)
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('photoBtn').addEventListener('click', openPhotoLibrary);
+
+            // File input handlers (both inputs will now open photo library)
+            document.getElementById('photoInput').addEventListener('change', handleImageUpload);
+            document.getElementById('galleryInput').addEventListener('change', handleImageUpload);
+        }
 
         function closeStorePanel() {
             const panel = document.getElementById('storeListPanel');
