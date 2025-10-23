@@ -2607,6 +2607,7 @@
 
             // Compass button now acts as location button
             document.getElementById('compassBtn').addEventListener('click', () =>{
+				showCompass();
                 map.panTo(userLocation);
                 map.setZoom(15);
             });
@@ -3456,6 +3457,10 @@
 
         // Compass Functions
         function showCompass() {
+			if (isCompassEnabled) {
+				return;
+			}
+			
             initializeCompass();
         }
 
@@ -3465,7 +3470,7 @@
 
         function initializeCompass() {
             console.log('Initializing compass...');
-            
+			
             // Check if device orientation is supported
             if (!window.DeviceOrientationEvent) {
                 console.warn('Device orientation not supported');
@@ -3613,6 +3618,7 @@
 
         function showCompassError() {
             const compassBtn = document.getElementById('compassBtn');
+			
             if (compassBtn) {
                 // Show error state
                 const needle = document.getElementById('compassNeedle');
