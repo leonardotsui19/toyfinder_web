@@ -1473,6 +1473,8 @@
 
                 // Enhanced geolocation with permissions policy handling
                 tryGetUserLocation(defaultLocation);
+				
+				showCompass();
 
                 const mapLoadingOverlay = document.getElementById('mapLoadingOverlay');
                 if (mapLoadingOverlay) {
@@ -3331,9 +3333,9 @@
             }
             
             // Show compass when live tracking starts
-            if (locationUpdateCount === 1) {
-                showCompass();
-            }
+            //if (locationUpdateCount === 1) {
+            //    showCompass();
+            //}
             
             // Check if we should update stores (less frequent)
             if (shouldUpdateStores(newLocation)) {
