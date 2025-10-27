@@ -1337,8 +1337,576 @@
         </div>
     </div>
 
+    <!-- Manual Location Input Modal -->
+    <div id="locationInputModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="google-card max-w-md w-full mx-4 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-medium text-gray-900 dark:text-white">Enter Your Location</h3>
+                <button onclick="closeLocationModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+                </button>
+            </div>
+            
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                We couldn't detect your location automatically. Please enter your address to find nearby toy stores.
+            </p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="manualLocationInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Address, City, or Zip Code
+                    </label>
+                    <input type="text" id="manualLocationInput" placeholder="Enter your location..." class="w-full google-input text-base" autocomplete="address-line1">
+                    <div id="locationSuggestions" class="hidden mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="useManualLocation()" class="flex-1 google-button-primary">
+                        <i class="fas fa-search mr-2"></i>
+                        Find Stores
+                    </button>
+                    <button onclick="tryGeolocationAgain()" class="flex-1 google-button">
+                        <i class="fas fa-location-arrow mr-2"></i>
+                        Try GPS Again
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="useDefaultLocation()" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">
+                        Or use San Francisco as default location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Google Maps and Places variables
+        // Constants
+        const CONSTANTS = {
+            LOCATION_UPDATE_THRESHOLD: 100, // meters
+            ORIENTATION_UPDATE_THRESHOLD: 50, // milliseconds
+            DEFAULT_LOCATION: { lat: 37.7749, lng: -122.4194 }, // San Francisco
+            SEARCH_RADIUS: 5000, // meters
+            MAX_IMAGE_SIZE: 10 * 1024 * 1024 // 10MB
+        };
+
+        // Base AI Service Class
+        class AIService {
+            constructor(name) {
+                this.name = name;
+                this.isAvailable = false;
+            }
+
+            async isServiceAvailable() {
+                throw new Error('isServiceAvailable must be implemented by subclass');
+            }
+
+            async search(query, image, stores) {
+                throw new Error('search must be implemented by subclass');
+            }
+
+            async getRecommendations(stores, preferences) {
+                throw new Error('getRecommendations must be implemented by subclass');
+            }
+        }
+
+        // Poe AI Service Implementation
+        class PoeAIService extends AIService {
+            constructor() {
+                super('Poe');
+                this.handlers = new Map();
+            }
+
+            async isServiceAvailable() {
+                this.isAvailable = !!(window.Poe && window.Poe.sendUserMessage);
+                return this.isAvailable;
+            }
+
+            async search(query, image, stores) {
+                if (!await this.isServiceAvailable()) {
+                    throw new Error('Poe service not available');
+                }
+
+                return new Promise((resolve, reject) => {
+                    const handlerId = `toy-search-${Date.now()}`;
+                    
+                    window.Poe.registerHandler(handlerId, (result) => {
+                        if (result.status === 'complete') {
+                            const response = result.responses[0];
+                            resolve(response.content);
+                        } else if (result.status === 'error') {
+                            reject(new Error('Poe search failed'));
+                        }
+                    });
+
+                    const storeInfo = stores.map(store => `${store.id}: ${store.name} - ${store.specialties.join(', ')}`).join('\n');
+                    
+                    let searchPrompt;
+                    if (image && query) {
+                        searchPrompt = `@Claude-Sonnet-4 I'm searching for "${query}" and have uploaded an image. Based on the image and text, find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    } else if (image) {
+                        searchPrompt = `@Claude-Sonnet-4 I've uploaded an image of a toy/product I'm looking for. Analyze the image and find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    } else {
+                        searchPrompt = `@Claude-Sonnet-4 I'm searching for "${query}". Based on this search query, find which nearby toy stores are most likely to have this product. Consider store specialties and typical inventory. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    }
+
+                    const messageOptions = {
+                        handler: handlerId,
+                        stream: false,
+                        openChat: false
+                    };
+
+                    if (image) {
+                        messageOptions.attachments = [image];
+                    }
+
+                    window.Poe.sendUserMessage(searchPrompt, messageOptions).catch(reject);
+                });
+            }
+
+            async getRecommendations(stores, preferences) {
+                if (!await this.isServiceAvailable()) {
+                    throw new Error('Poe service not available');
+                }
+
+                return new Promise((resolve, reject) => {
+                    const handlerId = `toy-recommendations-${Date.now()}`;
+                    
+                    window.Poe.registerHandler(handlerId, (result) => {
+                        if (result.status === 'complete') {
+                            const response = result.responses[0];
+                            resolve(response.content);
+                        } else if (result.status === 'error') {
+                            reject(new Error('Poe recommendations failed'));
+                        }
+                    });
+
+                    const storeInfo = stores.map(store => 
+                        `${store.id}: ${store.name} - Distance: ${store.distance}, Rating: ${store.rating}, Specialties: ${store.specialties.join(', ')}`
+                    ).join('\n');
+
+                    const userInterests = preferences.interests.length > 0 
+                        ? `User interests: ${preferences.interests.join(', ')}`
+                        : 'No specific user interests provided';
+
+                    const prompt = `@Claude-Sonnet-4 As a toy store recommendation AI, analyze these nearby stores and provide personalized recommendations based on user preferences. ${userInterests}\n\nStores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation"}`;
+
+                    window.Poe.sendUserMessage(prompt, {
+                        handler: handlerId,
+                        stream: false,
+                        openChat: false
+                    }).catch(reject);
+                });
+            }
+        }
+
+        // Grok AI Service Implementation
+        class GrokAIService extends AIService {
+            constructor() {
+                super('Grok');
+            }
+
+            async isServiceAvailable() {
+                const apiKey = this.getApiKey();
+                this.isAvailable = apiKey && apiKey !== 'YOUR_GROK_API_KEY';
+                return this.isAvailable;
+            }
+
+            getApiKey() {
+                return window.GROK_API_KEY || localStorage.getItem('grok_api_key') || 'YOUR_GROK_API_KEY';
+            }
+
+            async search(query, image, stores) {
+                const apiKey = this.getApiKey();
+                if (apiKey === 'YOUR_GROK_API_KEY') {
+                    throw new Error('API_KEY_REQUIRED');
+                }
+
+                const storeInfo = stores.map(store => `${store.id}: ${store.name} - ${store.specialties.join(', ')}`).join('\n');
+                
+                let searchPrompt;
+                if (image && query) {
+                    searchPrompt = `I'm searching for "${query}" and have an image. Based on the image and text, find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                } else if (image) {
+                    searchPrompt = `I've uploaded an image of a toy/product I'm looking for. Analyze the image and find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                } else {
+                    searchPrompt = `I'm searching for "${query}". Based on this search query, find which nearby toy stores are most likely to have this product. Consider store specialties and typical inventory. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                }
+
+                const requestBody = {
+                    messages: [{ role: "user", content: searchPrompt }],
+                    model: "grok-beta",
+                    stream: false,
+                    temperature: 0.3
+                };
+
+                if (image) {
+                    const base64Image = await this.fileToBase64(image);
+                    requestBody.messages[0].content = [
+                        { type: "text", text: searchPrompt },
+                        { type: "image_url", image_url: { url: base64Image } }
+                    ];
+                }
+
+                const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Grok API error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    return data.choices[0].message.content;
+                } else {
+                    throw new Error('No response from Grok API');
+                }
+            }
+
+            async getRecommendations(stores, preferences) {
+                const apiKey = this.getApiKey();
+                if (apiKey === 'YOUR_GROK_API_KEY') {
+                    throw new Error('API_KEY_REQUIRED');
+                }
+
+                const storeInfo = stores.map(store => 
+                    `${store.id}: ${store.name} - Distance: ${store.distance}, Rating: ${store.rating}, Specialties: ${store.specialties.join(', ')}`
+                ).join('\n');
+
+                const userInterests = preferences.interests.length > 0 
+                    ? `User interests: ${preferences.interests.join(', ')}`
+                    : 'No specific user interests provided';
+
+                const prompt = `As a toy store recommendation AI, analyze these nearby stores and provide personalized recommendations based on user preferences. ${userInterests}\n\nStores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation"}`;
+
+                const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        messages: [{ role: "user", content: prompt }],
+                        model: "grok-beta",
+                        stream: false,
+                        temperature: 0.3
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Grok API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    return data.choices[0].message.content;
+                } else {
+                    throw new Error('No response from Grok API');
+                }
+            }
+
+            fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+            }
+        }
+
+        // Location Manager Class
+        class LocationManager {
+            constructor() {
+                this.userLocation = null;
+                this.userLocationMarker = null;
+                this.userDirectionMarker = null;
+                this.isLiveTrackingEnabled = false;
+                this.watchPositionId = null;
+                this.lastKnownLocation = null;
+                this.trackingAccuracy = null;
+                this.locationUpdateCount = 0;
+                this.currentHeading = 0;
+                this.lastOrientationUpdate = 0;
+                this.isCompassEnabled = false;
+                
+                this.onLocationUpdate = null; // Callback for location updates
+            }
+
+            async getCurrentLocation() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error('Geolocation not supported'));
+                        return;
+                    }
+
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('Geolocation timeout'));
+                    }, 10000);
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            clearTimeout(timeoutId);
+                            const location = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            this.userLocation = location;
+                            resolve(location);
+                        },
+                        (error) => {
+                            clearTimeout(timeoutId);
+                            reject(error);
+                        },
+                        {
+                            enableHighAccuracy: false,
+                            timeout: 8000,
+                            maximumAge: 300000
+                        }
+                    );
+                });
+            }
+
+            createUserLocationMarker(map, location, isLive = false) {
+                if (!map) return;
+
+                this.userLocationMarker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: isLive ? 'Your Location (Live)' : 'Your Location',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 4,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2
+                    },
+                    zIndex: 1000
+                });
+
+                this.createDirectionalIndicator(map, location);
+            }
+
+            createDirectionalIndicator(map, location) {
+                if (!map) return;
+
+                if (this.userDirectionMarker) {
+                    this.userDirectionMarker.setMap(null);
+                }
+
+                this.userDirectionMarker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 6,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 1,
+                        rotation: this.currentHeading
+                    },
+                    zIndex: 999
+                });
+            }
+
+            startLiveTracking() {
+                if (!navigator.geolocation || this.isLiveTrackingEnabled) {
+                    return;
+                }
+
+                this.watchPositionId = navigator.geolocation.watchPosition(
+                    (position) => this.handleLocationUpdate(position),
+                    (error) => this.handleLiveTrackingError(error),
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 10000,
+                        maximumAge: 10000
+                    }
+                );
+
+                this.isLiveTrackingEnabled = true;
+            }
+
+            stopLiveTracking() {
+                if (this.watchPositionId !== null) {
+                    navigator.geolocation.clearWatch(this.watchPositionId);
+                    this.watchPositionId = null;
+                }
+                this.isLiveTrackingEnabled = false;
+            }
+
+            handleLocationUpdate(position) {
+                const newLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                this.trackingAccuracy = position.coords.accuracy;
+                this.locationUpdateCount++;
+
+                if (this.userLocationMarker) {
+                    this.userLocationMarker.setPosition(newLocation);
+                    if (this.userDirectionMarker) {
+                        this.userDirectionMarker.setPosition(newLocation);
+                    }
+                }
+
+                if (this.shouldUpdateStores(newLocation)) {
+                    this.lastKnownLocation = this.userLocation;
+                    this.userLocation = newLocation;
+                    
+                    if (this.onLocationUpdate) {
+                        this.onLocationUpdate(newLocation);
+                    }
+                } else {
+                    this.userLocation = newLocation;
+                }
+            }
+
+            handleLiveTrackingError(error) {
+                console.log('Live tracking error:', error);
+                if (error.code === error.PERMISSION_DENIED) {
+                    this.stopLiveTracking();
+                }
+            }
+
+            shouldUpdateStores(newLocation) {
+                if (!this.lastKnownLocation) {
+                    return true;
+                }
+
+                const distance = this.calculateDistanceInMeters(this.lastKnownLocation, newLocation);
+                return distance > CONSTANTS.LOCATION_UPDATE_THRESHOLD;
+            }
+
+            calculateDistanceInMeters(pos1, pos2) {
+                const R = 6371000;
+                const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
+                const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            // Compass functionality
+            initializeCompass() {
+                if (!window.DeviceOrientationEvent || this.isCompassEnabled) {
+                    return;
+                }
+
+                if (typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+                    window.DeviceOrientationEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                this.startCompassListening();
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    this.startCompassListening();
+                }
+            }
+
+            startCompassListening() {
+                this.isCompassEnabled = true;
+                window.addEventListener('deviceorientationabsolute', (e) => this.handleCompassReading(e), true);
+                window.addEventListener('deviceorientation', (e) => this.handleCompassReading(e), true);
+            }
+
+            stopCompass() {
+                this.isCompassEnabled = false;
+                window.removeEventListener('deviceorientationabsolute', (e) => this.handleCompassReading(e), true);
+                window.removeEventListener('deviceorientation', (e) => this.handleCompassReading(e), true);
+            }
+
+            handleCompassReading(event) {
+                if (!this.isCompassEnabled) return;
+
+                const now = Date.now();
+                if (now - this.lastOrientationUpdate < CONSTANTS.ORIENTATION_UPDATE_THRESHOLD) {
+                    return;
+                }
+                this.lastOrientationUpdate = now;
+
+                let heading = null;
+                if (event.absolute && event.alpha !== null) {
+                    heading = event.alpha;
+                } else if (event.webkitCompassHeading !== undefined) {
+                    heading = event.webkitCompassHeading;
+                } else if (event.alpha !== null) {
+                    heading = 360 - event.alpha;
+                }
+
+                if (heading !== null) {
+                    heading = (heading + 360) % 360;
+                    this.updateCompass(heading);
+                }
+            }
+
+            updateCompass(heading) {
+                this.currentHeading = heading;
+                
+                const needle = document.getElementById('compassNeedle');
+                if (needle) {
+                    needle.style.transform = `rotate(${heading}deg)`;
+                }
+
+                const direction = this.getCompassDirection(heading);
+                const directionElement = document.getElementById('compassDirection');
+                if (directionElement) {
+                    directionElement.textContent = direction;
+                }
+
+                if (this.userDirectionMarker) {
+                    const icon = this.userDirectionMarker.getIcon();
+                    icon.rotation = heading;
+                    this.userDirectionMarker.setIcon(icon);
+                }
+            }
+
+            getCompassDirection(heading) {
+                const directions = [
+                    { name: 'N', min: 0, max: 11.25 },
+                    { name: 'NNE', min: 11.25, max: 33.75 },
+                    { name: 'NE', min: 33.75, max: 56.25 },
+                    { name: 'ENE', min: 56.25, max: 78.75 },
+                    { name: 'E', min: 78.75, max: 101.25 },
+                    { name: 'ESE', min: 101.25, max: 123.75 },
+                    { name: 'SE', min: 123.75, max: 146.25 },
+                    { name: 'SSE', min: 146.25, max: 168.75 },
+                    { name: 'S', min: 168.75, max: 191.25 },
+                    { name: 'SSW', min: 191.25, max: 213.75 },
+                    { name: 'SW', min: 213.75, max: 236.25 },
+                    { name: 'WSW', min: 236.25, max: 258.75 },
+                    { name: 'W', min: 258.75, max: 281.25 },
+                    { name: 'WNW', min: 281.25, max: 303.75 },
+                    { name: 'NW', min: 303.75, max: 326.25 },
+                    { name: 'NNW', min: 326.25, max: 348.75 },
+                    { name: 'N', min: 348.75, max: 360 }
+                ];
+
+                for (const dir of directions) {
+                    if (heading >= dir.min && heading < dir.max) {
+                        return dir.name;
+                    }
+                }
+                return 'N';
+            }
+        }
+
+        // Global variables for backwards compatibility
         let map;
         let service;
         let infoWindow;
@@ -1347,89 +1915,38 @@
         let toyStores = [];
         let storeMarkers = [];
         let isMapInitialized = false;
-
-        // Navigation/Directions variables
         let directionsService = null;
         let directionsRenderer = null;
         let currentRoute = null;
         let selectedStore = null;
         let navigationActive = false;
-
-        // Live tracking variables
         let isLiveTrackingEnabled = false;
         let watchPositionId = null;
         let lastKnownLocation = null;
         let trackingAccuracy = null;
         let locationUpdateCount = 0;
-        const LOCATION_UPDATE_THRESHOLD = 100; // meters
-
-        // Compass variables
         let isCompassEnabled = false;
         let currentHeading = 0;
         let lastOrientationUpdate = 0;
-        const ORIENTATION_UPDATE_THRESHOLD = 50; // milliseconds
-
-        // Store recommendation tracking
         let recommendedStores = [];
-
-        // User preferences for auto-recommendations
-        let userPreferences = {
-            interests: []
-        };
-
-        // Search functionality variables
+        let userPreferences = { interests: [] };
         let currentSearchQuery = '';
         let currentSearchImage = null;
         let searchRecommendedStores = [];
-        let searchResultType = 'text'; // 'text' or 'image'
-
-        // Tab Management
+        let searchResultType = 'text';
         let activeTab = 'nearby';
+        let currentTravelMode = 'DRIVING';
+        let routeOptions = {
+            avoidTolls: false,
+            avoidHighways: false,
+            avoidFerries: false
+        };
+        let allRoutes = {};
 
-        // Initialize tab switching when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            initTabSwitching();
-        });
-
-        function initTabSwitching() {
-            const nearbyTab = document.getElementById('nearbyTab');
-            const recommendationsTab = document.getElementById('recommendationsTab');
-            
-            if (nearbyTab) {
-                nearbyTab.addEventListener('click', () => {
-                    switchToTab('nearby');
-                });
-            }
-
-            if (recommendationsTab) {
-                recommendationsTab.addEventListener('click', () => {
-                    switchToTab('recommendations');
-                });
-            }
-        }
-
-        function switchToTab(tabName) {
-            activeTab = tabName;
-            
-            const nearbyTab = document.getElementById('nearbyTab');
-            const recommendationsTab = document.getElementById('recommendationsTab');
-            const nearbyContent = document.getElementById('nearbyTabContent');
-            const recommendationsContent = document.getElementById('recommendationsTabContent');
-            
-            if (tabName === 'nearby') {
-                nearbyTab.className = 'google-tab active';
-                recommendationsTab.className = 'google-tab';
-                
-                nearbyContent.classList.remove('hidden');
-                recommendationsContent.classList.add('hidden');
-            } else if (tabName === 'recommendations') {
-                recommendationsTab.className = 'google-tab active';
-                nearbyTab.className = 'google-tab';
-                
-                recommendationsContent.classList.remove('hidden');
-                nearbyContent.classList.add('hidden');
-            }
-        }
+        // Initialize AI services
+        const poeAI = new PoeAIService();
+        const grokAI = new GrokAIService();
+        const locationManager = new LocationManager();
 
         // Google Maps Initialization
         function initMap() {
@@ -1550,37 +2067,48 @@
 
         function handleGeolocationError(error, fallbackLocation) {
             let errorMessage = 'Using default location. ';
+            let showLocationModal = false;
             
             switch(error.code) {
                 case error.PERMISSION_DENIED:
                     errorMessage += 'Location access was denied.';
                     console.log('Geolocation permission denied by user or policy');
+                    showLocationModal = true;
                     break;
                 case error.POSITION_UNAVAILABLE:
                     errorMessage += 'Location information is unavailable.';
                     console.log('Geolocation position unavailable');
+                    showLocationModal = true;
                     break;
                 case error.TIMEOUT:
                     errorMessage += 'Location request timed out.';
                     console.log('Geolocation request timeout');
+                    showLocationModal = true;
                     break;
                 default:
                     errorMessage += 'An unknown error occurred.';
                     console.log('Unknown geolocation error:', error);
+                    showLocationModal = true;
                     break;
             }
             
             // Check if this is a permissions policy violation
             if (error.message && error.message.includes('permissions policy')) {
-                errorMessage = 'Location access is restricted in this environment. Using San Francisco as default location.';
+                errorMessage = 'Location access is restricted in this environment.';
                 console.log('Permissions policy violation detected');
+                showLocationModal = true;
             }
             
-            userLocation = fallbackLocation;
-            initializeWithLocation(userLocation, false);
-            
-            // Show a non-intrusive notification
-            showLocationFallbackNotification(errorMessage);
+            if (showLocationModal) {
+                // Show manual location input modal instead of using fallback immediately
+                showLocationInputModal();
+            } else {
+                userLocation = fallbackLocation;
+                initializeWithLocation(userLocation, false);
+                
+                // Show a non-intrusive notification
+                showLocationFallbackNotification(errorMessage);
+            }
         }
 
         function initializeWithLocation(location, isUserLocation) {
@@ -2078,7 +2606,6 @@
 
             // Search buttons
             document.getElementById('searchBtn').addEventListener('click', performSearch);
-            document.getElementById('cameraBtn').addEventListener('click', openCamera);
             document.getElementById('photoBtn').addEventListener('click', openPhotoLibrary);
 
             // File input handlers
@@ -2091,11 +2618,6 @@
             if (currentSearchQuery.length === 0) {
                 clearSearchResults();
             }
-        }
-
-        function openCamera() {
-            const photoInput = document.getElementById('photoInput');
-            photoInput.click();
         }
 
         function openPhotoLibrary() {
@@ -2120,10 +2642,10 @@
                 return;
             }
 
-			if (currentSearchQuery) {
-				currentSearchQuery = '';
-			}
-			
+            if (currentSearchQuery) {
+                currentSearchQuery = '';
+            }
+            
             currentSearchImage = file;
             searchResultType = 'image';
             
@@ -2164,7 +2686,7 @@
                 </div>
             `;
             
-            document.querySelector('header .relative').appendChild(preview);
+            document.querySelector('.relative').appendChild(preview);
             
             // Auto-hide preview after 5 seconds
             setTimeout(() => {
@@ -2217,44 +2739,20 @@
         }
 
         async function searchWithAI() {
-            if (window.Poe && window.Poe.sendUserMessage) {
-                window.Poe.registerHandler('toy-search', (result) => {
-                    if (result.status === 'complete') {
-                        const response = result.responses[0];
-                        processSearchResults(response.content);
-                        hideSearchLoadingState();
-                    } else if (result.status === 'error') {
-                        showCustomAlert('AI search failed. Please try again.');
-                        hideSearchLoadingState();
-                    }
-                });
-
-                let searchPrompt;
-                const storeInfo = toyStores.map(store => `${store.id}: ${store.name} - ${store.specialties.join(', ')}`).join('\n');
-                
-                if (currentSearchImage && currentSearchQuery) {
-                    searchPrompt = `@Claude-Sonnet-4 I'm searching for "${currentSearchQuery}" and have uploaded an image. Based on the image and text, find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
-                } else if (currentSearchImage) {
-                    searchPrompt = `@Claude-Sonnet-4 I've uploaded an image of a toy/product I'm looking for. Analyze the image and find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
-                } else {
-                    searchPrompt = `@Claude-Sonnet-4 I'm searching for "${currentSearchQuery}". Based on this search query, find which nearby toy stores are most likely to have this product. Consider store specialties and typical inventory. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+            try {
+                const result = await poeAI.search(currentSearchQuery, currentSearchImage, toyStores);
+                processSearchResults(result);
+                hideSearchLoadingState();
+            } catch (error) {
+                console.log('Poe AI not available, trying Grok:', error);
+                try {
+                    const result = await grokAI.search(currentSearchQuery, currentSearchImage, toyStores);
+                    processSearchResults(result);
+                    hideSearchLoadingState();
+                } catch (grokError) {
+                    console.log('Grok AI also failed:', grokError);
+                    performFallbackSearch();
                 }
-
-                const messageOptions = {
-                    handler: 'toy-search',
-                    stream: false,
-                    openChat: false
-                };
-
-                // Add image attachment if available
-                if (currentSearchImage) {
-                    messageOptions.attachments = [currentSearchImage];
-                }
-
-                await window.Poe.sendUserMessage(searchPrompt, messageOptions);
-            } else {
-                // Fallback to simple text-based search
-                performFallbackSearch();
             }
         }
 
@@ -2342,7 +2840,6 @@
         }
 
         function renderStoresWithSearchResults(searchResults) {
-            // Instead of creating a separate render function, integrate search results into the main store list
             renderNearbyStoresWithSearch(searchResults);
         }
 
@@ -2488,11 +2985,6 @@
                             Match: ${Math.round(match.confidence * 100)}%
                         </div>
                     </div>
-                    
-                    <div class="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded flex items-center justify-between">
-                        <span>Product photos:</span>
-                        <span id="photo-status-${match.store_id}" class="font-medium">Loading...</span>
-                    </div>
                 </div>
             `;
         }
@@ -2505,19 +2997,6 @@
             overlay.classList.remove('hidden');
             panel.classList.remove('translate-y-full');
             btn.style.display = 'none';
-            
-            // Simulate checking for product photos
-            setTimeout(() => {
-                searchRecommendedStores.forEach(storeId => {
-                    const photoStatus = document.getElementById(`photo-status-${storeId}`);
-                    if (photoStatus) {
-                        // Simulate random photo availability
-                        const hasPhoto = Math.random() > 0.6;
-                        photoStatus.textContent = hasPhoto ? 'Available' : 'Not available';
-                        photoStatus.className = hasPhoto ? 'text-green-600' : 'text-gray-500';
-                    }
-                });
-            }, 1000);
         }
 
         function showSearchLoadingState() {
@@ -2583,8 +3062,8 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize search functionality without camera button
-            initializeSearchFunctionalityUpdated();
+            // Initialize search functionality
+            initializeSearchFunctionality();
             
             // Collections functionality
             document.getElementById('collectionsBtn').addEventListener('click', () => {
@@ -2609,32 +3088,34 @@
                 }
             });
 
-            // Compass button now acts as location button
-            document.getElementById('compassBtn').addEventListener('click', () =>{
-				showCompass();
-                map.panTo(userLocation);
-                map.setZoom(15);
-            });
-        });
-
-        // Updated search functionality without camera button
-        function initializeSearchFunctionalityUpdated() {
-            // Search input event
-            document.getElementById('searchInput').addEventListener('input', handleTextSearch);
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    performSearch();
+            // Compass button
+            document.getElementById('compassBtn').addEventListener('click', () => {
+                if (locationManager.isCompassEnabled) {
+                    locationManager.stopCompass();
+                } else {
+                    locationManager.initializeCompass();
+                }
+                
+                if (userLocation && map) {
+                    map.panTo(userLocation);
+                    map.setZoom(15);
                 }
             });
 
-            // Search buttons (removed camera button)
-            document.getElementById('searchBtn').addEventListener('click', performSearch);
-            document.getElementById('photoBtn').addEventListener('click', openPhotoLibrary);
-
-            // File input handlers (both inputs will now open photo library)
-            document.getElementById('photoInput').addEventListener('change', handleImageUpload);
-            document.getElementById('galleryInput').addEventListener('change', handleImageUpload);
-        }
+            // Route options checkboxes
+            ['avoidTolls', 'avoidHighways', 'avoidFerries'].forEach(option => {
+                const checkbox = document.getElementById(option);
+                if (checkbox) {
+                    checkbox.addEventListener('change', (e) => {
+                        routeOptions[option] = e.target.checked;
+                        // Recalculate routes if we have a destination
+                        if (selectedStore && userLocation) {
+                            calculateAllRoutes();
+                        }
+                    });
+                }
+            });
+        });
 
         function closeStorePanel() {
             const panel = document.getElementById('storeListPanel');
@@ -2644,52 +3125,6 @@
             panel.classList.add('translate-y-full');
             overlay.classList.add('hidden');
             btn.style.display = 'block';
-        }
-
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const newLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        
-                        if (map) {
-                            map.setCenter(newLocation);
-                            map.setZoom(15);
-                        }
-
-                        if(userLocation.lat != newLocation.lat && userLocation.lng != newLocation.lng) {
-                            userLocation = newLocation;
-                            if (userLocationMarker) {
-                                userLocationMarker.setPosition(userLocation);
-                            } else {
-                                createUserLocationMarker(userLocation, true);
-                            }
-                            
-                            storeMarkers.forEach(({ marker }) => {
-                                marker.setMap(null);
-                            });
-                            toyStores = [];
-                            storeMarkers = [];
-                            recommendedStores = [];
-
-                            searchToyStores(userLocation);        
-                            
-                            console.log('Location updated! Finding toy stores near you...');
-                        }
-                        else {
-                            console.log('Same Location!');
-                        }
-                    },
-                    (error) => {
-                        showCustomAlert('Unable to get your location. Please try again.');
-                    }
-                );
-            } else {
-                showCustomAlert('Geolocation is not supported by this browser.');
-            }
         }
 
         function focusStoreOnMap(storeId) {
@@ -2713,7 +3148,6 @@
                 return;
             }
 
-            // Set selectedStore immediately with validated data
             selectedStore = {
                 ...store,
                 location: {
@@ -2722,45 +3156,16 @@
                 }
             };
 
-            console.log('Selected store set:', selectedStore);
-
             const storeMarker = storeMarkers.find(sm => sm.store && sm.store.id === storeId);
-            if (!storeMarker) {
-                console.error('Store marker not found for store ID:', storeId);
-            }
 
             // Close store panel first
             closeStorePanel();
 
-            // Center the map on the selected store, accounting for open panels
+            // Center the map on the selected store
             try {
-                // Check if panels are open and calculate offset
-                const storeInfoOpen = !document.getElementById('storeInfoSheet').classList.contains('translate-y-full');
-                const navigationOpen = !document.getElementById('navigationPanel').classList.contains('translate-y-full');
-                
-                let targetLocation = selectedStore.location;
-                
-                // If panels are open, offset the center point upward so store appears in visible area
-                if (storeInfoOpen || navigationOpen) {
-                    const bounds = map.getBounds();
-                    if (bounds) {
-                        const center = map.getCenter();
-                        const ne = bounds.getNorthEast();
-                        const sw = bounds.getSouthWest();
-                        
-                        // Calculate offset - move center up by 25% of the viewport to account for 50vh panel
-                        const latOffset = (ne.lat() - sw.lat()) * 0.25;
-                        
-                        targetLocation = {
-                            lat: selectedStore.location.lat + latOffset,
-                            lng: selectedStore.location.lng
-                        };
-                    }
-                }
-                
+                const targetLocation = selectedStore.location;
                 map.panTo(targetLocation);
                 
-                // Zoom in if necessary for better view
                 if (map.getZoom() < 17) {
                     map.setZoom(17);
                 }
@@ -2792,23 +3197,14 @@
             }
         }
 
-        // Enhanced Navigation Variables
-        let currentTravelMode = 'DRIVING';
-        let routeOptions = {
-            avoidTolls: false,
-            avoidHighways: false,
-            avoidFerries: false
-        };
-        let allRoutes = {};
-
-        // Enhanced Navigation Functions
+        // Navigation Functions
         function calculateRoute(travelMode = 'DRIVING') {
             if (!selectedStore || !userLocation) {
                 showNavigationPanel();
                 return;
             }
 
-            // Show navigation panel (keep store info open)
+            // Show navigation panel
             showNavigationPanel();
             
             // Set the travel mode and calculate all routes
@@ -2837,7 +3233,6 @@
         }
 
         function calculateAllRoutes() {
-            // Validate required data
             if (!userLocation || !selectedStore || !selectedStore.location || !directionsService) {
                 console.error('Missing required data for route calculation');
                 document.getElementById('routeLoading').innerHTML = `
@@ -2945,7 +3340,6 @@
             // Populate route list with alternatives
             const routeList = document.getElementById('routeList');
             routeList.innerHTML = routeData.routes.map((route, index) => {
-                // Validate route data
                 if (!route || !route.legs || !route.legs[0]) {
                     return '';
                 }
@@ -2967,53 +3361,19 @@
                             </div>
                             ${isSelected ? '<i class="fas fa-check text-primary"></i>' : ''}
                         </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            ${getRouteDescription(route)}
-                        </div>
-                        ${getTrafficInfo(route)}
                     </div>
                 `;
             }).filter(html => html !== '').join('');
         }
 
-        function getRouteDescription(route) {
-            // Extract main roads from route
-            const mainRoads = [];
-            route.legs[0].steps.forEach(step => {
-                if (step.instructions && (step.instructions.includes('highway') || step.instructions.includes('freeway'))) {
-                    const roadMatch = step.instructions.match(/(?:on|onto|via)\s+([^,]+)/i);
-                    if (roadMatch && !mainRoads.includes(roadMatch[1])) {
-                        mainRoads.push(roadMatch[1]);
-                    }
-                }
-            });
-            
-            if (mainRoads.length > 0) {
-                return `Via ${mainRoads.slice(0, 2).join(' and ')}`;
-            }
-            return 'Local roads';
-        }
-
-        function getTrafficInfo(route) {
-            // Simulate traffic conditions
-            const conditions = ['Light traffic', 'Moderate traffic', 'Heavy traffic'];
-            const condition = conditions[Math.floor(Math.random() * conditions.length)];
-            const colorClass = condition === 'Light traffic' ? 'text-google-green' : 
-                              condition === 'Moderate traffic' ? 'text-google-yellow' : 'text-google-red';
-            
-            return `<div class="text-xs ${colorClass} mt-2 font-medium">${condition}</div>`;
-        }
-
         function selectRoute(routeIndex) {
             if (currentRoute && currentRoute.routes[routeIndex]) {
-                // Update directions renderer to show selected route
                 const newDirections = {
                     ...currentRoute,
                     routes: [currentRoute.routes[routeIndex]]
                 };
                 directionsRenderer.setDirections(newDirections);
                 
-                // Update UI
                 displayRouteResults();
             }
         }
@@ -3040,14 +3400,13 @@
             const nowBtn = document.getElementById('departNowBtn');
             const customBtn = document.getElementById('departCustomBtn');
             
-            // Reset button styles
-            nowBtn.className = 'flex-1 google-button text-sm';
-            customBtn.className = 'flex-1 google-button text-sm';
+            nowBtn.className = 'flex-1 google-button rounded-full text-sm';
+            customBtn.className = 'flex-1 google-button rounded-full text-sm';
             
             if (type === 'now') {
-                nowBtn.className = 'flex-1 google-button-primary text-sm';
+                nowBtn.className = 'flex-1 google-button-primary rounded-full text-sm';
             } else {
-                customBtn.className = 'flex-1 google-button-primary text-sm';
+                customBtn.className = 'flex-1 google-button-primary rounded-full text-sm';
                 showCustomAlert('Time picker would open here in a real app');
             }
         }
@@ -3058,20 +3417,14 @@
                 return;
             }
 
-            // Close navigation panel
             closeNavigationPanel();
             
-            // Show active navigation panel
             const activeNavPanel = document.getElementById('activeNavigationPanel');
             activeNavPanel.classList.remove('-translate-y-full');
             
-            // Update navigation info
             const leg = currentRoute.routes[0].legs[0];
             document.getElementById('remainingTime').textContent = leg.duration.text;
             document.getElementById('remainingDistance').textContent = leg.distance.text;
-            
-            // Simulate turn-by-turn
-            simulateTurnByTurn();
             
             navigationActive = true;
             showCustomAlert('Navigation started! Turn-by-turn directions will appear at the top.');
@@ -3081,39 +3434,12 @@
             const activeNavPanel = document.getElementById('activeNavigationPanel');
             activeNavPanel.classList.add('-translate-y-full');
             
-            // Clear route from map
             if (directionsRenderer) {
                 directionsRenderer.setDirections({routes: []});
             }
             
             navigationActive = false;
             currentRoute = null;
-        }
-
-        function simulateTurnByTurn() {
-            if (!currentRoute || !navigationActive) return;
-            
-            const steps = currentRoute.routes[0].legs[0].steps;
-            let currentStepIndex = 0;
-            
-            function updateTurnByTurn() {
-                if (!navigationActive || currentStepIndex >= steps.length) return;
-                
-                const step = steps[currentStepIndex];
-                
-                // Update turn instructions
-                document.getElementById('nextTurnInstruction').textContent = 
-                    step.instructions.replace(/<[^>]*>/g, ''); // Remove HTML tags
-                document.getElementById('nextTurnDistance').textContent = 
-                    `In ${step.distance.text}`;
-                
-                currentStepIndex++;
-                
-                // Continue to next step after delay
-                setTimeout(updateTurnByTurn, 5000); // 5 seconds per step for demo
-            }
-            
-            updateTurnByTurn();
         }
 
         function shareRoute() {
@@ -3132,7 +3458,6 @@
                     url: window.location.href
                 }).catch(console.error);
             } else {
-                // Fallback: copy to clipboard
                 navigator.clipboard.writeText(shareText).then(() => {
                     showCustomAlert('Route details copied to clipboard!');
                 }).catch(() => {
@@ -3141,214 +3466,21 @@
             }
         }
 
-        // Update route options when checkboxes change
-        document.addEventListener('DOMContentLoaded', function() {
-            ['avoidTolls', 'avoidHighways', 'avoidFerries'].forEach(option => {
-                const checkbox = document.getElementById(option);
-                if (checkbox) {
-                    checkbox.addEventListener('change', (e) => {
-                        routeOptions[option] = e.target.checked;
-                        // Recalculate routes if we have a destination
-                        if (selectedStore && userLocation) {
-                            calculateAllRoutes();
-                        }
-                    });
-                }
-            });
-        });
-
-        // Recommendations functionality
-        async function getRecommendations() {
-            document.getElementById('recommendationsLoadingOverlay').classList.remove('hidden');
-
-            try {
-                if (window.Poe && window.Poe.sendUserMessage) {
-                    window.Poe.registerHandler('toy-recommendations', (result) => {
-                        if (result.status === 'complete') {
-                            const response = result.responses[0];
-                            processRecommendations(response.content);
-                            document.getElementById('recommendationsLoadingOverlay').classList.add('hidden');
-                            showStoresPanelWithRecommendations();
-                        }
-                    });
-
-                    await window.Poe.sendUserMessage(
-                        "@Claude-Sonnet-4 As a toy store recommendation AI, analyze these nearby stores and provide recommendations. Provide ONLY raw JSON with structure: {\"recommended\": [\"store1\", \"store2\"], \"reasoning\": \"explanation\"}",
-                        {
-                            handler: 'toy-recommendations',
-                            stream: false,
-                            openChat: false
-                        }
-                    );
-                } else {
-                    setTimeout(() => {
-                        recommendedStores = ['toysrus', 'target'];
-                        renderStores();
-                        document.getElementById('recommendationsLoadingOverlay').classList.add('hidden');
-                        showStoresPanelWithRecommendations();
-                    }, 2000);
-                }
-            } catch (error) {
-                document.getElementById('recommendationsLoadingOverlay').classList.add('hidden');
-                showCustomAlert('Unable to get recommendations at this time. Please try again later.');
-            }
+        // Location functions using LocationManager
+        function createUserLocationMarker(location, isLive = false) {
+            locationManager.createUserLocationMarker(map, location, isLive);
+            userLocationMarker = locationManager.userLocationMarker;
         }
 
-        function processRecommendations(content) {
-            try {
-                const aiResponse = JSON.parse(content);
-                const storeNameToId = {
-                    'Toys R Us': 'toysrus',
-                    'Target': 'target'
-                };
-                
-                if (aiResponse.recommended && Array.isArray(aiResponse.recommended)) {
-                    recommendedStores = aiResponse.recommended
-                        .map(storeName => storeNameToId[storeName])
-                        .filter(id => id);
-                }
-                
-                renderStores();
-            } catch (error) {
-                recommendedStores = ['toysrus'];
-                renderStores();
-            }
-        }
-
-        function showStoresPanelWithRecommendations() {
-            const panel = document.getElementById('storeListPanel');
-            const btn = document.getElementById('showStoresBtn');
-            
-            panel.classList.remove('translate-y-full');
-            btn.style.display = 'none';
-            
-            switchToTab('recommendations');
-        }
-
-        // Live tracking functions  
         function tryStartLiveTracking() {
-            // Only try live tracking if we successfully got initial location
             if (!userLocation) {
                 console.log('No user location available, skipping live tracking');
                 return;
             }
             
-            // Check permissions first (if supported)
-            if ('permissions' in navigator) {
-                navigator.permissions.query({ name: 'geolocation' }).then((permissionStatus) => {
-                    console.log('Live tracking permission status:', permissionStatus.state);
-                    
-                    if (permissionStatus.state === 'denied') {
-                        console.log('Geolocation permission denied, not starting live tracking');
-                        return;
-                    }
-                    
-                    startLiveTracking();
-                }).catch((error) => {
-                    console.log('Live tracking permissions query failed:', error);
-                    // Try anyway as fallback
-                    startLiveTracking();
-                });
-            } else {
-                startLiveTracking();
-            }
-        }
-
-        function startLiveTracking() {
-            if (!navigator.geolocation) {
-                console.log('Geolocation not supported, cannot start live tracking');
-                return;
-            }
-
-            if (isLiveTrackingEnabled) {
-                console.log('Live tracking already enabled');
-                return;
-            }
-
-            console.log('Starting live tracking...');
-
-            watchPositionId = navigator.geolocation.watchPosition(
-                handleLocationUpdate,
-                handleLiveTrackingError,
-                {
-                    enableHighAccuracy: false, // Use lower accuracy for live tracking
-                    timeout: 10000,
-                    maximumAge: 10000
-                }
-            );
-
-            isLiveTrackingEnabled = true;
-            console.log('Live tracking started successfully');
-        }
-
-        function handleLiveTrackingError(error) {
-            console.log('Live tracking error:', error);
-            
-            // Check if this is a permissions policy violation
-            if (error.message && error.message.includes('permissions policy')) {
-                console.log('Live tracking blocked by permissions policy');
-                stopLiveTracking();
-                return;
-            }
-            
-            // Handle other errors gracefully
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    console.log('Live tracking permission denied');
-                    stopLiveTracking();
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    console.log('Live tracking position unavailable');
-                    // Continue trying for position unavailable
-                    break;
-                case error.TIMEOUT:
-                    console.log('Live tracking timeout');
-                    // Continue trying for timeouts
-                    break;
-                default:
-                    console.log('Unknown live tracking error');
-                    break;
-            }
-        }
-
-        function handleLocationUpdate(position) {
-            const newLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            
-            trackingAccuracy = position.coords.accuracy;
-            locationUpdateCount++;
-            
-            console.log(`Location update #${locationUpdateCount}:`, newLocation, 'Accuracy:', trackingAccuracy + 'm');
-            
-            // Always update the user location marker position for live tracking
-            if (userLocationMarker) {
-                userLocationMarker.setPosition(newLocation);
-
-                // Update direction marker position if it exists
-                if (window.userDirectionMarker) {
-                    window.userDirectionMarker.setPosition(newLocation);
-                }
-            } else {
-                createUserLocationMarker(newLocation, true);
-            }
-            
-            // Show compass when live tracking starts
-            //if (locationUpdateCount === 1) {
-            //    showCompass();
-            //}
-            
-            // Check if we should update stores (less frequent)
-            if (shouldUpdateStores(newLocation)) {
-                console.log('Updating stores due to significant location change');
-                lastKnownLocation = userLocation;
+            locationManager.userLocation = userLocation;
+            locationManager.onLocationUpdate = (newLocation) => {
                 userLocation = newLocation;
-                
-                // Only pan map occasionally to avoid constant movement
-                if (map && locationUpdateCount % 3 === 0) {
-                    map.panTo(newLocation);
-                }
                 
                 // Clear old stores and search for new ones
                 storeMarkers.forEach(({ marker }) => {
@@ -3359,308 +3491,9 @@
                 recommendedStores = [];
 
                 searchToyStores(newLocation);
-            } else {
-                // Still update userLocation for other functions that might need it
-                userLocation = newLocation;
-            }
-        }
-
-        function stopLiveTracking() {
-            if (watchPositionId !== null) {
-                navigator.geolocation.clearWatch(watchPositionId);
-                watchPositionId = null;
-            }
-            isLiveTrackingEnabled = false;
-            console.log('Live tracking stopped');
+            };
             
-            // Hide compass when live tracking stops
-            hideCompass();
-        }
-
-        function shouldUpdateStores(newLocation) {
-            if (!lastKnownLocation) {
-                console.log('No previous location, updating stores');
-                return true;
-            }
-            
-            const distance = calculateDistanceInMeters(lastKnownLocation, newLocation);
-            const shouldUpdate = distance > LOCATION_UPDATE_THRESHOLD;
-            
-            console.log(`Distance moved: ${distance.toFixed(1)}m, Threshold: ${LOCATION_UPDATE_THRESHOLD}m, Should update: ${shouldUpdate}`);
-            
-            return shouldUpdate;
-        }
-
-        function calculateDistanceInMeters(pos1, pos2) {
-            const R = 6371000;
-            const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
-            const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
-                    Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        function createUserLocationMarker(location, isLive = false) {
-            if (!map) return;
-            
-            // Create the main blue dot marker
-            userLocationMarker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: isLive ? 'Your Location (Live)' : 'Your Location',
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 4,
-                    fillColor: '#4285F4',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2
-                },
-                zIndex: 1000
-            });
-
-            // Create directional indicator
-            createDirectionalIndicator(location);
-        }
-
-        function createDirectionalIndicator(location) {
-            if (!map) return;
-            
-            // Remove existing directional indicator if it exists
-            if (window.userDirectionMarker) {
-                window.userDirectionMarker.setMap(null);
-            }
-            
-            // Create directional arrow marker
-            window.userDirectionMarker = new google.maps.Marker({
-                position: location,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, // Arrow/triangle shape pointing up
-                    scale: 6,
-                    fillColor: '#4285F4',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 1,
-                    rotation: currentHeading, // Start with current heading
-                },
-                zIndex: 999 // Slightly below the main dot
-            });
-        }
-
-        function updateUserLocationDirection(heading) {
-            // Update the directional indicator rotation
-            if (window.userDirectionMarker) {
-                const icon = window.userDirectionMarker.getIcon();
-                icon.rotation = heading;
-                window.userDirectionMarker.setIcon(icon);
-            }
-        }
-
-        // Compass Functions
-        function showCompass() {
-			if (isCompassEnabled) {
-				console.log('Compass is already enabled...');
-				return;
-			}
-			
-            initializeCompass();
-        }
-
-        function hideCompass() {
-            stopCompass();
-        }
-
-        function initializeCompass() {
-            console.log('Initializing compass...');
-			
-            // Check if device orientation is supported
-            if (!window.DeviceOrientationEvent) {
-                console.warn('Device orientation not supported');
-				showCustomAlert('Device orientation not supported');
-                return;
-            }
-            
-            // Request permission for iOS 13+
-            if (typeof window.DeviceOrientationEvent.requestPermission === 'function') {
-                window.DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            startCompassListening();
-                        } else {
-                            console.warn('Device orientation permission denied');
-							showCustomAlert('Device orientation permission denied: "${permissionState}"');
-                            showCompassError();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error requesting device orientation permission:', error);
-						showCustomAlert('Error requesting device orientation permission: "${error}"');
-                        showCompassError();
-                    });
-            } else {
-                // For non-iOS devices or older iOS versions
-                startCompassListening();
-            }
-        }
-
-        function startCompassListening() {
-            console.log('Starting compass listening...');
-            isCompassEnabled = true;
-            
-            // Show success state
-            const needle = document.getElementById('compassNeedle');
-     
-            if (needle) {
-                needle.innerHTML = '<i class="fa-solid fa-arrows-up-down-left-right text-green-500 text-base"></i>';
-            }
-
-            // Safely add event listeners with try-catch
-            try {
-                if (window.addEventListener) {
-                    window.addEventListener('deviceorientationabsolute', handleCompassReading, true);
-                    window.addEventListener('deviceorientation', handleCompassReading, true);
-                } else if (window.attachEvent) {
-                    // Fallback for older browsers
-                    window.attachEvent('ondeviceorientationabsolute', handleCompassReading);
-                    window.attachEvent('ondeviceorientation', handleCompassReading);
-                }
-                console.log('Compass event listeners attached successfully');
-            } catch (error) {
-                console.log('Could not attach compass event listeners:', error.message);
-                showCompassError();
-                return;
-            }
-            
-            console.log('Compass listening started');
-        }
-
-        function handleCompassReading(event) {
-            if (!isCompassEnabled) return;
-            
-            const now = Date.now();
-            if (now - lastOrientationUpdate < ORIENTATION_UPDATE_THRESHOLD) {
-                return; // Throttle updates
-            }
-            lastOrientationUpdate = now;
-            
-            let heading = null;
-            
-            // Try to get absolute heading first (more accurate)
-            if (event.absolute && event.alpha !== null) {
-                heading = event.alpha;
-            } else if (event.webkitCompassHeading !== undefined) {
-                // iOS Safari fallback
-                heading = event.webkitCompassHeading;
-            } else if (event.alpha !== null) {
-                // Standard fallback
-                heading = 360 - event.alpha;
-            }
-            
-            if (heading !== null) {
-                // Normalize heading to 0-360 degrees
-                heading = (heading + 360) % 360;
-                updateCompass(heading);
-            }
-        }
-
-        function updateCompass(heading) {
-            currentHeading = heading;
-            
-            // Update needle rotation
-            const needle = document.getElementById('compassNeedle');
-            if (needle) {
-                needle.style.transform = `rotate(${heading}deg)`;
-            }
-            
-            // Update direction text
-            const direction = getCompassDirection(heading);
-            const directionElement = document.getElementById('compassDirection');
-            if (directionElement) {
-                directionElement.textContent = direction;
-            }
-            
-            // Update compass button title
-            const compassBtn = document.getElementById('compassBtn');
-            if (compassBtn) {
-                compassBtn.title = `Compass - ${direction} (${Math.round(heading)}°)`;
-            }
-            
-            // Update user location marker direction
-            updateUserLocationDirection(heading);
-            
-            console.log(`Compass: ${direction} (${Math.round(heading)}°)`);
-        }
-
-        function getCompassDirection(heading) {
-            const directions = [
-                { name: 'N', min: 0, max: 11.25 },
-                { name: 'NNE', min: 11.25, max: 33.75 },
-                { name: 'NE', min: 33.75, max: 56.25 },
-                { name: 'ENE', min: 56.25, max: 78.75 },
-                { name: 'E', min: 78.75, max: 101.25 },
-                { name: 'ESE', min: 101.25, max: 123.75 },
-                { name: 'SE', min: 123.75, max: 146.25 },
-                { name: 'SSE', min: 146.25, max: 168.75 },
-                { name: 'S', min: 168.75, max: 191.25 },
-                { name: 'SSW', min: 191.25, max: 213.75 },
-                { name: 'SW', min: 213.75, max: 236.25 },
-                { name: 'WSW', min: 236.25, max: 258.75 },
-                { name: 'W', min: 258.75, max: 281.25 },
-                { name: 'WNW', min: 281.25, max: 303.75 },
-                { name: 'NW', min: 303.75, max: 326.25 },
-                { name: 'NNW', min: 326.25, max: 348.75 },
-                { name: 'N', min: 348.75, max: 360 }
-            ];
-            
-            for (const dir of directions) {
-                if (heading >= dir.min && heading < dir.max) {
-                    return dir.name;
-                }
-            }
-            
-            return 'N'; // Default fallback
-        }
-
-        function showCompassError() {
-            const compassBtn = document.getElementById('compassBtn');
-			
-            if (compassBtn) {
-                // Show error state
-                const needle = document.getElementById('compassNeedle');
-                const direction = document.getElementById('compassDirection');
-                
-                if (needle) {
-                    needle.innerHTML = '<i class="fas fa-exclamation-triangle text-yellow-500 text-lg"></i>';
-                }
-                if (direction) {
-                    direction.textContent = '?';
-                }
-                
-                compassBtn.title = 'Compass unavailable - Permission required';
-            }
-        }
-
-        function stopCompass() {
-            console.log('Stopping compass...');
-            isCompassEnabled = false;
-            
-            // Safely remove event listeners with try-catch
-            try {
-                if (window.removeEventListener) {
-                    window.removeEventListener('deviceorientationabsolute', handleCompassReading, true);
-                    window.removeEventListener('deviceorientation', handleCompassReading, true);
-                } else if (window.detachEvent) {
-                    // Fallback for older browsers
-                    window.detachEvent('ondeviceorientationabsolute', handleCompassReading);
-                    window.detachEvent('ondeviceorientation', handleCompassReading);
-                }
-                console.log('Compass event listeners removed successfully');
-            } catch (error) {
-                console.log('Could not remove compass event listeners:', error.message);
-            }
+            locationManager.startLiveTracking();
         }
 
         // Preferences functionality
@@ -3697,7 +3530,6 @@
         function updatePreferences() {
             console.log('Updated preferences:', userPreferences);
             
-            // Auto-generate recommendations based on preferences
             if (toyStores.length > 0) {
                 autoGenerateRecommendations();
             }
@@ -3706,15 +3538,12 @@
         function autoGenerateRecommendations() {
             console.log('Auto-generating recommendations based on preferences:', userPreferences);
             
-            // Reset recommendations
             recommendedStores = [];
             
-            // Score each store based on preferences
             const scoredStores = toyStores.map(store => {
                 let score = 0;
                 const reasons = [];
 
-                // Interest scoring
                 userPreferences.interests.forEach(interest => {
                     switch (interest) {
                         case 'educational':
@@ -3756,35 +3585,25 @@
                     }
                 });
                             
-                // Distance bonus (closer stores get slight preference)
                 const distance = parseFloat(store.distance);
                 if (distance < 1) score += 3;
                 else if (distance < 2) score += 2;
                 else if (distance < 5) score += 1;
                 
-                // Rating bonus
                 if (store.rating > 4.5) score += 2;
                 else if (store.rating > 4.0) score += 1;
                 
                 return { store, score, reasons };
             });
             
-            // Sort by score and select top recommendations
             scoredStores.sort((a, b) => b.score - a.score);
             
-            // Select stores with score > 5 as recommendations (up to 3)
             const topStores = scoredStores.filter(item => item.score > 5).slice(0, 3);
             recommendedStores = topStores.map(item => item.store.id);
             
-            console.log('Generated recommendations:', recommendedStores, 'Scores:', topStores.map(item => ({id: item.store.id, score: item.score, reasons: item.reasons})));
-            
-            // Update markers to show recommendations
             updateMarkersForRecommendations();
-            
-            // Re-render the store list
             renderStores();
             
-            // Show notification if recommendations were generated
             if (recommendedStores.length > 0) {
                 showCustomAlert(`Found ${recommendedStores.length} personalized recommendation${recommendedStores.length > 1 ? 's' : ''} based on your preferences!`);
             }
@@ -3833,13 +3652,254 @@
             document.body.appendChild(alertModal);
         }
         
+        // Manual Location Input Functions
+        function showLocationInputModal() {
+            const modal = document.getElementById('locationInputModal');
+            modal.classList.remove('hidden');
+            
+            initializeLocationAutocomplete();
+            
+            setTimeout(() => {
+                document.getElementById('manualLocationInput').focus();
+            }, 100);
+        }
+
+        function closeLocationModal() {
+            const modal = document.getElementById('locationInputModal');
+            modal.classList.add('hidden');
+            
+            document.getElementById('manualLocationInput').value = '';
+            hideSuggestions();
+        }
+
+        function initializeLocationAutocomplete() {
+            const input = document.getElementById('manualLocationInput');
+            const suggestionsDiv = document.getElementById('locationSuggestions');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (query.length >= 3) {
+                    getLocationSuggestions(query);
+                } else {
+                    hideSuggestions();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    useManualLocation();
+                }
+            });
+        }
+
+        function getLocationSuggestions(query) {
+            if (service && google.maps.places && google.maps.places.AutocompleteService) {
+                const autocompleteService = new google.maps.places.AutocompleteService();
+                
+                autocompleteService.getPlacePredictions({
+                    input: query,
+                    types: ['(regions)'],
+                    componentRestrictions: { country: 'us' }
+                }, (predictions, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                        showSuggestions(predictions);
+                    } else {
+                        hideSuggestions();
+                    }
+                });
+            } else {
+                const suggestionsDiv = document.getElementById('locationSuggestions');
+                suggestionsDiv.innerHTML = `
+                    <div class="p-3 text-sm text-gray-500 dark:text-gray-400">
+                        Type a city, state, or zip code and press Enter
+                    </div>
+                `;
+                suggestionsDiv.classList.remove('hidden');
+            }
+        }
+
+        function showSuggestions(predictions) {
+            const suggestionsDiv = document.getElementById('locationSuggestions');
+            
+            if (!predictions || predictions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestionsDiv.innerHTML = predictions.slice(0, 5).map((prediction, index) => `
+                <div onclick="selectLocationSuggestion('${prediction.place_id}', '${prediction.description.replace(/'/g, "\\'")}', ${index})" 
+                     class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors">
+                    <div class="flex items-center">
+                        <i class="fas fa-map-marker-alt text-gray-400 mr-3 text-sm"></i>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">${prediction.structured_formatting.main_text}</div>
+                            ${prediction.structured_formatting.secondary_text ? `
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${prediction.structured_formatting.secondary_text}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            suggestionsDiv.classList.remove('hidden');
+        }
+
+        function hideSuggestions() {
+            const suggestionsDiv = document.getElementById('locationSuggestions');
+            suggestionsDiv.classList.add('hidden');
+        }
+
+        function selectLocationSuggestion(placeId, description, index) {
+            const input = document.getElementById('manualLocationInput');
+            input.value = description;
+            hideSuggestions();
+            input.dataset.placeId = placeId;
+        }
+
+        async function useManualLocation() {
+            const input = document.getElementById('manualLocationInput');
+            const locationText = input.value.trim();
+            
+            if (!locationText) {
+                showCustomAlert('Please enter a location.');
+                return;
+            }
+
+            const modal = document.getElementById('locationInputModal');
+            const originalContent = modal.innerHTML;
+            
+            modal.innerHTML = `
+                <div class="google-card max-w-md w-full mx-4 p-6">
+                    <div class="text-center">
+                        <div class="google-spinner mb-4"></div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Finding location</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Searching for "${locationText}"...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                let location = null;
+                
+                if (input.dataset.placeId && service) {
+                    location = await geocodePlaceId(input.dataset.placeId);
+                }
+                
+                if (!location) {
+                    location = await geocodeAddress(locationText);
+                }
+
+                if (location) {
+                    userLocation = location;
+                    closeLocationModal();
+                    
+                    initializeWithLocation(userLocation, false);
+                    showCustomAlert(`Location set to: ${locationText}`);
+                } else {
+                    throw new Error('Location not found');
+                }
+            } catch (error) {
+                console.error('Manual location error:', error);
+                
+                modal.innerHTML = originalContent;
+                initializeLocationAutocomplete();
+                
+                showCustomAlert('Could not find that location. Please try a different address, city, or zip code.');
+            }
+        }
+
+        function geocodePlaceId(placeId) {
+            return new Promise((resolve) => {
+                if (!service) {
+                    resolve(null);
+                    return;
+                }
+
+                const request = {
+                    placeId: placeId,
+                    fields: ['geometry']
+                };
+
+                service.getDetails(request, (place, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                        const location = {
+                            lat: place.geometry.location.lat(),
+                            lng: place.geometry.location.lng()
+                        };
+                        resolve(location);
+                    } else {
+                        console.warn('Place details geocoding failed:', status);
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        function geocodeAddress(address) {
+            return new Promise((resolve) => {
+                if (!google.maps.Geocoder) {
+                    resolve(null);
+                    return;
+                }
+
+                const geocoder = new google.maps.Geocoder();
+                
+                geocoder.geocode({ address: address }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const location = {
+                            lat: results[0].geometry.location.lat(),
+                            lng: results[0].geometry.location.lng()
+                        };
+                        resolve(location);
+                    } else {
+                        console.warn('Address geocoding failed:', status);
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        function tryGeolocationAgain() {
+            closeLocationModal();
+            
+            const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+            attemptGeolocation(defaultLocation);
+        }
+
+        function useDefaultLocation() {
+            const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+            
+            userLocation = defaultLocation;
+            closeLocationModal();
+            
+            initializeWithLocation(userLocation, false);
+            
+            showCustomAlert('Using San Francisco, CA as your default location.');
+        }
+
         // Make functions globally available
         window.initMap = initMap;
         window.focusStoreOnMap = focusStoreOnMap;
-        window.getRecommendations = getRecommendations;
         window.calculateRoute = calculateRoute;
         window.closeStoreInfoSheet = closeStoreInfoSheet;
         window.clearImageSearch = clearImageSearch;
+        window.showLocationInputModal = showLocationInputModal;
+        window.closeLocationModal = closeLocationModal;
+        window.useManualLocation = useManualLocation;
+        window.tryGeolocationAgain = tryGeolocationAgain;
+        window.useDefaultLocation = useDefaultLocation;
+        window.closeNavigationPanel = closeNavigationPanel;
+        window.selectTravelMode = selectTravelMode;
+        window.selectRoute = selectRoute;
+        window.toggleRouteOptions = toggleRouteOptions;
+        window.setDepartureTime = setDepartureTime;
+        window.startNavigation = startNavigation;
+        window.stopNavigation = stopNavigation;
+        window.shareRoute = shareRoute;
+        window.closeStorePanel = closeStorePanel;
+        window.togglePreferences = togglePreferences;
+        window.toggleInterest = toggleInterest;
     </script>
 
 
