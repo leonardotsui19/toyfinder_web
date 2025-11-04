@@ -1535,7 +1535,7 @@
 
                 const requestBody = {
                     messages: [{ role: "user", content: searchPrompt }],
-                    model: "grok-beta",
+                    model: "grok-4-latest",
                     stream: false,
                     temperature: 0.3
                 };
@@ -1594,7 +1594,7 @@
                     },
                     body: JSON.stringify({
                         messages: [{ role: "user", content: prompt }],
-                        model: "grok-beta",
+                        model: "grok-4-latest",
                         stream: false,
                         temperature: 0.3
                     })
