@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://api.poe.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
     <meta name="x-poe-datastore-behavior" content="local_only">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://api.poe.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
     <meta charset="UTF-8">
@@ -1217,7 +1217,7 @@
         <div class="px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                    <button onclick="stopNavigation()" class="p-2 rounded-x1 bg-primary-dark hover:bg-opacity-80 transition-colors">
+                    <button onclick="stopNavigation()" class="p-2 rounded-xl bg-primary-dark hover:bg-opacity-80 transition-colors">
                         <i class="fas fa-times"></i>
                     </button>
                     <div>
@@ -1234,7 +1234,7 @@
     </div>
 
     <!-- Map Legend - Anchored to bottom left -->
-    <div class="fixed bottom-5 left-5 google-card rounded-x1
+    <div class="fixed bottom-5 left-5 google-card rounded-xl
                 p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 xl:p-4
                 z-30 
                 max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] xl:max-w-none
@@ -1446,7 +1446,7 @@
 
                 const requestBody = {
                     messages: [{ role: "user", content: searchPrompt }],
-                    model: "Claude-Sonnet-4"
+                    model: "Gemini-2.5-Pro"
                 };
 
                 if (image) {
@@ -1503,7 +1503,7 @@
                     },
                     body: JSON.stringify({
                         messages: [{ role: "user", content: prompt }],
-                        model: "Claude-Sonnet-4"
+                        model: "Gemini-2.5-Pro"
                     })
                 });
 
@@ -3802,7 +3802,6 @@
         window.toggleInterest = toggleInterest;
 		window.POE_API_KEY = 'AipTej0ZhWQKFC0Ufh3jUdkISme9jAsMSDxmsSdOKZ4';
     </script>
-
 
 
 </body></html>
