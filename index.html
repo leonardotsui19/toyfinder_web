@@ -1437,9 +1437,39 @@
                 
                 let searchPrompt;
                 if (image && query) {
-                    searchPrompt = `I'm searching for "${query}" and have an image. \n\nAnalyze the image and text, then provide detailed information based on the following requirements:\n- Identify the appearance of the target.\n- Identify the character and its version (e.g., style, media, or crossover).\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.\n- Tailor the analysis to the user's current region.\n- find which nearby toy stores are most likely to have this product.\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    searchPrompt = `I'm searching for "${query}" and have an image. 
+					\n\nAnalyze the image and text, then provide detailed information based on the following requirements:
+					\n- Identify toy product or not, if not, please return product not found as result.
+					\n- Identify the appearance of the target.
+					\n- Identify the character and its version (e.g., style, media, or crossover).
+					\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.
+					\n- Tailor the analysis to the user's current region.
+					\n- find which nearby toy stores are most likely to have this product.
+					\n\nCRITICAL ACCURACY REQUIREMENTS:
+					\n-ONLY provide information you are HIGHLY CONFIDENT about
+					\n-If you are NOT CERTAIN about ANY detail, use "Unknown" or indicate uncertainty
+					\n-DO NOT guess or make up information
+					\n-DO NOT invent release dates, model numbers, or series names
+					\n-If you cannot clearly identify the exact product, say so in the description
+					\n-Be honest about limitations, it's better to say "Unknown" than to provide incorrect information
+					\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
                 } else if (image) {
-                    searchPrompt = `I've uploaded an image of a toy/product I'm looking for. \n\nAnalyze the image, then provide detailed information based on the following requirements:\n- Identify the appearance of the target.\n- Identify the character and its version (e.g., style, media, or crossover).\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.\n- Tailor the analysis to the user's current region.\n- find which nearby toy stores are most likely to have this product.\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    searchPrompt = `I've uploaded an image of a toy/product I'm looking for. 
+					\n\nAnalyze the image, then provide detailed information based on the following requirements:
+					\n- Identify toy product or not, if not, please return product not found as result.
+					\n- Identify the appearance of the target.
+					\n- Identify the character and its version (e.g., style, media, or crossover).
+					\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.
+					\n- Tailor the analysis to the user's current region.
+					\n- find which nearby toy stores are most likely to have this product.
+					\n\nCRITICAL ACCURACY REQUIREMENTS:
+					\n-ONLY provide information you are HIGHLY CONFIDENT about
+					\n-If you are NOT CERTAIN about ANY detail, use "Unknown" or indicate uncertainty
+					\n-DO NOT guess or make up information
+					\n-DO NOT invent release dates, model numbers, or series names
+					\n-If you cannot clearly identify the exact product, say so in the description
+					\n-Be honest about limitations, it's better to say "Unknown" than to provide incorrect information
+					\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
                 } else {
                     searchPrompt = `I'm searching for "${query}". Based on this search query, find which nearby toy stores are most likely to have this product. Consider store specialties and typical inventory. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
                 }
