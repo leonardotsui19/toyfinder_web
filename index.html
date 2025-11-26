@@ -1437,16 +1437,16 @@
                 
                 let searchPrompt;
                 if (image && query) {
-                    searchPrompt = `I'm searching for "${query}" and have an image. Based on the image and text, find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    searchPrompt = `I'm searching for "${query}" and have an image. \n\nAnalyze the image and text, then provide detailed information based on the following requirements:\n- Identify the appearance of the target.\n- Identify the character and its version (e.g., style, media, or crossover).\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.\n- Tailor the analysis to the user's current region.\n- find which nearby toy stores are most likely to have this product.\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
                 } else if (image) {
-                    searchPrompt = `I've uploaded an image of a toy/product I'm looking for. Analyze the image and find which nearby toy stores are most likely to have this product. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                    searchPrompt = `I've uploaded an image of a toy/product I'm looking for. \n\nAnalyze the image, then provide detailed information based on the following requirements:\n- Identify the appearance of the target.\n- Identify the character and its version (e.g., style, media, or crossover).\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.\n- Tailor the analysis to the user's current region.\n- find which nearby toy stores are most likely to have this product.\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
                 } else {
                     searchPrompt = `I'm searching for "${query}". Based on this search query, find which nearby toy stores are most likely to have this product. Consider store specialties and typical inventory. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
                 }
 
                 const requestBody = {
                     messages: [{ role: "user", content: searchPrompt }],
-                    model: "GPT-4o"
+                    model: "Gemini-2.0-Flash"
                 };
 
                 if (image) {
@@ -1503,7 +1503,7 @@
                     },
                     body: JSON.stringify({
                         messages: [{ role: "user", content: prompt }],
-                        model: "GPT-4o"
+                        model: "Gemini-2.0-Flash"
                     })
                 });
 
@@ -2068,13 +2068,14 @@
             }
 
             const searchKeywords = [
-                'toys hobbies collectibles',
                 'toys',
                 'hobbies',
                 'model kits',
-                'collectibles',
                 'rc vehicles',
-                'action figures'
+                'action figures',
+				'retro toys',
+				'designer toys',
+				'vinyl toys'
             ];
 
             let allResults = [];
@@ -2751,7 +2752,7 @@
             const headerTitle = document.querySelector('#storeListPanel h2');
             if (headerTitle) {
                 if ((currentSearchQuery || currentSearchImage) && searchResults) {
-                    const searchTerm = currentSearchQuery || 'Image Search';
+                    const searchTerm = currentSearchQuery || searchResults.product_name;
                     headerTitle.innerHTML = `🔍 Search Results: "<span class="text-primary">${searchTerm}</span>"`;
                 } else {
                     headerTitle.textContent = '📍 Nearby Stores';
