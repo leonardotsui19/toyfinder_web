@@ -1,0 +1,1177 @@
+﻿<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
+    <meta charset="utf-8">
+    <title>Poe</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://puc.poecdn.net/authenticated_preview_page/disableWebRTC.9710cebe07429a9e8e06.js"></script><meta name="x-poe-allow-downloads" content="true"><meta name="x-poe-datastore-behavior" content="disabled"><script src="https://puc.poecdn.net/authenticated_preview_page/tw.50ec1b0612bf5b0c30a5.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/deps.faccd16000d314dc16d5.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/exports.b0f0f482cdeb5302b0b9.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/renderer.75c73ae6b4235f62945a.js"></script><script>Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _react = require('react'); var _react2 = _interopRequireDefault(_react);
+var _lucidereact = require('lucide-react');
+
+// ============================================================
+// 請把下面這個常數換成你自己的 Google Maps API Key
+// ============================================================
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
+
+const DEFAULT_USER_POS = { lat: 25.0421, lng: 121.5082 };
+const DEFAULT_USER_LABEL = '台北・西門町';
+const SEARCH_RADIUS_M = 5000;
+const LOCATION_SAFETY_TIMEOUT_MS = 12000;
+
+function haversine(a, b) {
+  const R = 6371;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const la1 = toRad(a.lat);
+  const la2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// ============ Google Maps Bootstrap ============
+function bootstrapGoogleMaps(params) {
+  if (typeof window === 'undefined') return;
+  if (_optionalChain([window, 'access', _ => _.google, 'optionalAccess', _2 => _2.maps, 'optionalAccess', _3 => _3.importLibrary])) return;
+  const CALLBACK_KEY = '__ib__';
+  window.google = window.google || {};
+  const maps = window.google.maps = window.google.maps || {};
+  const requestedLibs = new Set();
+  let scriptPromise;
+  const injectScript = () => scriptPromise || (scriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const qs = new URLSearchParams();
+    qs.set('libraries', [...requestedLibs].join(','));
+    for (const k in params) qs.set(k.replace(/[A-Z]/g, ch => '_' + ch.toLowerCase()), params[k]);
+    qs.set('loading', 'async');
+    qs.set('callback', 'google.maps.' + CALLBACK_KEY);
+    script.src = 'https://maps.googleapis.com/maps/api/js?' + qs.toString();
+    script.async = true; script.defer = true;
+    maps[CALLBACK_KEY] = resolve;
+    script.onerror = () => { scriptPromise = null; reject(new Error('Google Maps script load failed')); };
+    document.head.appendChild(script);
+  }));
+  maps.importLibrary = (lib, ...rest) => { requestedLibs.add(lib); return injectScript().then(() => maps.importLibrary(lib, ...rest)); };
+}
+
+let gmapsLoaderPromise = null;
+function loadGoogleMaps(apiKey) {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no window'));
+  if (_optionalChain([window, 'access', _4 => _4.google, 'optionalAccess', _5 => _5.maps, 'optionalAccess', _6 => _6.Map])) return Promise.resolve(window.google);
+  if (gmapsLoaderPromise) return gmapsLoaderPromise;
+  gmapsLoaderPromise = (async () => {
+    bootstrapGoogleMaps({ key: apiKey, v: 'weekly' });
+    if (!_optionalChain([window, 'access', _7 => _7.google, 'optionalAccess', _8 => _8.maps, 'optionalAccess', _9 => _9.importLibrary])) throw new Error('bootstrap failed');
+    await window.google.maps.importLibrary('maps');
+    await window.google.maps.importLibrary('marker');
+    await window.google.maps.importLibrary('places');
+    return window.google;
+  })().catch(err => { gmapsLoaderPromise = null; throw err; });
+  return gmapsLoaderPromise;
+}
+
+// ======================================================================
+// ⭐ 玩具店真偽判定 (三層過濾)
+// ======================================================================
+
+// [黑名單] 已知非玩具店的店名 pattern (連鎖超商/量販/百貨/藥妝/餐飲等)
+const NAME_BLACKLIST = [
+  /7-?\s?11|7-?eleven|seven-?eleven|統一超商/i,
+  /全家便利|family\s?mart|famima/i,
+  /萊爾富|hi-?life/i,
+  /\bok\s?(超商|mart|便利)/i,
+  /家樂福|carrefour/i,
+  /全聯|px\s?mart/i,
+  /大潤發|rt-?mart/i,
+  /愛買|a\.?mart/i,
+  /好市多|costco/i,
+  /ikea|宜家/i,
+  /屈臣氏|watsons/i,
+  /康是美|cosmed/i,
+  /寶雅|poya/i,
+  /小北百貨/i,
+  /大創|daiso/i,  // 大創雖然有賣玩具但主業是雜貨
+  /無印良品|muji/i,
+  /新光三越|sogo|崇光|遠東百貨|太平洋百貨|微風|bellavita/i,
+  /統一時代|京站|環球購物中心|大江購物中心|台茂|美麗華/i,
+  /誠品|金石堂|墊腳石|何嘉仁書店/i,
+  /星巴克|starbucks|路易莎|louisa|cama/i,
+  /麥當勞|mcdonald|肯德基|kfc|漢堡王|摩斯|subway/i,
+  /藥局|藥房|pharmacy|drug\s?store/i,
+  /加油站|gas\s?station/i,
+  /銀行|bank|郵局|post\s?office/i,
+  /診所|clinic|醫院|hospital/i,
+  /旅館|hotel|民宿/i,
+  /健身|gym|fitness/i,
+  /餐廳|restaurant|食堂|小吃|麵店|便當|飯店/i,
+  /服飾|時裝|boutique|鞋店|shoe\s?store/i,
+  /理髮|美容|salon|spa|nail/i,
+  /手機|通訊|電信|中華電信|台灣大哥大|遠傳/i,
+];
+
+// [寬類型] 這些類型太廣,單純有 toy_store tag 不足以證明真是玩具店
+const BROAD_TYPES = new Set([
+  'shopping_mall',           // 購物中心
+  'department_store',        // 百貨公司
+  'supermarket',             // 超市
+  'convenience_store',       // 超商
+  'grocery_or_supermarket',  // 雜貨/超市
+  'grocery_store',
+  'discount_store',          // 特價零售
+  'wholesaler',              // 批發
+  'book_store',              // 書店
+  'stationery_store',        // 文具店
+  'clothing_store',          // 服飾
+  'electronics_store',       // 電子用品
+  'home_goods_store',        // 家居
+  'gift_shop',               // 禮品 (太廣)
+  'pharmacy', 'drugstore',
+]);
+
+// [關鍵字] 店名含這些關鍵字 → 強力證明是玩具店
+const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|遊戲/i;
+
+// [強關鍵字] 連某些廣義店如果有這關鍵字也算
+const STRONG_TOY_KEYWORDS = /玩具|toy|toys|模型|扭蛋|轉蛋|gacha|公仔|figure|手辦|積木|樂高|lego|玩具屋|模型屋|hobby\s?shop|玩具店/i;
+
+function extractName(place) {
+  return typeof place.displayName === 'string'
+    ? place.displayName
+    : (_optionalChain([place, 'access', _10 => _10.displayName, 'optionalAccess', _11 => _11.text]) || place.name || '');
+}
+
+/**
+ * 判定是否為真正的玩具店
+ * @returns {{ ok: boolean, reason?: string }}
+ */
+function classifyToyStore(place) {
+  const name = extractName(place);
+  const types = place.types || [];
+  const primaryType = place.primaryType || '';
+
+  // 第 1 層: types 必須包含 toy_store (若完全沒有,直接拒絕)
+  if (!types.includes('toy_store')) {
+    return { ok: false, reason: `types 不含 toy_store` };
+  }
+
+  // 第 2 層: 店名黑名單 (連鎖超商/百貨/藥妝等)
+  for (const re of NAME_BLACKLIST) {
+    if (re.test(name)) {
+      return { ok: false, reason: `店名符合黑名單 (${re.source.slice(0, 30)}...)` };
+    }
+  }
+
+  // 第 3 層: 寬類型檢查
+  const hasBroadType = types.some(t => BROAD_TYPES.has(t));
+  const primaryIsBroad = BROAD_TYPES.has(primaryType);
+  const primaryIsToyStore = primaryType === 'toy_store';
+  const nameHasToyKeyword = TOY_KEYWORDS.test(name);
+  const nameHasStrongToyKeyword = STRONG_TOY_KEYWORDS.test(name);
+
+  // 3a. primaryType 就是 toy_store → 最可信,直接通過
+  if (primaryIsToyStore) return { ok: true };
+
+  // 3b. primaryType 是寬類型 (e.g. shopping_mall) → 除非店名有強玩具關鍵字,否則拒絕
+  if (primaryIsBroad) {
+    if (nameHasStrongToyKeyword) return { ok: true };
+    return { ok: false, reason: `primaryType=${primaryType} 是寬類型且店名無玩具關鍵字` };
+  }
+
+  // 3c. 有寬類型 (非 primary) → 店名必須有玩具關鍵字
+  if (hasBroadType) {
+    if (nameHasToyKeyword) return { ok: true };
+    return { ok: false, reason: `含寬類型 (${types.filter(t => BROAD_TYPES.has(t)).join(',')}) 且店名無玩具關鍵字` };
+  }
+
+  // 3d. 其他 (e.g. primaryType 是 store / establishment / point_of_interest)
+  //     有 toy_store tag + 沒寬類型 + 沒黑名單 → 通過
+  return { ok: true };
+}
+
+// ============ Places API: 新版 ============
+async function fetchNearbyWithNewAPI(google, center, radius) {
+  const places = google.maps.places;
+  if (!_optionalChain([places, 'optionalAccess', _12 => _12.Place]) || typeof places.Place.searchNearby !== 'function') {
+    throw new Error('NEW_API_UNAVAILABLE');
+  }
+  const { Place, SearchNearbyRankPreference } = places;
+  const request = {
+    fields: [
+      'id', 'displayName', 'formattedAddress', 'location',
+      'rating', 'userRatingCount', 'types', 'primaryType', 'primaryTypeDisplayName',
+      'priceLevel', 'regularOpeningHours', 'nationalPhoneNumber',
+      'businessStatus', 'websiteURI',
+    ],
+    locationRestriction: { center, radius },
+    includedTypes: ['toy_store'],
+    maxResultCount: 20,
+    rankPreference: SearchNearbyRankPreference.POPULARITY,
+    language: 'zh-TW',
+    region: 'TW',
+  };
+  const { places: results } = await Place.searchNearby(request);
+  return results || [];
+}
+
+// ============ Places API: 舊版 ============
+function fetchNearbyWithLegacyAPI(google, center, radius) {
+  return new Promise((resolve, reject) => {
+    const places = google.maps.places;
+    if (!_optionalChain([places, 'optionalAccess', _13 => _13.PlacesService])) {
+      reject(new Error('LEGACY_API_UNAVAILABLE'));
+      return;
+    }
+    const attrDiv = document.createElement('div');
+    const service = new places.PlacesService(attrDiv);
+    const S = places.PlacesServiceStatus;
+    service.nearbySearch(
+      {
+        location: new google.maps.LatLng(center.lat, center.lng),
+        radius,
+        type: 'toy_store',
+        language: 'zh-TW',
+      },
+      (results, status) => {
+        if (status === S.OK) return resolve(results || []);
+        if (status === S.ZERO_RESULTS) return resolve([]);
+        reject(new Error(`LEGACY_API_FAILED: ${status}`));
+      }
+    );
+  });
+}
+
+function normalizeLegacyPlace(p) {
+  const loc = _optionalChain([p, 'access', _14 => _14.geometry, 'optionalAccess', _15 => _15.location]);
+  const priceMap = ['PRICE_LEVEL_FREE', 'PRICE_LEVEL_INEXPENSIVE', 'PRICE_LEVEL_MODERATE', 'PRICE_LEVEL_EXPENSIVE', 'PRICE_LEVEL_VERY_EXPENSIVE'];
+  return {
+    id: p.place_id, displayName: p.name, formattedAddress: p.vicinity || '',
+    location: loc, rating: p.rating, userRatingCount: p.user_ratings_total,
+    types: p.types || [], primaryType: _optionalChain([p, 'access', _16 => _16.types, 'optionalAccess', _17 => _17[0]]) || '', primaryTypeDisplayName: '',
+    priceLevel: typeof p.price_level === 'number' ? priceMap[p.price_level] : null,
+    regularOpeningHours: _optionalChain([p, 'access', _18 => _18.opening_hours, 'optionalAccess', _19 => _19.weekday_text]) ? { weekdayDescriptions: p.opening_hours.weekday_text } : null,
+    nationalPhoneNumber: '', businessStatus: p.business_status, websiteURI: '', __legacy: true,
+  };
+}
+
+async function fetchNearbyToyStores(google, center, radius) {
+  const errors = [];
+  try {
+    const results = await fetchNearbyWithNewAPI(google, center, radius);
+    return { results, apiUsed: 'new' };
+  } catch (err) {
+    errors.push({ api: 'new', message: _optionalChain([err, 'optionalAccess', _20 => _20.message]) || String(err) });
+  }
+  try {
+    const rawResults = await fetchNearbyWithLegacyAPI(google, center, radius);
+    const results = rawResults.map(normalizeLegacyPlace);
+    return { results, apiUsed: 'legacy' };
+  } catch (err) {
+    errors.push({ api: 'legacy', message: _optionalChain([err, 'optionalAccess', _21 => _21.message]) || String(err) });
+  }
+  const combined = new Error(`兩個 API 都失敗:\n` + errors.map(e => `  · ${e.api}: ${e.message}`).join('\n'));
+  combined.errors = errors;
+  throw combined;
+}
+
+// ============ 分類推斷 ============
+function inferCategory(name = '', types = []) {
+  const n = name;
+  if (/扭蛋|轉蛋|ガチャ|gacha|gashapon|カプセル/i.test(n)) return '扭蛋';
+  if (/模型|鋼彈|高達|gundam|plamo|プラモ|塑膠模型|田宮|tamiya/i.test(n)) return '模型';
+  if (/積木|樂高|lego|brick|ブロック|nanoblock/i.test(n)) return '積木';
+  if (/公仔|figure|figurine|手辦|景品|黏土人|nendoroid|figma|scale/i.test(n)) return '公仔';
+  if (/盒玩|食玩|盲盒|blind ?box|popmart|泡泡瑪特|molly|labubu/i.test(n)) return '盒玩';
+  if (/手作|手工|diy|craft|工房|ハンドメイド/i.test(n)) return '手作';
+  if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '絕版懷舊';
+  return '玩具';
+}
+
+const EMOJIS = { '玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '絕版懷舊': '🎪', '公仔': '🦸', '盒玩': '📦', '手作': '🎨' };
+const GRADIENTS = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+  'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+  'linear-gradient(135deg, #fddb92 0%, #d1fdff 100%)',
+  'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+];
+const PRICE_MAP = {
+  PRICE_LEVEL_FREE: '$', PRICE_LEVEL_INEXPENSIVE: '$',
+  PRICE_LEVEL_MODERATE: '$$', PRICE_LEVEL_EXPENSIVE: '$$$', PRICE_LEVEL_VERY_EXPENSIVE: '$$$$',
+};
+
+function getLatLng(loc) {
+  if (!loc) return null;
+  const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
+  const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
+  if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) return null;
+  return { lat, lng };
+}
+
+function placeToShop(place, userPos, idx) {
+  const pos = getLatLng(place.location);
+  if (!pos) return null;
+  const distance = haversine(userPos, pos);
+  const priceKey = typeof place.priceLevel === 'string' ? place.priceLevel : null;
+  const price = PRICE_MAP[priceKey] || '—';
+  const addr = place.formattedAddress || '';
+  const cleaned = addr.replace(/^台灣\s*/, '').replace(/\d{3,}\s*/, '');
+  const areaMatch = cleaned.match(/([^,,\s\d]*[市縣][^,,\s\d]*[區鄉鎮市])/) || cleaned.match(/([^,,\s\d]*[區鄉鎮])/);
+  const area = areaMatch ? areaMatch[1].trim() : (_optionalChain([cleaned, 'access', _22 => _22.split, 'call', _23 => _23(/[,,]/), 'access', _24 => _24[0], 'optionalAccess', _25 => _25.slice, 'call', _26 => _26(0, 10)]) || '附近');
+  const weekday = _optionalChain([place, 'access', _27 => _27.regularOpeningHours, 'optionalAccess', _28 => _28.weekdayDescriptions]);
+  const today = new Date().getDay();
+  const todayIdx = today === 0 ? 6 : today - 1;
+  const hours = _optionalChain([weekday, 'optionalAccess', _29 => _29[todayIdx]]) || _optionalChain([weekday, 'optionalAccess', _30 => _30[0]]) || '營業時間未提供';
+  const rating = place.rating || 0;
+  const reviews = place.userRatingCount || 0;
+  let badge = null;
+  if (rating >= 4.7 && reviews >= 100) badge = 'Gold';
+  else if (rating >= 4.3 && reviews >= 30) badge = 'Silver';
+  const nameStr = extractName(place) || '未命名店家';
+  const category = inferCategory(nameStr, place.types || []);
+  const typeTagMap = {
+    toy_store: '玩具店', gift_shop: '禮品', hobby_shop: '興趣專賣',
+    shopping_mall: '商場', department_store: '百貨', store: '零售', establishment: '店家',
+  };
+  const tags = Array.from(new Set((place.types || []).map(t => typeTagMap[t]).filter(Boolean))).slice(0, 3);
+  if (!tags.length) tags.push(category);
+  const highlights = [];
+  if (reviews >= 200) highlights.push('超高人氣');
+  else if (reviews >= 50) highlights.push('好評眾多');
+  else if (reviews > 0) highlights.push('私房選擇');
+  else highlights.push('新進店家');
+  if (rating >= 4.6) highlights.push('高評分');
+  else if (rating >= 4.0) highlights.push('評價良好');
+  else if (rating > 0) highlights.push('評分中等');
+  else highlights.push('尚無評分');
+  if (distance <= 1) highlights.push('步行可達');
+  else if (distance <= 3) highlights.push('交通便利');
+  else highlights.push('值得專程');
+  const isClosed = place.businessStatus && place.businessStatus !== 'OPERATIONAL';
+  const primaryDisplay = typeof place.primaryTypeDisplayName === 'string'
+    ? place.primaryTypeDisplayName
+    : (_optionalChain([place, 'access', _31 => _31.primaryTypeDisplayName, 'optionalAccess', _32 => _32.text]) || '');
+  return {
+    id: place.id || `place-${idx}`, name: nameStr, rating: Math.round(rating * 100) / 100,
+    reviews, category, tags, area, price, hours,
+    phone: place.nationalPhoneNumber || '未提供', website: place.websiteURI || '',
+    badge, image: GRADIENTS[idx % GRADIENTS.length], emoji: EMOJIS[category] || '🧸',
+    description: `${primaryDisplay || '玩具店'}・位於${area},距離 ${distance.toFixed(1)} km。${isClosed ? ' (目前暫停營業)' : ''}`,
+    highlights, lat: pos.lat, lng: pos.lng, distance, address: addr, isClosed,
+    __legacy: !!place.__legacy,
+    __primaryType: place.primaryType || '',
+    __types: place.types || [],
+  };
+}
+
+function buildMarkerIcon(google, shop, color, selected) {
+  const w = selected ? 52 : 44;
+  const h = selected ? 66 : 56;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 44 56">
+    <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.25"/></filter></defs>
+    <path filter="url(#s)" d="M22 1 C11 1 2 10 2 21 C2 35 22 54 22 54 C22 54 42 35 42 21 C42 10 33 1 22 1 Z" fill="${color}" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="22" cy="21" r="11" fill="#fff"/>
+    <text x="22" y="25.5" text-anchor="middle" font-family="system-ui" font-size="12" font-weight="800" fill="${color}">${(shop.rating || 0).toFixed(1)}</text>
+  </svg>`;
+  return {
+    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(w, h), anchor: new google.maps.Point(w / 2, h),
+  };
+}
+function buildUserIcon(google) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="13" fill="#3b82f6" opacity="0.2"/>
+    <circle cx="14" cy="14" r="8" fill="#3b82f6" stroke="#fff" stroke-width="3"/>
+  </svg>`;
+  return {
+    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(28, 28), anchor: new google.maps.Point(14, 14),
+  };
+}
+
+const LIGHT_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#f5f1e8' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#5c5449' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#aad3df' }] },
+];
+
+function HorizontalShopList({ shops, onSelect }) {
+  const scrollRef = _react.useRef.call(void 0, null);
+  const dragRef = _react.useRef.call(void 0, { active: false, startX: 0, startScroll: 0, moved: false });
+  _react.useEffect.call(void 0, () => {
+    const el = scrollRef.current; if (!el) return;
+    const onWheel = (e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); el.scrollLeft += e.deltaY; } };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+  _react.useEffect.call(void 0, () => {
+    const onMove = (e) => { if (!dragRef.current.active) return; const dx = e.clientX - dragRef.current.startX; if (Math.abs(dx) > 3) dragRef.current.moved = true; if (scrollRef.current) scrollRef.current.scrollLeft = dragRef.current.startScroll - dx; };
+    const onUp = () => { dragRef.current.active = false; };
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
+    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp); };
+  }, []);
+  if (!shops.length) return null;
+  return (
+    _react2.default.createElement('div', { ref: scrollRef,
+      className: "flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide cursor-grab active:cursor-grabbing"       ,
+      style: { touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' },
+      onPointerDown: (e) => { if (e.pointerType === 'touch') return; const el = scrollRef.current; if (!el) return; dragRef.current = { active: true, startX: e.clientX, startScroll: el.scrollLeft, moved: false }; },
+      onClickCapture: (e) => { if (dragRef.current.moved) { e.stopPropagation(); e.preventDefault(); dragRef.current.moved = false; } },}
+      , shops.map(shop => (
+        _react2.default.createElement('button', { key: shop.id, type: "button", onClick: () => onSelect(shop), className: "flex-shrink-0 bg-white rounded-xl shadow-lg overflow-hidden text-left w-64 focus:outline-none"       , draggable: false,}
+          , _react2.default.createElement('div', { className: "flex",}
+            , _react2.default.createElement('div', { className: "w-16 h-16 flex-shrink-0 flex items-center justify-center text-2xl"      , style: { background: shop.image },}, shop.emoji)
+            , _react2.default.createElement('div', { className: "flex-1 p-2 min-w-0"  ,}
+              , _react2.default.createElement('p', { className: "text-sm font-bold text-gray-900 truncate"   ,}, shop.name)
+              , _react2.default.createElement('div', { className: "flex items-center gap-1 mt-0.5"   ,}
+                , _react2.default.createElement(_lucidereact.Star, { className: "w-3 h-3 fill-amber-400 text-amber-400"   ,} )
+                , _react2.default.createElement('span', { className: "text-xs font-semibold text-gray-700"  ,}, shop.rating || '–')
+                , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "· " , shop.distance.toFixed(1), "km")
+              )
+              , _react2.default.createElement('p', { className: "text-xs text-gray-500 truncate mt-0.5"   ,}, shop.area)
+            )
+          )
+        )
+      ))
+    )
+  );
+}
+
+function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocation, allShops, visibleShops, mapPinShop, setMapPinShop, favorites, toggleFav, openDetail, getCategoryColor, searchQuery, setSearchQuery, categories, activeCategory, setActiveCategory, setView, StarRating, BadgeIcon, placesStatus, apiUsed, filterStats }) {
+  const mapRef = _react.useRef.call(void 0, null);
+  const mapInstanceRef = _react.useRef.call(void 0, null);
+  const markersRef = _react.useRef.call(void 0, new Map());
+  const userMarkerRef = _react.useRef.call(void 0, null);
+  const [style, setStyle] = _react.useState.call(void 0, 'standard');
+  const [zoom, setZoom] = _react.useState.call(void 0, 14);
+
+  _react.useEffect.call(void 0, () => {
+    if (mapStatus !== 'ready' || !mapRef.current || mapInstanceRef.current) return;
+    const google = window.google;
+    const map = new google.maps.Map(mapRef.current, {
+      center: userPos, zoom: 14, disableDefaultUI: true,
+      clickableIcons: false, gestureHandling: 'greedy',
+      styles: style === 'light' ? LIGHT_STYLE : undefined,
+    });
+    mapInstanceRef.current = map;
+    map.addListener('zoom_changed', () => setZoom(map.getZoom()));
+    map.addListener('click', () => setMapPinShop(null));
+    userMarkerRef.current = new google.maps.Marker({ position: userPos, map, icon: buildUserIcon(google), zIndex: 1, title: '我的位置' });
+  }, [mapStatus, style, setMapPinShop, userPos]);
+
+  _react.useEffect.call(void 0, () => {
+    if (!mapInstanceRef.current || !userMarkerRef.current) return;
+    userMarkerRef.current.setPosition(userPos);
+    if (locationStatus === 'granted') mapInstanceRef.current.panTo(userPos);
+  }, [userPos, locationStatus]);
+
+  _react.useEffect.call(void 0, () => {
+    if (!mapInstanceRef.current) return;
+    mapInstanceRef.current.setOptions({ styles: style === 'light' ? LIGHT_STYLE : null });
+  }, [style]);
+
+  _react.useEffect.call(void 0, () => {
+    if (mapStatus !== 'ready' || !mapInstanceRef.current) return;
+    const google = window.google;
+    const map = mapInstanceRef.current;
+    const visibleIds = new Set(visibleShops.map(s => s.id));
+    const alive = new Set(allShops.map(s => s.id));
+    markersRef.current.forEach((m, id) => { if (!alive.has(id)) { m.setMap(null); markersRef.current.delete(id); } });
+    allShops.forEach(shop => {
+      const selected = _optionalChain([mapPinShop, 'optionalAccess', _33 => _33.id]) === shop.id;
+      const inFilter = visibleIds.has(shop.id);
+      const color = inFilter ? getCategoryColor(shop.category) : '#9ca3af';
+      let marker = markersRef.current.get(shop.id);
+      const icon = buildMarkerIcon(google, shop, color, selected);
+      if (!marker) {
+        marker = new google.maps.Marker({ position: { lat: shop.lat, lng: shop.lng }, map, icon, zIndex: selected ? 999 : (inFilter ? 10 : 5), title: shop.name, opacity: inFilter ? 1 : 0.45 });
+        marker.addListener('click', () => setMapPinShop(shop));
+        markersRef.current.set(shop.id, marker);
+      } else {
+        marker.setIcon(icon);
+        marker.setZIndex(selected ? 999 : (inFilter ? 10 : 5));
+        marker.setOpacity(inFilter ? 1 : 0.45);
+      }
+    });
+  }, [allShops, visibleShops, mapPinShop, mapStatus, getCategoryColor, setMapPinShop]);
+
+  _react.useEffect.call(void 0, () => {
+    if (!mapPinShop || !mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+    map.panTo({ lat: mapPinShop.lat, lng: mapPinShop.lng });
+    if (map.getZoom() < 14) map.setZoom(15);
+  }, [mapPinShop]);
+
+  const zoomBy = (d) => { const m = mapInstanceRef.current; if (m) m.setZoom(Math.max(3, Math.min(21, (m.getZoom() || 14) + d))); };
+  const recenter = () => { const m = mapInstanceRef.current; if (!m) return; refreshLocation(); m.panTo(userPos); if (m.getZoom() < 14) m.setZoom(14); };
+  const sorted = _react.useMemo.call(void 0, () => [...visibleShops].sort((a, b) => a.distance - b.distance), [visibleShops]);
+
+  return (
+    _react2.default.createElement('div', { className: "relative h-screen w-full overflow-hidden bg-gray-200 select-none"     ,}
+      , _react2.default.createElement('div', { ref: mapRef, className: "absolute inset-0 z-0 bg-gray-200"   ,} )
+
+      , mapStatus !== 'ready' && (
+        _react2.default.createElement('div', { className: "absolute inset-0 z-20 bg-gray-100/95 backdrop-blur flex items-center justify-center p-6"        ,}
+          , _react2.default.createElement('div', { className: "bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"     ,}
+            , _react2.default.createElement('button', { onClick: () => setView('home'), className: "mb-3 flex items-center gap-1 text-sm text-gray-600"     ,}
+              , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-4 h-4" ,} ), "返回"
+            )
+            , mapStatus === 'loading' && (
+              _react2.default.createElement('div', { className: "py-6 text-center text-sm text-gray-600"   ,}
+                , _react2.default.createElement('div', { className: "inline-block w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin mb-3"        ,})
+                , _react2.default.createElement('p', null, "載入 Google Maps 中..."   )
+              )
+            )
+            , mapStatus === 'error' && (
+              _react2.default.createElement('div', { className: "bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700"      ,}
+                , _react2.default.createElement('p', { className: "font-bold flex items-center gap-1"   ,}, _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-4 h-4" ,} ), "載入失敗")
+                , _react2.default.createElement('p', { className: "text-xs mt-1 break-words"  ,}, mapsError)
+              )
+            )
+            , mapStatus === 'missing-key' && (
+              _react2.default.createElement('div', { className: "bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800"      ,}
+                , _react2.default.createElement('p', { className: "font-bold flex items-center gap-1"   ,}, _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-4 h-4" ,} ), "尚未設定 API Key"  )
+              )
+            )
+          )
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-white/90 via-white/60 to-transparent pointer-events-none"          ,}
+        , _react2.default.createElement('div', { className: "flex items-center gap-2 pointer-events-auto"   ,}
+          , _react2.default.createElement('button', { onClick: () => { setView('home'); setMapPinShop(null); }, className: "bg-white rounded-full p-2.5 shadow-lg"   ,}
+            , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5 text-gray-700"  ,} )
+          )
+          , _react2.default.createElement('div', { className: "flex-1 bg-white rounded-full shadow-lg flex items-center px-4 py-2.5"       ,}
+            , _react2.default.createElement(_lucidereact.Search, { className: "w-4 h-4 text-gray-400"  ,} )
+            , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋附近玩具店...", className: "flex-1 ml-2 text-sm outline-none bg-transparent"    ,} )
+            , searchQuery && _react2.default.createElement('button', { onClick: () => setSearchQuery(''),}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4 text-gray-400"  ,} ))
+          )
+        )
+        , _react2.default.createElement('div', { className: "flex gap-2 overflow-x-auto mt-3 pb-1 scrollbar-hide pointer-events-auto"      ,}
+          , categories.map(c => (
+            _react2.default.createElement('button', { key: c, onClick: () => setActiveCategory(c), className: `flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold shadow ${activeCategory === c ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`,}, c)
+          ))
+        )
+        , filterStats && filterStats.removed > 0 && (
+          _react2.default.createElement('div', { className: "mt-2 pointer-events-auto bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 text-xs text-emerald-800 flex items-center gap-1.5 shadow"             ,}
+            , _react2.default.createElement(_lucidereact.Shield, { className: "w-3.5 h-3.5 flex-shrink-0"  ,} )
+            , _react2.default.createElement('span', null, "已過濾 " , filterStats.removed, " 家非玩具店 (保留 "   , filterStats.kept, " 家)" )
+          )
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "absolute right-4 top-40 z-30 flex flex-col gap-2"      ,}
+        , _react2.default.createElement('button', { onClick: () => setStyle(s => s === 'standard' ? 'light' : 'standard'), className: "bg-white rounded-lg p-2.5 shadow-lg"   ,}, _react2.default.createElement(_lucidereact.Layers, { className: "w-4 h-4 text-gray-700"  ,} ))
+        , _react2.default.createElement('div', { className: "bg-white rounded-lg shadow-lg flex flex-col overflow-hidden"     ,}
+          , _react2.default.createElement('button', { onClick: () => zoomBy(1), className: "p-2.5 border-b border-gray-100"  ,}, _react2.default.createElement(_lucidereact.Plus, { className: "w-4 h-4" ,} ))
+          , _react2.default.createElement('button', { onClick: () => zoomBy(-1), className: "p-2.5",}, _react2.default.createElement('svg', { className: "w-4 h-4" , viewBox: "0 0 24 24"   , fill: "none", stroke: "currentColor", strokeWidth: "2",}, _react2.default.createElement('line', { x1: "5", y1: "12", x2: "19", y2: "12",} )))
+        )
+        , _react2.default.createElement('button', { onClick: recenter, className: "bg-white rounded-lg p-2.5 shadow-lg"   ,}
+          , locationStatus === 'requesting' ? _react2.default.createElement('div', { className: "w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"      ,}) : locationStatus === 'granted' ? _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-4 h-4 text-blue-500"  ,} ) : _react2.default.createElement(_lucidereact.Locate, { className: "w-4 h-4 text-gray-500"  ,} )
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "absolute left-4 bottom-44 z-30 bg-white/90 rounded px-2 py-0.5 text-xs text-gray-600 shadow"          ,}, "Zoom " , zoom)
+
+      , mapPinShop ? (
+        _react2.default.createElement('div', { className: "absolute bottom-4 left-4 right-4 z-40 bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up"         ,}
+          , _react2.default.createElement('div', { className: "flex",}
+            , _react2.default.createElement('div', { className: "w-24 h-24 flex-shrink-0 flex items-center justify-center text-4xl"      , style: { background: mapPinShop.image },}, mapPinShop.emoji)
+            , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
+              , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
+                , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
+                  , mapPinShop.badge && _react2.default.createElement('div', { className: "mb-1",}, _react2.default.createElement(BadgeIcon, { badge: mapPinShop.badge,} ))
+                  , _react2.default.createElement('h3', { className: "font-bold text-gray-900 truncate"  ,}, mapPinShop.name)
+                  , _react2.default.createElement('div', { className: "flex items-center gap-1 mt-0.5"   ,}
+                    , _react2.default.createElement('span', { className: "text-sm font-bold text-amber-500"  ,}, mapPinShop.rating || '–')
+                    , _react2.default.createElement(StarRating, { rating: mapPinShop.rating,} )
+                    , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "(", mapPinShop.reviews, ")")
+                  )
+                )
+                , _react2.default.createElement('button', { onClick: () => setMapPinShop(null), className: "text-gray-400",}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4" ,} ))
+              )
+              , _react2.default.createElement('div', { className: "flex items-center gap-2 mt-1 text-xs text-gray-500"     ,}
+                , _react2.default.createElement('span', { className: "flex items-center gap-0.5"  ,}, _react2.default.createElement(_lucidereact.Navigation, { className: "w-3 h-3" ,} ), mapPinShop.distance.toFixed(1), " km" )
+                , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', null, mapPinShop.price)
+                , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', { className: "truncate",}, mapPinShop.area)
+              )
+            )
+          )
+          , _react2.default.createElement('div', { className: "flex border-t border-gray-100"  ,}
+            , _react2.default.createElement('button', { onClick: () => toggleFav(mapPinShop.id), className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold border-r border-gray-100"         ,}
+              , _react2.default.createElement(_lucidereact.Heart, { className: `w-4 h-4 ${favorites.includes(mapPinShop.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`,} )
+              , _react2.default.createElement('span', { className: favorites.includes(mapPinShop.id) ? 'text-red-500' : 'text-gray-600',}, "收藏")
+            )
+            , _react2.default.createElement('a', { href: `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${mapPinShop.lat},${mapPinShop.lng}&destination_place_id=${mapPinShop.id}`, target: "_blank", rel: "noopener noreferrer" , className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-600"        ,}
+              , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4" ,} ), "導航"
+            )
+            , _react2.default.createElement('button', { onClick: () => openDetail(mapPinShop), className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-rose-500"           ,}, "查看詳情")
+          )
+        )
+      ) : (
+        _react2.default.createElement('div', { className: "absolute bottom-4 left-0 right-0 z-30 pointer-events-none"     ,}
+          , _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto"     ,}
+            , _react2.default.createElement('span', { className: "text-xs font-bold text-gray-700 bg-white px-2.5 py-1 rounded-full shadow"       ,}, "📍 "
+               , visibleShops.length > 0 ? `${visibleShops.length} 家玩具店` : (placesStatus === 'loading' ? '搜尋中...' : '沒有符合的店家')
+            )
+          )
+          , sorted.length > 0 ? (
+            _react2.default.createElement('div', { className: "pointer-events-auto",}, _react2.default.createElement(HorizontalShopList, { shops: sorted, onSelect: setMapPinShop,} ))
+          ) : placesStatus === 'empty' ? (
+            _react2.default.createElement('div', { className: "mx-4 bg-white rounded-xl p-3 shadow-lg text-center text-xs text-gray-500 pointer-events-auto"        ,}, "此範圍內沒有玩具店"
+
+            )
+          ) : null
+        )
+      )
+
+      , _react2.default.createElement('style', null, `
+        @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slide-up 0.2s ease-out; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `)
+    )
+  );
+}
+
+ function ToyTabelog() {
+  const [view, setView] = _react.useState.call(void 0, 'home');
+  const [selectedShop, setSelectedShop] = _react.useState.call(void 0, null);
+  const [searchQuery, setSearchQuery] = _react.useState.call(void 0, '');
+  const [activeCategory, setActiveCategory] = _react.useState.call(void 0, '全部');
+  const [favorites, setFavorites] = _react.useState.call(void 0, []);
+  const [sortBy, setSortBy] = _react.useState.call(void 0, 'distance');
+  const [showFilter, setShowFilter] = _react.useState.call(void 0, false);
+  const [mapPinShop, setMapPinShop] = _react.useState.call(void 0, null);
+
+  const [userPos, setUserPos] = _react.useState.call(void 0, DEFAULT_USER_POS);
+  const [locationStatus, setLocationStatus] = _react.useState.call(void 0, 'requesting');
+  const [locationError, setLocationError] = _react.useState.call(void 0, '');
+
+  const hasValidKey = !!GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== 'YOUR_API_KEY_HERE';
+  const [mapsStatus, setMapsStatus] = _react.useState.call(void 0, hasValidKey ? 'idle' : 'missing-key');
+  const [mapsError, setMapsError] = _react.useState.call(void 0, '');
+  const [placesStatus, setPlacesStatus] = _react.useState.call(void 0, 'idle');
+  const [placesError, setPlacesError] = _react.useState.call(void 0, '');
+  const [placesShops, setPlacesShops] = _react.useState.call(void 0, []);
+  const [apiUsed, setApiUsed] = _react.useState.call(void 0, null);
+  const [filterStats, setFilterStats] = _react.useState.call(void 0, { total: 0, kept: 0, removed: 0, rejected: [] });
+  const [refreshTick, setRefreshTick] = _react.useState.call(void 0, 0);
+  const [showRejected, setShowRejected] = _react.useState.call(void 0, false);
+
+  const requestLocation = _react.useCallback.call(void 0, () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationStatus('unavailable');
+      setLocationError('此瀏覽器不支援地理定位,已使用預設位置');
+      return;
+    }
+    setLocationStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationStatus('granted'); setLocationError(''); },
+      (err) => {
+        const codes = { 1: ['denied', '定位權限被拒,已使用預設位置'], 2: ['fallback', '無法取得位置訊號,已使用預設位置'], 3: ['fallback', '定位逾時,已使用預設位置'] };
+        const [s, m] = codes[err.code] || ['fallback', '定位失敗,已使用預設位置'];
+        setUserPos(DEFAULT_USER_POS); setLocationStatus(s); setLocationError(m);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+
+  _react.useEffect.call(void 0, () => { requestLocation(); }, [requestLocation]);
+
+  _react.useEffect.call(void 0, () => {
+    if (locationStatus !== 'requesting') return;
+    const t = setTimeout(() => {
+      setLocationStatus(prev => {
+        if (prev !== 'requesting') return prev;
+        setUserPos(DEFAULT_USER_POS);
+        setLocationError('定位超時,已使用預設位置');
+        return 'fallback';
+      });
+    }, LOCATION_SAFETY_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [locationStatus]);
+
+  _react.useEffect.call(void 0, () => {
+    if (!hasValidKey) { setMapsStatus('missing-key'); return; }
+    let cancelled = false;
+    setMapsStatus('loading'); setMapsError('');
+    loadGoogleMaps(GOOGLE_MAPS_API_KEY)
+      .then(() => { if (!cancelled) setMapsStatus('ready'); })
+      .catch(err => { if (!cancelled) { setMapsError(err.message); setMapsStatus('error'); } });
+    return () => { cancelled = true; };
+  }, [hasValidKey]);
+
+  _react.useEffect.call(void 0, () => {
+    if (mapsStatus !== 'ready') return;
+    if (locationStatus === 'requesting') return;
+    let cancelled = false;
+    setPlacesStatus('loading');
+    setPlacesError('');
+
+    (async () => {
+      try {
+        const google = window.google;
+        const { results, apiUsed: usedApi } = await fetchNearbyToyStores(google, userPos, SEARCH_RADIUS_M);
+        if (cancelled) return;
+
+        // ⭐ 真偽判定 + 統計
+        const rejected = [];
+        const kept = [];
+        results.forEach(p => {
+          const verdict = classifyToyStore(p);
+          if (verdict.ok) {
+            kept.push(p);
+          } else {
+            rejected.push({
+              name: extractName(p),
+              primaryType: p.primaryType || '',
+              types: p.types || [],
+              reason: verdict.reason,
+            });
+          }
+        });
+        console.log(`[玩具店過濾] 總回傳=${results.length} | 保留=${kept.length} | 剔除=${rejected.length}`);
+        rejected.forEach(r => console.log(`  ✗ ${r.name} [${r.primaryType}] - ${r.reason}`));
+
+        const shops = kept.map((p, i) => placeToShop(p, userPos, i)).filter(Boolean);
+        setApiUsed(usedApi);
+        setPlacesShops(shops);
+        setFilterStats({ total: results.length, kept: kept.length, removed: rejected.length, rejected });
+        setPlacesStatus(shops.length ? 'ready' : 'empty');
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[Places] 全部失敗:', err);
+        setPlacesError(err.message || 'Places 查詢失敗');
+        setPlacesStatus('error');
+        setApiUsed(null);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [mapsStatus, locationStatus, userPos, refreshTick]);
+
+  const categories = ['全部', '玩具', '扭蛋', '模型', '積木', '絕版懷舊', '公仔', '盒玩', '手作'];
+  const shops = placesShops;
+  const usingDefaultLocation = locationStatus !== 'granted' && locationStatus !== 'requesting';
+
+  const availableCategories = _react.useMemo.call(void 0, () => new Set(['全部', ...shops.map(s => s.category)]), [shops]);
+
+  const filteredShops = _react.useMemo.call(void 0, () => {
+    let r = shops.filter(s => {
+      const catOk = activeCategory === '全部' || s.category === activeCategory;
+      const q = searchQuery.trim();
+      const searchOk = !q || s.name.includes(q) || (s.tags || []).some(t => t.includes(q)) || s.area.includes(q);
+      return catOk && searchOk;
+    });
+    if (sortBy === 'rating') r.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (sortBy === 'reviews') r.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    else r.sort((a, b) => a.distance - b.distance);
+    return r;
+  }, [shops, activeCategory, searchQuery, sortBy]);
+
+  const nearbyShops = _react.useMemo.call(void 0, () => [...shops].sort((a, b) => a.distance - b.distance).slice(0, 6), [shops]);
+
+  const toggleFav = (id) => setFavorites(f => f.includes(id) ? f.filter(x => x !== id) : [...f, id]);
+  const openDetail = (shop) => { setSelectedShop(shop); setView('detail'); };
+
+  const getCategoryColor = _react.useCallback.call(void 0, (cat) => ({
+    '玩具': '#ef4444', '模型': '#6366f1', '扭蛋': '#ec4899', '積木': '#3b82f6',
+    '絕版懷舊': '#f59e0b', '公仔': '#10b981', '手作': '#a855f7', '盒玩': '#f97316'
+  }[cat] || '#ef4444'), []);
+
+  const StarRating = ({ rating, size = 'sm' }) => {
+    const cls = size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
+    return _react2.default.createElement('div', { className: "flex items-center gap-0.5"  ,}, [1, 2, 3, 4, 5].map(i => _react2.default.createElement(_lucidereact.Star, { key: i, className: `${cls} ${i <= Math.round(rating || 0) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`,} )));
+  };
+
+  const BadgeIcon = ({ badge }) => {
+    if (badge === 'Gold') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"            ,}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3" ,} ), "金牌店家");
+    if (badge === 'Silver') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-gray-400 to-gray-300 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"            ,}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3" ,} ), "銀牌店家");
+    return null;
+  };
+
+  if (view === 'map') {
+    return _react2.default.createElement(MapView, { mapStatus: mapsStatus, mapsError: mapsError, userPos: userPos, locationStatus: locationStatus, refreshLocation: requestLocation, allShops: shops, visibleShops: filteredShops, mapPinShop: mapPinShop, setMapPinShop: setMapPinShop, favorites: favorites, toggleFav: toggleFav, openDetail: openDetail, getCategoryColor: getCategoryColor, searchQuery: searchQuery, setSearchQuery: setSearchQuery, categories: categories, activeCategory: activeCategory, setActiveCategory: setActiveCategory, setView: setView, StarRating: StarRating, BadgeIcon: BadgeIcon, placesStatus: placesStatus, apiUsed: apiUsed, filterStats: filterStats,} );
+  }
+
+  if (view === 'detail' && selectedShop) {
+    const cur = shops.find(s => s.id === selectedShop.id) || selectedShop;
+    return (
+      _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20"  ,}
+        , _react2.default.createElement('div', { className: "relative h-64 w-full flex items-center justify-center text-8xl"      , style: { background: cur.image },}
+          , _react2.default.createElement('button', { onClick: () => setView('home'), className: "absolute top-4 left-4 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg"       ,}, _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5" ,} ))
+          , _react2.default.createElement('button', { onClick: () => toggleFav(cur.id), className: "absolute top-4 right-4 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg"       ,}
+            , _react2.default.createElement(_lucidereact.Heart, { className: `w-5 h-5 ${favorites.includes(cur.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`,} )
+          )
+          , _react2.default.createElement('span', { className: "drop-shadow-lg",}, cur.emoji)
+          , _react2.default.createElement('div', { className: "absolute bottom-3 left-4 bg-white/90 text-xs font-bold text-gray-700 px-2 py-0.5 rounded-full shadow flex items-center gap-1"             ,}
+            , _react2.default.createElement(_lucidereact.Shield, { className: "w-3 h-3 text-emerald-500"  ,} ), "已驗證玩具店"
+          )
+        )
+        , _react2.default.createElement('div', { className: "bg-white px-5 py-5 border-b"   ,}
+          , _react2.default.createElement('div', { className: "mb-2",}, _react2.default.createElement(BadgeIcon, { badge: cur.badge,} ))
+          , _react2.default.createElement('h1', { className: "text-2xl font-bold text-gray-900"  ,}, cur.name)
+          , cur.address && _react2.default.createElement('p', { className: "text-sm text-gray-500 mt-0.5"  ,}, cur.address)
+          , _react2.default.createElement('div', { className: "flex items-center gap-3 mt-3"   ,}
+            , _react2.default.createElement('div', { className: "flex items-baseline gap-1"  ,}
+              , _react2.default.createElement('span', { className: "text-3xl font-bold text-amber-500"  ,}, cur.rating || '–')
+              , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "/5.0")
+            )
+            , _react2.default.createElement('div', null
+              , _react2.default.createElement(StarRating, { rating: cur.rating, size: "lg",} )
+              , _react2.default.createElement('p', { className: "text-xs text-gray-500 mt-0.5"  ,}, cur.reviews, " 則評價" )
+            )
+            , _react2.default.createElement('div', { className: "ml-auto text-right" ,}
+              , _react2.default.createElement('p', { className: "text-xs text-gray-400" ,}, "距離", usingDefaultLocation && '(預設)')
+              , _react2.default.createElement('p', { className: "text-lg font-bold text-blue-500"  ,}, cur.distance.toFixed(1), " km" )
+            )
+          )
+          , _react2.default.createElement('div', { className: "flex flex-wrap gap-1.5 mt-4"   ,}
+            , _react2.default.createElement('span', { className: "text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium"      ,}, cur.category)
+            , cur.tags.map(t => _react2.default.createElement('span', { key: t, className: "text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-full font-medium"      ,}, "#", t))
+          )
+        )
+        , _react2.default.createElement('div', { className: "bg-white mt-2 px-5 py-4"   ,}
+          , _react2.default.createElement('h2', { className: "font-bold text-gray-900 mb-3 flex items-center gap-2"     ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店家介紹")
+          , _react2.default.createElement('p', { className: "text-sm text-gray-700 leading-relaxed"  ,}, cur.description)
+          , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-2 mt-4"   ,}
+            , cur.highlights.map(h => _react2.default.createElement('div', { key: h, className: "bg-gradient-to-br from-amber-50 to-red-50 rounded-lg p-2.5 text-center"     ,}, _react2.default.createElement('p', { className: "text-xs font-semibold text-red-700"  ,}, h)))
+          )
+        )
+        , _react2.default.createElement('div', { className: "bg-white mt-2 px-5 py-4"   ,}
+          , _react2.default.createElement('h2', { className: "font-bold text-gray-900 mb-3 flex items-center gap-2"     ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店家資訊")
+          , _react2.default.createElement('div', { className: "space-y-3",}
+            , _react2.default.createElement('button', { onClick: () => { setMapPinShop(cur); setView('map'); }, className: "w-full flex items-start gap-3 text-left"    ,}
+              , _react2.default.createElement(_lucidereact.MapPin, { className: "w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"    ,} )
+              , _react2.default.createElement('div', { className: "flex-1",}
+                , _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.area)
+                , _react2.default.createElement('span', { className: "text-xs text-red-500 ml-2"  ,}, "在地圖上查看 →" )
+              )
+            )
+            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}, _react2.default.createElement(_lucidereact.Clock, { className: "w-4 h-4 text-gray-400 mt-0.5"   ,} ), _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.hours))
+            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}, _react2.default.createElement(_lucidereact.Phone, { className: "w-4 h-4 text-gray-400 mt-0.5"   ,} ), _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.phone))
+            , cur.website && (
+              _react2.default.createElement('a', { href: cur.website, target: "_blank", rel: "noopener noreferrer" , className: "flex items-start gap-3"  ,}
+                , _react2.default.createElement(_lucidereact.Store, { className: "w-4 h-4 text-gray-400 mt-0.5"   ,} )
+                , _react2.default.createElement('span', { className: "text-sm text-blue-500 truncate"  ,}, cur.website)
+              )
+            )
+          )
+        )
+        , _react2.default.createElement('div', { className: "fixed bottom-0 left-0 right-0 bg-white border-t px-5 py-3 flex gap-3"         ,}
+          , _react2.default.createElement('button', { onClick: () => toggleFav(cur.id), className: "flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2.5 flex items-center gap-1.5"        ,}
+            , _react2.default.createElement(_lucidereact.Bookmark, { className: `w-4 h-4 ${favorites.includes(cur.id) ? 'fill-red-500 text-red-500' : ''}`,} )
+            , _react2.default.createElement('span', { className: "text-sm font-semibold" ,}, "收藏")
+          )
+          , _react2.default.createElement('a', { href: `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${cur.lat},${cur.lng}&destination_place_id=${cur.id}`, target: "_blank", rel: "noopener noreferrer" , className: "flex-1 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg py-2.5 font-bold text-sm shadow-lg text-center"          ,}, "導航前往 ("
+             , cur.distance.toFixed(1), " km)"
+          )
+        )
+      )
+    );
+  }
+
+  const isLoading = placesStatus === 'loading' || mapsStatus === 'loading' || locationStatus === 'requesting';
+  const isEmpty = placesStatus === 'empty';
+
+  return (
+    _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20"  ,}
+      , _react2.default.createElement('div', { className: "bg-gradient-to-br from-red-500 via-rose-500 to-pink-500 px-5 pt-8 pb-5 text-white"       ,}
+        , _react2.default.createElement('div', { className: "flex items-center justify-between mb-1"   ,}
+          , _react2.default.createElement('div', null
+            , _react2.default.createElement('h1', { className: "text-2xl font-black tracking-tight"  ,}, "玩具食べログ")
+            , _react2.default.createElement('p', { className: "text-xs text-white/80 mt-0.5"  ,}, "ToyTabelog・Google Places + 真偽驗證"   )
+          )
+          , _react2.default.createElement('div', { className: "text-3xl",}, "🧸")
+        )
+
+        , _react2.default.createElement('div', { className: "mt-3",}
+          , locationStatus === 'requesting' ? (
+            _react2.default.createElement('div', { className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20"        ,}
+              , _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"      ,}), "正在取得位置..."
+            )
+          ) : locationStatus === 'granted' ? (
+            _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30"         ,}
+              , _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-3 h-3" ,} ), "已定位 · "  , userPos.lat.toFixed(4), ", " , userPos.lng.toFixed(4)
+            )
+          ) : (
+            _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-400/90 text-amber-900"         ,}
+              , _react2.default.createElement(_lucidereact.LocateOff, { className: "w-3 h-3" ,} ), locationError || '已使用預設位置', " · 重試定位"
+            )
+          )
+        )
+
+        , _react2.default.createElement('div', { className: "mt-3 bg-white rounded-xl flex items-center px-3 py-2.5 shadow-lg"       ,}
+          , _react2.default.createElement(_lucidereact.Search, { className: "w-4 h-4 text-gray-400"  ,} )
+          , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋店家、區域或關鍵字...", className: "flex-1 ml-2 text-sm text-gray-800 outline-none bg-transparent"     ,} )
+          , searchQuery && _react2.default.createElement('button', { onClick: () => setSearchQuery(''),}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4 text-gray-400"  ,} ))
+        )
+
+        , _react2.default.createElement('button', { onClick: () => setView('map'), disabled: mapsStatus !== 'ready', className: "mt-3 w-full bg-white/20 backdrop-blur border border-white/30 rounded-xl px-4 py-3 flex items-center justify-between shadow-lg disabled:opacity-60"             ,}
+          , _react2.default.createElement('div', { className: "flex items-center gap-3"  ,}
+            , _react2.default.createElement('div', { className: "bg-white rounded-lg p-2"  ,}, _react2.default.createElement(_lucidereact.Map, { className: "w-4 h-4 text-red-500"  ,} ))
+            , _react2.default.createElement('div', { className: "text-left",}
+              , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "地圖模式 · Google Maps"   )
+              , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}
+                , placesStatus === 'ready' ? `${shops.length} 家已驗證玩具店` : placesStatus === 'loading' ? '搜尋中...' : placesStatus === 'empty' ? '附近無結果' : '進入地圖'
+              )
+            )
+          )
+          , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-4 h-4 rotate-180"  ,} )
+        )
+
+        , usingDefaultLocation && mapsStatus === 'ready' && (
+          _react2.default.createElement('div', { className: "mt-3 bg-amber-400/25 border border-amber-300/40 rounded-lg px-3 py-2 text-xs flex items-start gap-1.5"          ,}
+            , _react2.default.createElement(_lucidereact.Info, { className: "w-3.5 h-3.5 flex-shrink-0 mt-0.5"   ,} )
+            , _react2.default.createElement('div', { className: "flex-1",}
+              , _react2.default.createElement('p', { className: "font-semibold",}, "已使用預設位置搜尋")
+              , _react2.default.createElement('p', { className: "text-white/90 mt-0.5" ,}, "改以 " , _react2.default.createElement('strong', null, DEFAULT_USER_LABEL), " 為中心。" )
+            )
+          )
+        )
+
+        , _react2.default.createElement('div', { className: "mt-3",}
+          , mapsStatus === 'missing-key' ? (
+            _react2.default.createElement('div', { className: "bg-amber-400/25 border border-amber-300/40 rounded-lg p-3 text-xs"     ,}
+              , _react2.default.createElement('p', { className: "font-bold flex items-center gap-1.5"   ,}, _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-3.5 h-3.5" ,} ), "尚未設定 API Key"  )
+              , _react2.default.createElement('p', { className: "mt-1 text-white/90" ,}, "請把 " , _react2.default.createElement('code', { className: "bg-black/20 px-1 py-0.5 rounded"   ,}, "GOOGLE_MAPS_API_KEY"), " 換成自己的 Key。"  )
+            )
+          ) : mapsStatus === 'loading' ? (
+            _react2.default.createElement('div', { className: "flex items-center gap-2 text-xs bg-white/15 rounded-lg px-3 py-2"       ,}
+              , _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"      ,})
+              , _react2.default.createElement('span', null, "正在載入 Google Maps..."  )
+            )
+          ) : mapsStatus === 'error' ? (
+            _react2.default.createElement('div', { className: "bg-red-500/30 border border-red-300/40 rounded-lg px-3 py-2 text-xs"      ,}
+              , _react2.default.createElement('p', { className: "font-bold flex items-center gap-1"   ,}, _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-3 h-3" ,} ), "Google Maps 載入失敗"  )
+              , _react2.default.createElement('p', { className: "mt-0.5 text-white/90 break-words"  ,}, mapsError)
+            )
+          ) : placesStatus === 'ready' ? (
+            _react2.default.createElement('div', { className: "space-y-2",}
+              , _react2.default.createElement('div', { className: "flex items-center justify-between bg-emerald-500/25 border border-emerald-300/40 rounded-lg px-3 py-1.5"        ,}
+                , _react2.default.createElement('div', { className: "flex items-center gap-1.5 text-xs font-semibold"    ,}
+                  , _react2.default.createElement('div', { className: "w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse"    ,})
+                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "Places API (相容)"  )
+                  , _react2.default.createElement('span', null, "· " , shops.length, " 筆" )
+                )
+                , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "text-xs flex items-center gap-1 hover:bg-white/10 px-1.5 py-0.5 rounded"       ,}
+                  , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重新整理"
+                )
+              )
+              , filterStats.removed > 0 && (
+                _react2.default.createElement('button', { onClick: () => setShowRejected(v => !v), className: "w-full bg-emerald-500/20 border border-emerald-300/30 rounded-lg px-3 py-1.5 text-xs flex items-center justify-between hover:bg-emerald-500/30"           ,}
+                  , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
+                    , _react2.default.createElement(_lucidereact.Shield, { className: "w-3 h-3" ,} )
+                    , _react2.default.createElement('span', null, "真偽驗證: 已過濾 "  , _react2.default.createElement('strong', null, filterStats.removed), " 家非玩具店 (保留 "   , _react2.default.createElement('strong', null, filterStats.kept), "/", filterStats.total, ")")
+                  )
+                  , _react2.default.createElement('span', { className: "text-white/80",}, showRejected ? '▲ 隱藏' : '▼ 詳情')
+                )
+              )
+              , showRejected && filterStats.rejected.length > 0 && (
+                _react2.default.createElement('div', { className: "bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-xs max-h-40 overflow-y-auto"        ,}
+                  , _react2.default.createElement('p', { className: "font-bold mb-1.5 text-white/90"  ,}, "已過濾的店家:")
+                  , _react2.default.createElement('div', { className: "space-y-1",}
+                    , filterStats.rejected.map((r, i) => (
+                      _react2.default.createElement('div', { key: i, className: "flex items-start gap-1.5 text-white/85"   ,}
+                        , _react2.default.createElement(_lucidereact.X, { className: "w-3 h-3 flex-shrink-0 mt-0.5 text-red-200"    ,} )
+                        , _react2.default.createElement('div', { className: "min-w-0 flex-1" ,}
+                          , _react2.default.createElement('div', { className: "font-semibold truncate" ,}, r.name)
+                          , _react2.default.createElement('div', { className: "text-white/60 text-[10px]" ,}, r.reason)
+                        )
+                      )
+                    ))
+                  )
+                )
+              )
+            )
+          ) : placesStatus === 'loading' ? (
+            _react2.default.createElement('div', { className: "flex items-center gap-2 text-xs bg-white/15 rounded-lg px-3 py-2"       ,}
+              , _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"      ,})
+              , _react2.default.createElement('span', null, "正在搜尋附近玩具店...")
+            )
+          ) : placesStatus === 'empty' ? (
+            _react2.default.createElement('div', { className: "bg-amber-400/25 border border-amber-300/40 rounded-lg px-3 py-2 text-xs"      ,}
+              , _react2.default.createElement('div', { className: "flex items-center justify-between"  ,}
+                , _react2.default.createElement('span', null, usingDefaultLocation ? '預設位置' : '您附近', " " , SEARCH_RADIUS_M / 1000, "km 內沒有玩具店" )
+                , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "underline",}, "重試")
+              )
+              , filterStats.total > 0 && filterStats.kept === 0 && (
+                _react2.default.createElement('p', { className: "mt-1 text-white/85" ,}, "Google 回傳 "  , filterStats.total, " 家,但真偽驗證後全部被剔除 (大多為百貨/超商/便利店)"  )
+              )
+            )
+          ) : placesStatus === 'error' ? (
+            _react2.default.createElement('div', { className: "bg-red-500/30 border border-red-300/40 rounded-lg px-3 py-2 text-xs"      ,}
+              , _react2.default.createElement('p', { className: "font-bold flex items-center gap-1"   ,}, _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-3 h-3" ,} ), "Places 查詢失敗" )
+              , _react2.default.createElement('p', { className: "mt-1 text-white/90 break-words whitespace-pre-line"   ,}, placesError)
+              , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "mt-2 bg-white/20 hover:bg-white/30 rounded px-2 py-1 flex items-center gap-1"        ,}
+                , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重試"
+              )
+            )
+          ) : null
+        )
+
+        , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-2 mt-3"   ,}
+          , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center"    ,}
+            , _react2.default.createElement('p', { className: "text-lg font-bold" ,}, shops.length)
+            , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}, "已驗證店家")
+          )
+          , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center"    ,}
+            , _react2.default.createElement('p', { className: "text-lg font-bold" ,}, nearbyShops[0] ? `${nearbyShops[0].distance.toFixed(1)}km` : '–')
+            , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}, "最近距離")
+          )
+          , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center"    ,}
+            , _react2.default.createElement('p', { className: "text-lg font-bold" ,}, favorites.length)
+            , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}, "我的收藏")
+          )
+        )
+      )
+
+      , shops.length > 0 && (
+        _react2.default.createElement('div', { className: "bg-gradient-to-b from-gray-50 to-white pt-4 pb-2"    ,}
+          , _react2.default.createElement('div', { className: "flex items-center justify-between px-5 mb-2"    ,}
+            , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
+              , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4 text-blue-500"  ,} )
+              , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, usingDefaultLocation ? `${DEFAULT_USER_LABEL}附近` : '您附近的店家')
+              , _react2.default.createElement('span', { className: "text-xs text-green-600 font-semibold"  ,}, "· 即時" )
+            )
+            , _react2.default.createElement('button', { onClick: () => setView('map'), className: "text-xs text-red-500 font-semibold"  ,}, "地圖 →" )
+          )
+          , _react2.default.createElement(HorizontalShopList, { shops: nearbyShops, onSelect: openDetail,} )
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "bg-white border-b sticky top-0 z-10"    ,}
+        , _react2.default.createElement('div', { className: "flex gap-2 overflow-x-auto px-5 py-3 scrollbar-hide"     ,}
+          , categories.map(c => {
+            const available = availableCategories.has(c);
+            return (
+              _react2.default.createElement('button', { key: c, onClick: () => setActiveCategory(c),
+                className: `flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-semibold transition ${activeCategory === c ? 'bg-gray-900 text-white shadow' : available ? 'bg-gray-100 text-gray-700' : 'bg-gray-50 text-gray-300'}`,}
+                , c
+              )
+            );
+          })
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "px-5 py-3 flex items-center justify-between"    ,}
+        , _react2.default.createElement('div', { className: "flex items-center gap-2"  ,}
+          , _react2.default.createElement(_lucidereact.TrendingUp, { className: "w-4 h-4 text-red-500"  ,} )
+          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, activeCategory === '全部' ? '附近玩具店' : `${activeCategory}類店家`)
+          , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "· " , filteredShops.length, " 家" )
+        )
+        , _react2.default.createElement('button', { onClick: () => setShowFilter(!showFilter), className: "flex items-center gap-1 text-xs text-gray-600 bg-white border rounded-full px-3 py-1"         ,}
+          , _react2.default.createElement(_lucidereact.Filter, { className: "w-3 h-3" ,} ), sortBy === 'rating' ? '評分' : sortBy === 'reviews' ? '人氣' : '距離'
+        )
+      )
+
+      , showFilter && (
+        _react2.default.createElement('div', { className: "mx-5 mb-3 bg-white rounded-xl p-3 shadow-sm border flex gap-2"        ,}
+          , [['distance', '距離最近'], ['rating', '評分最高'], ['reviews', '評價最多']].map(([k, label]) => (
+            _react2.default.createElement('button', { key: k, onClick: () => { setSortBy(k); setShowFilter(false); }, className: `flex-1 py-1.5 rounded-lg text-xs font-semibold ${sortBy === k ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`,}, label)
+          ))
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "px-5 space-y-3" ,}
+        , isLoading && shops.length === 0 && (
+          _react2.default.createElement('div', { className: "text-center py-16 text-gray-400"  ,}
+            , _react2.default.createElement('div', { className: "inline-block w-10 h-10 border-4 border-red-400 border-t-transparent rounded-full animate-spin mb-3"        ,})
+            , _react2.default.createElement('p', { className: "text-sm",}, locationStatus === 'requesting' ? '正在取得位置...' : mapsStatus === 'loading' ? '載入 Google Maps...' : '搜尋附近玩具店...')
+          )
+        )
+        , isEmpty && !isLoading && (
+          _react2.default.createElement('div', { className: "text-center py-16 text-gray-500"  ,}
+            , _react2.default.createElement('div', { className: "text-5xl mb-3" ,}, "🔎")
+            , _react2.default.createElement('p', { className: "text-sm font-semibold text-gray-700"  ,}, "附近 " , SEARCH_RADIUS_M / 1000, "km 內沒有玩具店" )
+            , filterStats.total > 0 && filterStats.kept === 0 ? (
+              _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1"  ,}, "Google 回傳 "  , filterStats.total, " 筆,但真偽驗證後全部被剔除" )
+            ) : (
+              _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1"  ,}, usingDefaultLocation ? `目前搜尋範圍: ${DEFAULT_USER_LABEL}` : '試試擴大搜尋範圍')
+            )
+            , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "mt-3 inline-flex items-center gap-1 text-sm text-red-500 font-semibold"      ,}
+              , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重新搜尋"
+            )
+          )
+        )
+        , placesStatus === 'error' && (
+          _react2.default.createElement('div', { className: "bg-red-50 border border-red-200 rounded-xl p-4"    ,}
+            , _react2.default.createElement('div', { className: "flex items-start gap-2 text-red-700"   ,}
+              , _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-5 h-5 flex-shrink-0 mt-0.5"   ,} )
+              , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
+                , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "無法載入店家資料")
+                , _react2.default.createElement('p', { className: "text-xs mt-1 break-words whitespace-pre-line"   ,}, placesError)
+                , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "mt-3 inline-flex items-center gap-1 bg-red-500 text-white rounded px-3 py-1 text-xs font-semibold"          ,}
+                  , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重試"
+                )
+              )
+            )
+          )
+        )
+        , !isLoading && !isEmpty && placesStatus !== 'error' && filteredShops.length === 0 && shops.length > 0 && (
+          _react2.default.createElement('div', { className: "text-center py-12 text-gray-400"  ,}
+            , _react2.default.createElement('div', { className: "text-4xl mb-2" ,}, "🔍")
+            , _react2.default.createElement('p', { className: "text-sm",}, "目前分類或搜尋條件下沒有店家")
+            , _react2.default.createElement('button', { onClick: () => { setActiveCategory('全部'); setSearchQuery(''); }, className: "mt-2 text-xs text-red-500 font-semibold"   ,}, "清除篩選")
+          )
+        )
+
+        , filteredShops.map((shop, idx) => (
+          _react2.default.createElement('div', { key: shop.id, onClick: () => openDetail(shop), className: "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"      ,}
+            , _react2.default.createElement('div', { className: "flex",}
+              , _react2.default.createElement('div', { className: "w-28 h-28 flex-shrink-0 flex items-center justify-center text-5xl relative"       , style: { background: shop.image },}
+                , idx < 3 && activeCategory === '全部' && sortBy === 'distance' && _react2.default.createElement('div', { className: "absolute top-1.5 left-1.5 bg-white/90 text-gray-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center"            ,}, idx + 1)
+                , _react2.default.createElement('div', { className: "absolute bottom-1 right-1 bg-emerald-500 text-white rounded-full p-0.5"      , title: "已驗證為玩具店",}, _react2.default.createElement(_lucidereact.Shield, { className: "w-2.5 h-2.5" ,} ))
+                , _react2.default.createElement('span', { className: "drop-shadow",}, shop.emoji)
+              )
+              , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
+                , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
+                  , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
+                    , shop.badge && _react2.default.createElement('div', { className: "flex items-center gap-1.5 mb-1"   ,}, _react2.default.createElement(BadgeIcon, { badge: shop.badge,} ))
+                    , _react2.default.createElement('h3', { className: "font-bold text-gray-900 truncate"  ,}, shop.name)
+                  )
+                  , _react2.default.createElement('button', { onClick: (e) => { e.stopPropagation(); toggleFav(shop.id); }, className: "flex-shrink-0",}
+                    , _react2.default.createElement(_lucidereact.Heart, { className: `w-5 h-5 ${favorites.includes(shop.id) ? 'fill-red-500 text-red-500' : 'text-gray-300'}`,} )
+                  )
+                )
+                , _react2.default.createElement('div', { className: "flex items-center gap-1.5 mt-1"   ,}
+                  , _react2.default.createElement('span', { className: "text-base font-bold text-amber-500"  ,}, shop.rating || '–')
+                  , _react2.default.createElement(StarRating, { rating: shop.rating,} )
+                  , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "(", shop.reviews, ")")
+                )
+                , _react2.default.createElement('div', { className: "flex items-center gap-2 mt-1.5 text-xs text-gray-500"     ,}
+                  , _react2.default.createElement('span', { className: "flex items-center gap-0.5"  ,}, _react2.default.createElement(_lucidereact.MapPin, { className: "w-3 h-3" ,} ), shop.area)
+                  , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', { className: "text-gray-700 font-semibold" ,}, shop.price)
+                  , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', { className: "flex items-center gap-0.5 text-blue-500"   ,}, _react2.default.createElement(_lucidereact.Navigation, { className: "w-3 h-3" ,} ), shop.distance.toFixed(1), "km")
+                )
+                , _react2.default.createElement('div', { className: "flex flex-wrap gap-1 mt-1.5"   ,}
+                  , _react2.default.createElement('span', { className: "text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded"     ,}, shop.category)
+                  , shop.tags.slice(0, 2).map(t => _react2.default.createElement('span', { key: t, className: "text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded"     ,}, "#", t))
+                )
+              )
+            )
+          )
+        ))
+      )
+
+      , _react2.default.createElement('div', { className: "fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2"        ,}
+        , _react2.default.createElement('button', { className: "flex flex-col items-center py-1 px-4"    ,}, _react2.default.createElement(_lucidereact.TrendingUp, { className: "w-5 h-5 text-red-500"  ,} ), _react2.default.createElement('span', { className: "text-xs text-red-500 font-bold mt-0.5"   ,}, "探索"))
+        , _react2.default.createElement('button', { onClick: () => setView('map'), className: "flex flex-col items-center py-1 px-4"    ,}, _react2.default.createElement(_lucidereact.Map, { className: "w-5 h-5 text-gray-400"  ,} ), _react2.default.createElement('span', { className: "text-xs text-gray-400 mt-0.5"  ,}, "地圖"))
+        , _react2.default.createElement('button', { className: "flex flex-col items-center py-1 px-4 relative"     ,}
+          , _react2.default.createElement(_lucidereact.Heart, { className: "w-5 h-5 text-gray-400"  ,} ), _react2.default.createElement('span', { className: "text-xs text-gray-400 mt-0.5"  ,}, "收藏")
+          , favorites.length > 0 && _react2.default.createElement('span', { className: "absolute top-0 right-2 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold"           , style: { fontSize: '10px' },}, favorites.length)
+        )
+        , _react2.default.createElement('button', { className: "flex flex-col items-center py-1 px-4"    ,}, _react2.default.createElement('div', { className: "w-5 h-5 rounded-full bg-gray-300"   ,}), _react2.default.createElement('span', { className: "text-xs text-gray-400 mt-0.5"  ,}, "我的"))
+      )
+    )
+  );
+} exports.default = ToyTabelog;
+</script></head>
+  <body>
+  
+
+<div id="preview-app"></div></body></html>
