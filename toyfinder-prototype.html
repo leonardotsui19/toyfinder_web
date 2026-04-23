@@ -200,7 +200,7 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
       'businessStatus', 'websiteURI',
     ],
     locationRestriction: { center, radius },
-    includedTypes: ['toy_store'],
+    includedTypes: ['toy', 'store'],
     maxResultCount: 20,
     rankPreference: SearchNearbyRankPreference.POPULARITY,
     language: 'zh-TW',
@@ -225,7 +225,8 @@ function fetchNearbyWithLegacyAPI(google, center, radius) {
       {
         location: new google.maps.LatLng(center.lat, center.lng),
         radius,
-        type: 'toy_store',
+	keyword: 'toy',
+        type: 'store',	
         language: 'zh-TW',
       },
       (results, status) => {
@@ -723,16 +724,16 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         const kept = [];
         results.forEach(p => {
           const verdict = classifyToyStore(p);
-          if (verdict.ok) {
+          //if (verdict.ok) {
             kept.push(p);
-          } else {
-            rejected.push({
-              name: extractName(p),
-              primaryType: p.primaryType || '',
-              types: p.types || [],
-              reason: verdict.reason,
-            });
-          }
+          //} else {
+          //  rejected.push({
+          //    name: extractName(p),
+          //    primaryType: p.primaryType || '',
+          //    types: p.types || [],
+          //    reason: verdict.reason,
+          //  });
+          //}
         });
         console.log(`[玩具店過濾] 總回傳=${results.length} | 保留=${kept.length} | 剔除=${rejected.length}`);
         rejected.forEach(r => console.log(`  ✗ ${r.name} [${r.primaryType}] - ${r.reason}`));
