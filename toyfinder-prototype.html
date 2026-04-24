@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
+<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
     <meta charset="utf-8">
     <title>ToyFinder Prototype</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -68,10 +68,10 @@ function loadGoogleMaps(apiKey) {
 }
 
 // ======================================================================
-// ⭐ 玩具店真偽判定 (三層過濾)
+// ⭐ 玩具店真偽判定 - 適配「廣義 store + 關鍵字搜尋」
 // ======================================================================
 
-// [黑名單] 已知非玩具店的店名 pattern (連鎖超商/量販/百貨/藥妝/餐飲等)
+// [黑名單] 已知非玩具/興趣店的店名 pattern
 const NAME_BLACKLIST = [
   /7-?\s?11|7-?eleven|seven-?eleven|統一超商/i,
   /全家便利|family\s?mart|famima/i,
@@ -87,49 +87,48 @@ const NAME_BLACKLIST = [
   /康是美|cosmed/i,
   /寶雅|poya/i,
   /小北百貨/i,
-  /大創|daiso/i,  // 大創雖然有賣玩具但主業是雜貨
   /無印良品|muji/i,
   /新光三越|sogo|崇光|遠東百貨|太平洋百貨|微風|bellavita/i,
   /統一時代|京站|環球購物中心|大江購物中心|台茂|美麗華/i,
-  /誠品|金石堂|墊腳石|何嘉仁書店/i,
-  /星巴克|starbucks|路易莎|louisa|cama/i,
-  /麥當勞|mcdonald|肯德基|kfc|漢堡王|摩斯|subway/i,
+  /誠品(?!.*(玩具|模型|公仔))/i,  // 誠品 (除非名字帶玩具/模型/公仔)
+  /金石堂|墊腳石|何嘉仁書店/i,
+  /星巴克|starbucks|路易莎|louisa|cama\s?cafe/i,
+  /麥當勞|mcdonald|肯德基|kfc|漢堡王|摩斯|subway|必勝客|pizza\s?hut|達美樂/i,
   /藥局|藥房|pharmacy|drug\s?store/i,
   /加油站|gas\s?station/i,
-  /銀行|bank|郵局|post\s?office/i,
+  /銀行|\bbank\b|郵局|post\s?office/i,
   /診所|clinic|醫院|hospital/i,
-  /旅館|hotel|民宿/i,
-  /健身|gym|fitness/i,
-  /餐廳|restaurant|食堂|小吃|麵店|便當|飯店/i,
-  /服飾|時裝|boutique|鞋店|shoe\s?store/i,
-  /理髮|美容|salon|spa|nail/i,
-  /手機|通訊|電信|中華電信|台灣大哥大|遠傳/i,
+  /旅館|hotel|民宿|motel/i,
+  /健身|gym|fitness|瑜珈|yoga/i,
+  /餐廳|restaurant|食堂|小吃|麵店|便當|飯店|café|咖啡廳/i,
+  /服飾|時裝|boutique|鞋店|shoe\s?store|uniqlo|zara|h&m/i,
+  /理髮|美容|salon|spa|美甲|nail/i,
+  /手機|通訊行|電信|中華電信|台灣大哥大|遠傳|亞太/i,
+  /超市|supermarket/i,
+  /花店|florist|flower\s?shop/i,
+  /寵物|pet\s?shop/i,
+  /書局|書店|bookstore|bookshop/i,  // 純書店
+  /文具店|stationery(?!.*(玩具|hobby|模型))/i,
 ];
 
-// [寬類型] 這些類型太廣,單純有 toy_store tag 不足以證明真是玩具店
+// [寬類型] 這些類型若無玩具關鍵字佐證即剔除
 const BROAD_TYPES = new Set([
-  'shopping_mall',           // 購物中心
-  'department_store',        // 百貨公司
-  'supermarket',             // 超市
-  'convenience_store',       // 超商
-  'grocery_or_supermarket',  // 雜貨/超市
-  'grocery_store',
-  'discount_store',          // 特價零售
-  'wholesaler',              // 批發
-  'book_store',              // 書店
-  'stationery_store',        // 文具店
-  'clothing_store',          // 服飾
-  'electronics_store',       // 電子用品
-  'home_goods_store',        // 家居
-  'gift_shop',               // 禮品 (太廣)
-  'pharmacy', 'drugstore',
+  'shopping_mall', 'department_store', 'supermarket', 'convenience_store',
+  'grocery_or_supermarket', 'grocery_store', 'discount_store', 'wholesaler',
+  'book_store', 'stationery_store', 'clothing_store', 'electronics_store',
+  'home_goods_store', 'gift_shop', 'pharmacy', 'drugstore',
+  'furniture_store', 'hardware_store', 'jewelry_store', 'shoe_store',
+  'bicycle_store', 'bakery', 'cafe', 'restaurant', 'food',
 ]);
 
-// [關鍵字] 店名含這些關鍵字 → 強力證明是玩具店
-const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|遊戲/i;
+// [肯定玩具/興趣類型] 只要有這些就直接通過 (不論店名)
+const POSITIVE_TYPES = new Set([
+  'toy_store',
+  'hobby_shop',   // Places API 有時會標這個
+]);
 
-// [強關鍵字] 連某些廣義店如果有這關鍵字也算
-const STRONG_TOY_KEYWORDS = /玩具|toy|toys|模型|扭蛋|轉蛋|gacha|公仔|figure|手辦|積木|樂高|lego|玩具屋|模型屋|hobby\s?shop|玩具店/i;
+// [玩具/興趣關鍵字] 店名含這些 → 強力證明是玩具/興趣店
+const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具/i;
 
 function extractName(place) {
   return typeof place.displayName === 'string'
@@ -138,7 +137,7 @@ function extractName(place) {
 }
 
 /**
- * 判定是否為真正的玩具店
+ * 判定是否為真正的玩具/興趣店 (適配 store + keyword 廣義搜尋)
  * @returns {{ ok: boolean, reason?: string }}
  */
 function classifyToyStore(place) {
@@ -146,42 +145,52 @@ function classifyToyStore(place) {
   const types = place.types || [];
   const primaryType = place.primaryType || '';
 
-  <!-- // 第 1 層: types 必須包含 toy_store (若完全沒有,直接拒絕) -->
-  <!-- if (!types.includes('store')) { -->
-    <!-- return { ok: false, reason: `types 不含 store` }; -->
-  <!-- } -->
+  // ========== Layer 1: 黑名單 (最優先) ==========
+  // 連鎖超商、百貨、書店、餐廳等,即使 Google 標了 toy_store 也剔除
+  for (const re of NAME_BLACKLIST) {
+    if (re.test(name)) {
+      return { ok: false, reason: `店名符合黑名單 (${re.source.slice(0, 25)}...)` };
+    }
+  }
 
-  <!-- // 第 2 層: 店名黑名單 (連鎖超商/百貨/藥妝等) -->
-  <!-- for (const re of NAME_BLACKLIST) { -->
-    <!-- if (re.test(name)) { -->
-      <!-- return { ok: false, reason: `店名符合黑名單 (${re.source.slice(0, 30)}...)` }; -->
-    <!-- } -->
-  <!-- } -->
+  // ========== Layer 2: 強訊號 (直接通過) ==========
+  // 2a. primaryType 就是玩具/興趣店
+  if (POSITIVE_TYPES.has(primaryType)) return { ok: true };
 
-  // 第 3 層: 寬類型檢查
-  const hasBroadType = types.some(t => BROAD_TYPES.has(t));
-  const primaryIsBroad = BROAD_TYPES.has(primaryType);
-  const primaryIsToyStore = primaryType === 'toy_store';
+  // 2b. types 陣列含玩具店類型
+  const hasPositiveType = types.some(t => POSITIVE_TYPES.has(t));
   const nameHasToyKeyword = TOY_KEYWORDS.test(name);
-  const nameHasStrongToyKeyword = STRONG_TOY_KEYWORDS.test(name);
 
-  // 3a. primaryType 就是 toy_store → 最可信,直接通過
-  if (primaryIsToyStore) return { ok: true };
+  // 2c. 店名有玩具關鍵字 (就算 Google 沒標 toy_store,店名有就算)
+  if (nameHasToyKeyword) return { ok: true };
 
-  // 3b. primaryType 是寬類型 (e.g. shopping_mall) → 除非店名有強玩具關鍵字,否則拒絕
+  // 2d. 有 toy_store/hobby_shop tag + 沒被黑名單剔除 → 通過
+  if (hasPositiveType) return { ok: true };
+
+  // ========== Layer 3: 寬類型剔除 ==========
+  const primaryIsBroad = BROAD_TYPES.has(primaryType);
+  const hasBroadType = types.some(t => BROAD_TYPES.has(t));
+
   if (primaryIsBroad) {
-    if (nameHasStrongToyKeyword) return { ok: true };
     return { ok: false, reason: `primaryType=${primaryType} 是寬類型且店名無玩具關鍵字` };
   }
-
-  // 3c. 有寬類型 (非 primary) → 店名必須有玩具關鍵字
   if (hasBroadType) {
-    if (nameHasToyKeyword) return { ok: true };
-    return { ok: false, reason: `含寬類型 (${types.filter(t => BROAD_TYPES.has(t)).join(',')}) 且店名無玩具關鍵字` };
+    const broadList = types.filter(t => BROAD_TYPES.has(t)).join(',');
+    return { ok: false, reason: `含寬類型 (${broadList}) 且店名無玩具關鍵字` };
   }
 
-  // 3d. 其他 (e.g. primaryType 是 store / establishment / point_of_interest)
-  //     有 toy_store tag + 沒寬類型 + 沒黑名單 → 通過
+  // ========== Layer 4: 純 store / establishment ==========
+  // 到此: 不在黑名單、沒玩具 tag、店名沒關鍵字、沒寬類型
+  // Legacy API 用 keyword 搜尋雖然是 Google 認為相關,但證據不足 → 剔除
+  // 這層可以決定是否保守
+  const onlyGenericTypes = types.every(t =>
+    t === 'store' || t === 'establishment' || t === 'point_of_interest' || t === 'food'
+  );
+  if (onlyGenericTypes && types.length > 0) {
+    return { ok: false, reason: `僅通用類型 (${types.join(',')}) 且無玩具關鍵字` };
+  }
+
+  // 其他情況 (e.g. 有小眾但非寬類型的 tag) → 保守通過
   return { ok: true };
 }
 
@@ -210,7 +219,7 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
   return results || [];
 }
 
-// ============ Places API: 舊版 ============
+// ============ Places API: 舊版 (廣義 store + 玩具/興趣 keyword) ============
 function fetchNearbyWithLegacyAPI(google, center, radius) {
   return new Promise((resolve, reject) => {
     const places = google.maps.places;
@@ -221,13 +230,13 @@ function fetchNearbyWithLegacyAPI(google, center, radius) {
     const attrDiv = document.createElement('div');
     const service = new places.PlacesService(attrDiv);
     const S = places.PlacesServiceStatus;
-	
+
     service.nearbySearch(
       {
         location: new google.maps.LatLng(center.lat, center.lng),
         radius,
-		keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR action figures',
-        type: 'store',	
+        keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR action figures',
+        type: 'store',
         language: 'zh-TW',
       },
       (results, status) => {
@@ -276,7 +285,7 @@ async function fetchNearbyToyStores(google, center, radius) {
 function inferCategory(name = '', types = []) {
   const n = name;
   if (/扭蛋|轉蛋|ガチャ|gacha|gashapon|カプセル/i.test(n)) return '扭蛋';
-  if (/模型|鋼彈|高達|gundam|plamo|プラモ|塑膠模型|田宮|tamiya/i.test(n)) return '模型';
+  if (/模型|鋼彈|高達|gundam|plamo|プラモ|塑膠模型|田宮|tamiya|rc\s?car|遙控/i.test(n)) return '模型';
   if (/積木|樂高|lego|brick|ブロック|nanoblock/i.test(n)) return '積木';
   if (/公仔|figure|figurine|手辦|景品|黏土人|nendoroid|figma|scale/i.test(n)) return '公仔';
   if (/盒玩|食玩|盲盒|blind ?box|popmart|泡泡瑪特|molly|labubu/i.test(n)) return '盒玩';
@@ -331,7 +340,7 @@ function placeToShop(place, userPos, idx) {
   const nameStr = extractName(place) || '未命名店家';
   const category = inferCategory(nameStr, place.types || []);
   const typeTagMap = {
-    toy_store: '玩具店', gift_shop: '禮品', hobby_shop: '興趣專賣',
+    toy_store: '玩具店', hobby_shop: '興趣專賣', gift_shop: '禮品',
     shopping_mall: '商場', department_store: '百貨', store: '零售', establishment: '店家',
   };
   const tags = Array.from(new Set((place.types || []).map(t => typeTagMap[t]).filter(Boolean))).slice(0, 3);
@@ -639,7 +648,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   );
 }
 
- function ToyTabelog() {
+ function ToyFinder() {
   const [view, setView] = _react.useState.call(void 0, 'home');
   const [selectedShop, setSelectedShop] = _react.useState.call(void 0, null);
   const [searchQuery, setSearchQuery] = _react.useState.call(void 0, '');
@@ -956,7 +965,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
               , _react2.default.createElement('div', { className: "flex items-center justify-between bg-emerald-500/25 border border-emerald-300/40 rounded-lg px-3 py-1.5"        ,}
                 , _react2.default.createElement('div', { className: "flex items-center gap-1.5 text-xs font-semibold"    ,}
                   , _react2.default.createElement('div', { className: "w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse"    ,})
-                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "Places API (相容)"  )
+                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "Places API (廣義+關鍵字)"  )
                   , _react2.default.createElement('span', null, "· " , shops.length, " 筆" )
                 )
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "text-xs flex items-center gap-1 hover:bg-white/10 px-1.5 py-0.5 rounded"       ,}
@@ -981,7 +990,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
                         , _react2.default.createElement(_lucidereact.X, { className: "w-3 h-3 flex-shrink-0 mt-0.5 text-red-200"    ,} )
                         , _react2.default.createElement('div', { className: "min-w-0 flex-1" ,}
                           , _react2.default.createElement('div', { className: "font-semibold truncate" ,}, r.name)
-                          , _react2.default.createElement('div', { className: "text-white/60 text-[10px]" ,}, r.reason)
+                          , _react2.default.createElement('div', { className: "text-white/60 text-xs" ,}, r.reason)
                         )
                       )
                     ))
@@ -1001,7 +1010,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "underline",}, "重試")
               )
               , filterStats.total > 0 && filterStats.kept === 0 && (
-                _react2.default.createElement('p', { className: "mt-1 text-white/85" ,}, "Google 回傳 "  , filterStats.total, " 家,但真偽驗證後全部被剔除 (大多為百貨/超商/便利店)"  )
+                _react2.default.createElement('p', { className: "mt-1 text-white/85" ,}, "Google 回傳 "  , filterStats.total, " 家,但真偽驗證後全部被剔除" )
               )
             )
           ) : placesStatus === 'error' ? (
@@ -1164,13 +1173,13 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , _react2.default.createElement('button', { onClick: () => setView('map'), className: "flex flex-col items-center py-1 px-4"    ,}, _react2.default.createElement(_lucidereact.Map, { className: "w-5 h-5 text-gray-400"  ,} ), _react2.default.createElement('span', { className: "text-xs text-gray-400 mt-0.5"  ,}, "地圖"))
         , _react2.default.createElement('button', { className: "flex flex-col items-center py-1 px-4 relative"     ,}
           , _react2.default.createElement(_lucidereact.Heart, { className: "w-5 h-5 text-gray-400"  ,} ), _react2.default.createElement('span', { className: "text-xs text-gray-400 mt-0.5"  ,}, "收藏")
-          , favorites.length > 0 && _react2.default.createElement('span', { className: "absolute top-0 right-2 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold"           , style: { fontSize: '10px' },}, favorites.length)
+          , favorites.length > 0 && _react2.default.createElement('span', { className: "absolute top-0 right-2 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center font-bold text-xs"            ,}, favorites.length)
         )
         , _react2.default.createElement('button', { className: "flex flex-col items-center py-1 px-4"    ,}, _react2.default.createElement('div', { className: "w-5 h-5 rounded-full bg-gray-300"   ,}), _react2.default.createElement('span', { className: "text-xs text-gray-400 mt-0.5"  ,}, "我的"))
       )
     )
   );
-} exports.default = ToyTabelog;
+} exports.default = ToyFinder;
 </script></head>
   <body>
   
