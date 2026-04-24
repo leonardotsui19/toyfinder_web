@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
+﻿<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
     <meta charset="utf-8">
     <title>Poe</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -146,17 +146,17 @@ function classifyToyStore(place) {
   const types = place.types || [];
   const primaryType = place.primaryType || '';
 
-  // 第 1 層: types 必須包含 toy_store (若完全沒有,直接拒絕)
-  if (!types.includes('toy_store')) {
-    return { ok: false, reason: `types 不含 toy_store` };
-  }
+  <!-- // 第 1 層: types 必須包含 toy_store (若完全沒有,直接拒絕) -->
+  <!-- if (!types.includes('store')) { -->
+    <!-- return { ok: false, reason: `types 不含 store` }; -->
+  <!-- } -->
 
-  // 第 2 層: 店名黑名單 (連鎖超商/百貨/藥妝等)
-  for (const re of NAME_BLACKLIST) {
-    if (re.test(name)) {
-      return { ok: false, reason: `店名符合黑名單 (${re.source.slice(0, 30)}...)` };
-    }
-  }
+  <!-- // 第 2 層: 店名黑名單 (連鎖超商/百貨/藥妝等) -->
+  <!-- for (const re of NAME_BLACKLIST) { -->
+    <!-- if (re.test(name)) { -->
+      <!-- return { ok: false, reason: `店名符合黑名單 (${re.source.slice(0, 30)}...)` }; -->
+    <!-- } -->
+  <!-- } -->
 
   // 第 3 層: 寬類型檢查
   const hasBroadType = types.some(t => BROAD_TYPES.has(t));
@@ -200,7 +200,7 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
       'businessStatus', 'websiteURI',
     ],
     locationRestriction: { center, radius },
-    includedTypes: ['toy', 'store'],
+    includedTypes: ['toy_store'],
     maxResultCount: 20,
     rankPreference: SearchNearbyRankPreference.POPULARITY,
     language: 'zh-TW',
@@ -221,11 +221,12 @@ function fetchNearbyWithLegacyAPI(google, center, radius) {
     const attrDiv = document.createElement('div');
     const service = new places.PlacesService(attrDiv);
     const S = places.PlacesServiceStatus;
+	
     service.nearbySearch(
       {
         location: new google.maps.LatLng(center.lat, center.lng),
         radius,
-	keyword: 'toy',
+		keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR action figures',
         type: 'store',	
         language: 'zh-TW',
       },
@@ -724,16 +725,16 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         const kept = [];
         results.forEach(p => {
           const verdict = classifyToyStore(p);
-          //if (verdict.ok) {
+          if (verdict.ok) {
             kept.push(p);
-          //} else {
-          //  rejected.push({
-          //    name: extractName(p),
-          //    primaryType: p.primaryType || '',
-          //    types: p.types || [],
-          //    reason: verdict.reason,
-          //  });
-          //}
+          } else {
+            rejected.push({
+              name: extractName(p),
+              primaryType: p.primaryType || '',
+              types: p.types || [],
+              reason: verdict.reason,
+            });
+          }
         });
         console.log(`[玩具店過濾] 總回傳=${results.length} | 保留=${kept.length} | 剔除=${rejected.length}`);
         rejected.forEach(r => console.log(`  ✗ ${r.name} [${r.primaryType}] - ${r.reason}`));
@@ -884,8 +885,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
       , _react2.default.createElement('div', { className: "bg-gradient-to-br from-red-500 via-rose-500 to-pink-500 px-5 pt-8 pb-5 text-white"       ,}
         , _react2.default.createElement('div', { className: "flex items-center justify-between mb-1"   ,}
           , _react2.default.createElement('div', null
-            , _react2.default.createElement('h1', { className: "text-2xl font-black tracking-tight"  ,}, "玩具食べログ")
-            , _react2.default.createElement('p', { className: "text-xs text-white/80 mt-0.5"  ,}, "ToyTabelog・Google Places + 真偽驗證"   )
+            , _react2.default.createElement('h1', { className: "text-2xl font-black tracking-tight"  ,}, "ToyFinder")
           )
           , _react2.default.createElement('div', { className: "text-3xl",}, "🧸")
         )
