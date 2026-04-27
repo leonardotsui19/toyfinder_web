@@ -12,15 +12,9 @@ const DEFAULT_USER_LABEL = '台北・西門町';
 const SEARCH_RADIUS_M = 5000;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
-// ⭐ 縮放限制
-const MAP_MIN_ZOOM = 11;   // 最遠 (約城市等級, 防止看不到任何店家)
-const MAP_MAX_ZOOM = 18;   // 最近 (街道級, 防止瓦片糊掉)
+const MAP_MIN_ZOOM = 11;
+const MAP_MAX_ZOOM = 18;
 const MAP_DEFAULT_ZOOM = 14;
-
-// ⭐ fitBounds 的 padding (px),依螢幕上下方 UI 高度設計:
-//   top: 搜尋列+分類膠囊+過濾提示 ≈ 140px
-//   bottom: 底部水平卡片清單 ≈ 200px
-//   left/right: 視覺呼吸空間
 const FIT_PADDING = { top: 140, right: 30, bottom: 220, left: 30 };
 
 const photoUrlCache = new Map();
@@ -220,7 +214,8 @@ const PLACE_FIELDS = [
   'id', 'displayName', 'formattedAddress', 'location', 'types',
   'primaryType', 'primaryTypeDisplayName', 'businessStatus', 'photos',
   'rating', 'userRatingCount', 'priceLevel', 'regularOpeningHours',
-  'nationalPhoneNumber', 'websiteURI',
+  'nationalPhoneNumber', 'internationalPhoneNumber', 'websiteURI',
+  'googleMapsURI',
 ];
 
 async function fetchNearbyWithNewAPI(google, center, radius) {
@@ -242,17 +237,40 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
   return results || [];
 }
 
-function fetchNearbyWithLegacyAPI(google, center, radius) {
-  return new Promise((resolve, reject) => {
+// ⭐ 新增: Legacy API 的「詳情補完」呼叫
+// nearbySearch 不會回傳電話/網站/完整營業時間,必須對每個 place_id 額外打 getDetails
+function fetchPlaceDetailsLegacy(google, placeId) {
+  return new Promise((resolve) => {
     const places = google.maps.places;
-    if (!_optionalChain([places, 'optionalAccess', _13 => _13.PlacesService])) {
-      reject(new Error('LEGACY_API_UNAVAILABLE'));
-      return;
-    }
-    const attrDiv = document.createElement('div');
-    const service = new places.PlacesService(attrDiv);
-    const S = places.PlacesServiceStatus;
+    if (!places || !places.PlacesService) { resolve(null); return; }
+    const service = new places.PlacesService(document.createElement('div'));
+    service.getDetails(
+      {
+        placeId,
+        fields: [
+          'formatted_phone_number',
+          'international_phone_number',
+          'website',
+          'url',
+          'opening_hours',
+        ],
+        language: 'zh-TW',
+      },
+      (result, status) => {
+        if (status === places.PlacesServiceStatus.OK) resolve(result);
+        else { console.warn(`[legacy details] ${placeId} 失敗: ${status}`); resolve(null); }
+      }
+    );
+  });
+}
 
+async function fetchNearbyWithLegacyAPI(google, center, radius) {
+  const places = google.maps.places;
+  if (!places || !places.PlacesService) throw new Error('LEGACY_API_UNAVAILABLE');
+
+  const rawResults = await new Promise((resolve, reject) => {
+    const service = new places.PlacesService(document.createElement('div'));
+    const S = places.PlacesServiceStatus;
     service.nearbySearch(
       {
         location: new google.maps.LatLng(center.lat, center.lng),
@@ -268,18 +286,49 @@ function fetchNearbyWithLegacyAPI(google, center, radius) {
       }
     );
   });
+
+  // ⭐ 對每個結果補打 getDetails 以取得電話/網站/完整營業時間
+  console.log(`[legacy] 開始補完 ${rawResults.length} 家店家詳情...`);
+  const enriched = await Promise.all(
+    rawResults.map(async (r) => {
+      const details = await fetchPlaceDetailsLegacy(google, r.place_id);
+      if (details) {
+        if (details.formatted_phone_number) r.formatted_phone_number = details.formatted_phone_number;
+        if (details.international_phone_number) r.international_phone_number = details.international_phone_number;
+        if (details.website) r.website = details.website;
+        if (details.url) r.url = details.url;
+        if (details.opening_hours) {
+          // 合併 opening_hours,保留 weekday_text
+          r.opening_hours = { ...(r.opening_hours || {}), ...details.opening_hours };
+        }
+      }
+      return r;
+    })
+  );
+  const phoneCount = enriched.filter(r => r.formatted_phone_number).length;
+  const webCount = enriched.filter(r => r.website).length;
+  const hoursCount = enriched.filter(r => _optionalChain([r, 'access', _r => _r.opening_hours, 'optionalAccess', _r2 => _r2.weekday_text])).length;
+  console.log(`[legacy] 補完完成: 電話 ${phoneCount}/${enriched.length} | 網站 ${webCount}/${enriched.length} | 完整時間 ${hoursCount}/${enriched.length}`);
+  return enriched;
 }
 
 function normalizeLegacyPlace(p) {
   const loc = _optionalChain([p, 'access', _14 => _14.geometry, 'optionalAccess', _15 => _15.location]);
   const priceMap = ['PRICE_LEVEL_FREE', 'PRICE_LEVEL_INEXPENSIVE', 'PRICE_LEVEL_MODERATE', 'PRICE_LEVEL_EXPENSIVE', 'PRICE_LEVEL_VERY_EXPENSIVE'];
+  const phone = p.formatted_phone_number || p.international_phone_number || '';
+  const website = p.website || '';
+  const weekdayText = _optionalChain([p, 'access', _w => _w.opening_hours, 'optionalAccess', _w2 => _w2.weekday_text]);
   return {
     id: p.place_id, displayName: p.name, formattedAddress: p.vicinity || '',
     location: loc, rating: p.rating, userRatingCount: p.user_ratings_total,
     types: p.types || [], primaryType: _optionalChain([p, 'access', _16 => _16.types, 'optionalAccess', _17 => _17[0]]) || '', primaryTypeDisplayName: '',
     priceLevel: typeof p.price_level === 'number' ? priceMap[p.price_level] : null,
-    regularOpeningHours: _optionalChain([p, 'access', _18 => _18.opening_hours, 'optionalAccess', _19 => _19.weekday_text]) ? { weekdayDescriptions: p.opening_hours.weekday_text } : null,
-    nationalPhoneNumber: '', businessStatus: p.business_status, websiteURI: '',
+    regularOpeningHours: weekdayText && weekdayText.length ? { weekdayDescriptions: weekdayText } : null,
+    nationalPhoneNumber: phone,
+    internationalPhoneNumber: p.international_phone_number || '',
+    businessStatus: p.business_status,
+    websiteURI: website,
+    googleMapsURI: p.url || '',
     photos: p.photos || [],
     __legacy: true,
   };
@@ -292,6 +341,7 @@ async function fetchNearbyToyStores(google, center, radius) {
     return { results, apiUsed: 'new' };
   } catch (err) {
     errors.push({ api: 'new', message: _optionalChain([err, 'optionalAccess', _20 => _20.message]) || String(err) });
+    console.warn('[Places] New API 失敗,降級到 Legacy:', err);
   }
   try {
     const rawResults = await fetchNearbyWithLegacyAPI(google, center, radius);
@@ -315,6 +365,38 @@ function inferCategory(name = '', types = []) {
   if (/手作|手工|diy|craft|工房|ハンドメイド/i.test(n)) return '手作';
   if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '絕版懷舊';
   return '玩具';
+}
+
+// ⭐ 新增: 從 weekdayDescriptions 找「今天」對應的那一行
+// 不再依賴陣列索引 (因為 Google 的回傳順序會隨 locale 而變),
+// 改用「比對日名稱前綴」的方式 — 不論陣列怎麼排都能正確命中
+const DAY_NAME_PATTERNS = [
+  ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+  ['週日', '週一', '週二', '週三', '週四', '週五', '週六'],
+  ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+  ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+];
+
+function findTodayHourLine(weekdayDescriptions) {
+  if (!weekdayDescriptions || !weekdayDescriptions.length) return null;
+  const today = new Date().getDay(); // 0=週日, 1=週一 ... 6=週六
+  for (const dayList of DAY_NAME_PATTERNS) {
+    const todayName = dayList[today];
+    const match = weekdayDescriptions.find(line => typeof line === 'string' && line.startsWith(todayName));
+    if (match) return match;
+  }
+  return null;
+}
+
+function todayIndexInDescriptions(weekdayDescriptions) {
+  if (!weekdayDescriptions || !weekdayDescriptions.length) return -1;
+  const today = new Date().getDay();
+  for (const dayList of DAY_NAME_PATTERNS) {
+    const todayName = dayList[today];
+    const idx = weekdayDescriptions.findIndex(line => typeof line === 'string' && line.startsWith(todayName));
+    if (idx >= 0) return idx;
+  }
+  return -1;
 }
 
 const EMOJIS = { '玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '絕版懷舊': '🎪', '公仔': '🦸', '盒玩': '📦', '手作': '🎨' };
@@ -351,10 +433,12 @@ function placeToShop(place, userPos, idx) {
   const cleaned = addr.replace(/^台灣\s*/, '').replace(/\d{3,}\s*/, '');
   const areaMatch = cleaned.match(/([^,,\s\d]*[市縣][^,,\s\d]*[區鄉鎮市])/) || cleaned.match(/([^,,\s\d]*[區鄉鎮])/);
   const area = areaMatch ? areaMatch[1].trim() : (_optionalChain([cleaned, 'access', _22 => _22.split, 'call', _23 => _23(/[,,]/), 'access', _24 => _24[0], 'optionalAccess', _25 => _25.slice, 'call', _26 => _26(0, 10)]) || '附近');
-  const weekday = _optionalChain([place, 'access', _27 => _27.regularOpeningHours, 'optionalAccess', _28 => _28.weekdayDescriptions]);
-  const today = new Date().getDay();
-  const todayIdx = today === 0 ? 6 : today - 1;
-  const hours = _optionalChain([weekday, 'optionalAccess', _29 => _29[todayIdx]]) || _optionalChain([weekday, 'optionalAccess', _30 => _30[0]]) || '營業時間未提供';
+
+  // ⭐ 新邏輯: 取出完整 weekdayDescriptions,並用「日名稱比對」找今天那行
+  const weekdayDescriptions = _optionalChain([place, 'access', _27 => _27.regularOpeningHours, 'optionalAccess', _28 => _28.weekdayDescriptions]) || [];
+  const todayLine = findTodayHourLine(weekdayDescriptions);
+  const hours = todayLine || '營業時間未提供';
+
   const rating = place.rating || 0;
   const reviews = place.userRatingCount || 0;
   let badge = null;
@@ -387,12 +471,22 @@ function placeToShop(place, userPos, idx) {
 
   const photoRef = (place.photos && place.photos.length) ? place.photos[0] : null;
 
+  // ⭐ 同時保留電話的兩種版本,供 tel: 連結與顯示用
+  const phone = place.nationalPhoneNumber || place.internationalPhoneNumber || '';
+  const website = place.websiteURI || '';
+  const googleMapsURI = place.googleMapsURI || `https://www.google.com/maps/place/?q=place_id:${place.id}`;
+
   return {
     id: place.id || `place-${idx}`,
     placeId: place.id || `place-${idx}`,
     name: nameStr, rating: Math.round(rating * 100) / 100,
-    reviews, category, tags, area, price, hours,
-    phone: place.nationalPhoneNumber || '未提供', website: place.websiteURI || '',
+    reviews, category, tags, area, price,
+    hours,
+    weekdayHours: weekdayDescriptions,           // ⭐ 新增: 完整一週時間 (字串陣列)
+    todayDescriptionIdx: todayIndexInDescriptions(weekdayDescriptions),  // ⭐ 新增: 今天在陣列中的索引
+    phone: phone || '',
+    website,
+    googleMapsURI,
     badge, image: GRADIENTS[idx % GRADIENTS.length], emoji: EMOJIS[category] || '🧸',
     _photoRef: photoRef,
     _hasPhoto: !!photoRef,
@@ -489,15 +583,12 @@ const LIGHT_STYLE = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#aad3df' }] },
 ];
 
-// ⭐ 計算「使用者位置 + 所有店家」的最小邊界,
-// 若沒有店家就 fallback 到搜尋半徑外框
 function computeBoundsForShops(google, userPos, shops) {
   const bounds = new google.maps.LatLngBounds();
   bounds.extend(userPos);
   if (shops && shops.length > 0) {
     shops.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
   } else {
-    // 無店家時,以使用者位置為中心、SEARCH_RADIUS_M 為半徑畫出外框
     const circle = new google.maps.Circle({ center: userPos, radius: SEARCH_RADIUS_M });
     bounds.union(circle.getBounds());
   }
@@ -580,10 +671,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const userMarkerRef = _react.useRef.call(void 0, null);
   const [style, setStyle] = _react.useState.call(void 0, 'standard');
   const [zoom, setZoom] = _react.useState.call(void 0, MAP_DEFAULT_ZOOM);
-
-  // ⭐ 是否已做過初次自動 fitBounds (避免每次資料變動都覆寫使用者的縮放操作)
   const didInitialFitRef = _react.useRef.call(void 0, false);
-  // 使用者「最後一次主動操作」的時間戳,用於決定要不要自動重新 fit
   const lastUserInteractRef = _react.useRef.call(void 0, 0);
 
   _react.useEffect.call(void 0, () => {
@@ -592,7 +680,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     const map = new google.maps.Map(mapRef.current, {
       center: userPos,
       zoom: MAP_DEFAULT_ZOOM,
-      // ⭐ 縮放層級限制:小於 11 看不到任何店,大於 18 瓦片會糊
       minZoom: MAP_MIN_ZOOM,
       maxZoom: MAP_MAX_ZOOM,
       disableDefaultUI: true,
@@ -603,7 +690,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     mapInstanceRef.current = map;
     map.addListener('zoom_changed', () => setZoom(map.getZoom()));
     map.addListener('click', () => setMapPinShop(null));
-    // ⭐ 偵測使用者主動操作 (拖曳/縮放) → 之後的資料變動就不再自動 fit
     map.addListener('dragstart', () => { lastUserInteractRef.current = Date.now(); });
     userMarkerRef.current = new google.maps.Marker({ position: userPos, map, icon: buildUserIcon(google), zIndex: 1, title: '我的位置' });
   }, [mapStatus, style, setMapPinShop, userPos]);
@@ -643,33 +729,23 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     });
   }, [allShops, visibleShops, mapPinShop, mapStatus, getCategoryColor, setMapPinShop]);
 
-  // ⭐ 自動 fitBounds: 只在「初次」資料載入完成時觸發,
-  // 之後若使用者主動操作過地圖,就不再自動覆寫他的視角
   _react.useEffect.call(void 0, () => {
     if (mapStatus !== 'ready' || !mapInstanceRef.current) return;
-    if (didInitialFitRef.current) return;                 // 只做一次
-    if (placesStatus === 'loading') return;               // 等資料載完
+    if (didInitialFitRef.current) return;
+    if (placesStatus === 'loading') return;
     if (allShops.length === 0 && placesStatus !== 'empty' && placesStatus !== 'error') return;
-
     const google = window.google;
     const map = mapInstanceRef.current;
     const bounds = computeBoundsForShops(google, userPos, allShops);
-
-    // ⚠️ 用 fitBounds 之後,maxZoom 會自動限制 (Google Maps 內建行為),
-    // 但如果只有 1 個點,會放到很近 → 我們手動再壓回合理範圍
     map.fitBounds(bounds, FIT_PADDING);
-
-    // 等 fitBounds 套用完再校正極端情況
     google.maps.event.addListenerOnce(map, 'idle', () => {
       const z = map.getZoom();
-      if (z > 16) map.setZoom(16);   // 只有 1-2 個點時不要放太近
+      if (z > 16) map.setZoom(16);
       if (z < MAP_MIN_ZOOM) map.setZoom(MAP_MIN_ZOOM);
     });
-
     didInitialFitRef.current = true;
   }, [mapStatus, placesStatus, allShops, userPos]);
 
-  // ⭐ 當使用者點擊店家 popup 時,平滑移動但「不超過 maxZoom」
   _react.useEffect.call(void 0, () => {
     if (!mapPinShop || !mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
@@ -692,7 +768,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     if (m.getZoom() < MAP_DEFAULT_ZOOM) m.setZoom(MAP_DEFAULT_ZOOM);
   };
 
-  // ⭐ 「框選全部」按鈕: 重新計算 bounds 把所有可見店家+使用者都納入螢幕
   const fitAll = () => {
     const m = mapInstanceRef.current; if (!m) return;
     const google = window.google;
@@ -847,6 +922,32 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   );
 }
 
+// ⭐ 新增: 詳情頁的「完整一週營業時間」展開元件
+function WeekdayHoursList({ weekdayHours, todayIdx }) {
+  const [expanded, setExpanded] = _react.useState.call(void 0, false);
+  if (!weekdayHours || !weekdayHours.length) {
+    return _react2.default.createElement('span', { className: "text-sm text-gray-500" ,}, '營業時間未提供');
+  }
+  const todayLine = todayIdx >= 0 ? weekdayHours[todayIdx] : weekdayHours[0];
+  const otherLines = weekdayHours.filter((_, i) => i !== todayIdx);
+  return (
+    _react2.default.createElement('div', { className: "flex-1",}
+      , _react2.default.createElement('button', { onClick: () => setExpanded(e => !e), className: "flex items-center gap-1 text-left w-full"     ,}
+        , _react2.default.createElement('span', { className: "text-sm text-gray-700 font-semibold"  ,}, todayLine)
+        , todayIdx >= 0 && _react2.default.createElement('span', { className: "text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium flex-shrink-0"      ,}, '今天')
+        , _react2.default.createElement(_lucidereact.ChevronLeft, { className: `w-4 h-4 text-gray-400 transition-transform ${expanded ? '-rotate-90' : 'rotate-180 -rotate-90'}`,} )
+      )
+      , expanded && (
+        _react2.default.createElement('div', { className: "mt-2 space-y-1 bg-gray-50 rounded-lg p-2"     ,}
+          , weekdayHours.map((line, i) => (
+            _react2.default.createElement('div', { key: i, className: `text-xs ${i === todayIdx ? 'text-gray-900 font-bold' : 'text-gray-600'}`,}, line)
+          ))
+        )
+      )
+    )
+  );
+}
+
  function ToyFinder() {
   const [view, setView] = _react.useState.call(void 0, 'home');
   const [selectedShop, setSelectedShop] = _react.useState.call(void 0, null);
@@ -957,7 +1058,20 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
 
         const shops = kept.map((p, i) => placeToShop(p, userPos, i)).filter(Boolean);
         const photoCount = shops.filter(s => s._hasPhoto).length;
-        console.log(`[照片] ${photoCount}/${shops.length} 家可用實照 (但不會立刻載入,進視窗才載)`);
+        const phoneCount = shops.filter(s => s.phone).length;
+        const webCount = shops.filter(s => s.website).length;
+        const hoursCount = shops.filter(s => s.weekdayHours && s.weekdayHours.length).length;
+        console.log(`[資料完整度] 照片 ${photoCount}/${shops.length} | 電話 ${phoneCount}/${shops.length} | 網站 ${webCount}/${shops.length} | 完整時間 ${hoursCount}/${shops.length}`);
+        // ⭐ 印出第一筆店家的完整資料供逐筆對帳用
+        if (shops.length > 0) {
+          const s0 = shops[0];
+          console.log(`[範例店家] ${s0.name}`);
+          console.log(`  電話: ${s0.phone || '(無)'}`);
+          console.log(`  網站: ${s0.website || '(無)'}`);
+          console.log(`  今天: ${s0.hours}`);
+          console.log(`  一週:`, s0.weekdayHours);
+          console.log(`  Google Maps: ${s0.googleMapsURI}`);
+        }
         setApiUsed(usedApi);
         setPlacesShops(shops);
         setFilterStats({ total: results.length, kept: kept.length, removed: rejected.length, rejected });
@@ -1032,6 +1146,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   if (view === 'detail' && selectedShop) {
     const cur = shops.find(s => s.id === selectedShop.id) || selectedShop;
     const backLabel = detailFrom === 'map' ? '返回地圖' : '返回';
+    const phoneDigits = (cur.phone || '').replace(/[^\d+]/g, '');
     return (
       _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20"  ,}
         , _react2.default.createElement(ShopThumb, { shop: cur, photoSize: "large", emojiSize: "text-8xl", className: "h-64 w-full", eager: true,}
@@ -1078,7 +1193,12 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
           )
         )
         , _react2.default.createElement('div', { className: "bg-white mt-2 px-5 py-4"   ,}
-          , _react2.default.createElement('h2', { className: "font-bold text-gray-900 mb-3 flex items-center gap-2"     ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店家資訊")
+          , _react2.default.createElement('div', { className: "flex items-center justify-between mb-3"   ,}
+            , _react2.default.createElement('h2', { className: "font-bold text-gray-900 flex items-center gap-2"    ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店家資訊")
+            , _react2.default.createElement('a', { href: cur.googleMapsURI, target: "_blank", rel: "noopener noreferrer" , className: "text-xs text-blue-500 font-semibold flex items-center gap-1"      ,}
+              , _react2.default.createElement(_lucidereact.ExternalLink, { className: "w-3 h-3" ,} ), '在 Google Maps 開啟'
+            )
+          )
           , _react2.default.createElement('div', { className: "space-y-3",}
             , _react2.default.createElement('button', { onClick: () => { setMapPinShop(cur); setView('map'); }, className: "w-full flex items-start gap-3 text-left"    ,}
               , _react2.default.createElement(_lucidereact.MapPin, { className: "w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"    ,} )
@@ -1087,13 +1207,31 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
                 , _react2.default.createElement('span', { className: "text-xs text-red-500 ml-2"  ,}, "在地圖上查看 →" )
               )
             )
-            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}, _react2.default.createElement(_lucidereact.Clock, { className: "w-4 h-4 text-gray-400 mt-0.5"   ,} ), _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.hours))
-            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}, _react2.default.createElement(_lucidereact.Phone, { className: "w-4 h-4 text-gray-400 mt-0.5"   ,} ), _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.phone))
-            , cur.website && (
-              _react2.default.createElement('a', { href: cur.website, target: "_blank", rel: "noopener noreferrer" , className: "flex items-start gap-3"  ,}
-                , _react2.default.createElement(_lucidereact.Store, { className: "w-4 h-4 text-gray-400 mt-0.5"   ,} )
-                , _react2.default.createElement('span', { className: "text-sm text-blue-500 truncate"  ,}, cur.website)
+            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}
+              , _react2.default.createElement(_lucidereact.Clock, { className: "w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"    ,} )
+              , _react2.default.createElement(WeekdayHoursList, { weekdayHours: cur.weekdayHours, todayIdx: cur.todayDescriptionIdx,} )
+            )
+            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}
+              , _react2.default.createElement(_lucidereact.Phone, { className: "w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"    ,} )
+              , cur.phone ? (
+                _react2.default.createElement('a', { href: `tel:${phoneDigits}`, className: "text-sm text-blue-600 hover:underline"   ,}, cur.phone)
+              ) : (
+                _react2.default.createElement('span', { className: "text-sm text-gray-400" ,}, '未提供')
               )
+            )
+            , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}
+              , _react2.default.createElement(_lucidereact.Globe, { className: "w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"    ,} )
+              , cur.website ? (
+                _react2.default.createElement('a', { href: cur.website, target: "_blank", rel: "noopener noreferrer" , className: "text-sm text-blue-600 hover:underline truncate flex-1 min-w-0"      ,}, cur.website)
+              ) : (
+                _react2.default.createElement('span', { className: "text-sm text-gray-400" ,}, '未提供')
+              )
+            )
+          )
+          , cur.__legacy && (
+            _react2.default.createElement('div', { className: "mt-3 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 text-xs text-amber-800 flex items-start gap-1.5"             ,}
+              , _react2.default.createElement(_lucidereact.Info, { className: "w-3.5 h-3.5 flex-shrink-0 mt-0.5"   ,} )
+              , _react2.default.createElement('span', null, '此店家資料來自 Legacy API,可能略晚於 Google Maps 即時更新')
             )
           )
         )
@@ -1189,7 +1327,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
               , _react2.default.createElement('div', { className: "flex items-center justify-between bg-emerald-500/25 border border-emerald-300/40 rounded-lg px-3 py-1.5"        ,}
                 , _react2.default.createElement('div', { className: "flex items-center gap-1.5 text-xs font-semibold"    ,}
                   , _react2.default.createElement('div', { className: "w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse"    ,})
-                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "Places API (廣義+關鍵字)"  )
+                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "Places (Legacy + 詳情補完)"  )
                   , _react2.default.createElement('span', null, "· " , shops.length, " 筆" )
                 )
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "text-xs flex items-center gap-1 hover:bg-white/10 px-1.5 py-0.5 rounded"       ,}
