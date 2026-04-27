@@ -189,23 +189,23 @@ function classifyToyStore(place) {
   if (nameHasToyKeyword) return { ok: true };
   if (hasPositiveType) return { ok: true };
 
-  const primaryIsBroad = BROAD_TYPES.has(primaryType);
-  const hasBroadType = types.some(t => BROAD_TYPES.has(t));
+  //const primaryIsBroad = BROAD_TYPES.has(primaryType);
+  //const hasBroadType = types.some(t => BROAD_TYPES.has(t));
 
-  if (primaryIsBroad) {
-    return { ok: false, reason: `primaryType=${primaryType} 是寬類型且店名無玩具關鍵字` };
-  }
-  if (hasBroadType) {
-    const broadList = types.filter(t => BROAD_TYPES.has(t)).join(',');
-    return { ok: false, reason: `含寬類型 (${broadList}) 且店名無玩具關鍵字` };
-  }
+  //if (primaryIsBroad) {
+  //  return { ok: false, reason: `primaryType=${primaryType} 是寬類型且店名無玩具關鍵字` };
+  //}
+  //if (hasBroadType) {
+  //  const broadList = types.filter(t => BROAD_TYPES.has(t)).join(',');
+  //  return { ok: false, reason: `含寬類型 (${broadList}) 且店名無玩具關鍵字` };
+  //}
 
-  const onlyGenericTypes = types.every(t =>
-    t === 'store' || t === 'establishment' || t === 'point_of_interest' || t === 'food'
-  );
-  if (onlyGenericTypes && types.length > 0) {
-    return { ok: false, reason: `僅通用類型 (${types.join(',')}) 且無玩具關鍵字` };
-  }
+  //const onlyGenericTypes = types.every(t =>
+  //  t === 'store' || t === 'establishment' || t === 'point_of_interest' || t === 'food'
+  //);
+  //if (onlyGenericTypes && types.length > 0) {
+  //  return { ok: false, reason: `僅通用類型 (${types.join(',')}) 且無玩具關鍵字` };
+  //}
 
   return { ok: true };
 }
