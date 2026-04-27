@@ -12,6 +12,57 @@ const DEFAULT_USER_LABEL = '台北・西門町';
 const SEARCH_RADIUS_M = 5000;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
+// ============================================================================
+// ⭐ 優化 #4: Module-level 照片 URL 快取
+// 同一個 placeId+size 永遠回傳同一個 URL,瀏覽器才會命中 HTTP cache,
+// Google 也才不會重複計費 (相同 URL 在瀏覽器 cache 期間不會再打 API)
+// ============================================================================
+const photoUrlCache = new Map();
+let _photoUrlGenCount = 0; // debug: 累計產生過幾次 URL
+
+const PHOTO_DIMS = {
+  small: { maxWidth: 200, maxHeight: 200 },
+  medium: { maxWidth: 400, maxHeight: 400 },
+  large: { maxWidth: 800, maxHeight: 600 },
+};
+
+// ⭐ 優化 #2: 只有當需要顯示時才把 photo 物件轉成 URL
+// (注意: 呼叫 getURI/getUrl 本身不一定立刻計費,瀏覽器 fetch 那個 URL 才計費,
+//  但每次呼叫產生的 URL 不同 → 換新 URL 等於跳過 HTTP cache → 等於重新計費,
+//  所以這裡用 cache 強制同一張照片永遠用同一個 URL)
+function buildPhotoUrl(photoRef, placeId, size = 'medium') {
+  if (!photoRef || !placeId) return '';
+  const cacheKey = `${placeId}::${size}`;
+  if (photoUrlCache.has(cacheKey)) return photoUrlCache.get(cacheKey);
+
+  const dims = PHOTO_DIMS[size] || PHOTO_DIMS.medium;
+  let url = '';
+  try {
+    if (typeof photoRef.getURI === 'function') {
+      url = photoRef.getURI(dims); // New API
+    } else if (typeof photoRef.getUrl === 'function') {
+      url = photoRef.getUrl(dims); // Legacy API
+    }
+  } catch (e) {
+    console.warn('[photo] 產生 URL 失敗:', e);
+    return '';
+  }
+  if (url) {
+    photoUrlCache.set(cacheKey, url);
+    _photoUrlGenCount++;
+    console.log(`[photo] 🆕 產生 URL #${_photoUrlGenCount}: place=${placeId} size=${size} (cache size=${photoUrlCache.size})`);
+  }
+  return url;
+}
+
+// 對外曝露快取狀態,方便 UI 顯示
+function getPhotoCacheStats() {
+  return {
+    cachedUrls: photoUrlCache.size,
+    totalGenerated: _photoUrlGenCount,
+  };
+}
+
 function haversine(a, b) {
   const R = 6371;
   const toRad = d => d * Math.PI / 180;
@@ -124,28 +175,6 @@ function extractName(place) {
     : (_optionalChain([place, 'access', _10 => _10.displayName, 'optionalAccess', _11 => _11.text]) || place.name || '');
 }
 
-// ⭐ 從 Place 物件取出第一張照片的 URL,同時兼容新舊 API
-function extractPhotoUrl(place, opts = {}) {
-  try {
-    const photos = place.photos;
-    if (!photos || !photos.length) return '';
-    const photo = photos[0];
-    const maxWidth = opts.maxWidth || 600;
-    const maxHeight = opts.maxHeight || 600;
-    // 新 API: photo.getURI({maxWidth, maxHeight})
-    if (typeof photo.getURI === 'function') {
-      return photo.getURI({ maxWidth, maxHeight });
-    }
-    // Legacy API: photo.getUrl({maxWidth, maxHeight})
-    if (typeof photo.getUrl === 'function') {
-      return photo.getUrl({ maxWidth, maxHeight });
-    }
-  } catch (e) {
-    console.warn('[photo] 取得失敗:', e);
-  }
-  return '';
-}
-
 function classifyToyStore(place) {
   const name = extractName(place);
   const types = place.types || [];
@@ -186,6 +215,48 @@ function classifyToyStore(place) {
   return { ok: true };
 }
 
+// ============================================================================
+// ⭐ 優化 #7: Field Mask 嚴格限制
+// Places API (New) 按欄位分組計費:
+//   • Place IDs Only        → 免費    (id)
+//   • Place Details Pro     → 中等    (displayName, types, location, photos[metadata]...)
+//   • Place Details Enterprise → 較高 (rating, userRatingCount, priceLevel, regularOpeningHours...)
+//   • Enterprise + Atmosphere → 最高  (reviews, editorialSummary...)
+//
+// 這裡只請求「真正會顯示出來」的欄位,任何用不到的欄位都不放,
+// 例如刻意不請求 reviews / editorialSummary / parkingOptions 等高價欄位。
+// 注意: photos 本身只是 metadata (URL 引用),實際圖片計費發生在 <img> 載入時。
+// ============================================================================
+const PLACE_FIELDS = [
+  // —— Place Details Pro 等級 ——
+  'id',                       // 免費等級識別子,做為快取 key
+  'displayName',              // 店名 (必要)
+  'formattedAddress',         // 地址 (詳情頁顯示)
+  'location',                 // 經緯度 (地圖標記必需)
+  'types',                    // 類型陣列 (用於真偽驗證)
+  'primaryType',              // 主要類型 (用於真偽驗證)
+  'primaryTypeDisplayName',   // 類型中文化顯示
+  'businessStatus',           // 是否歇業
+  'photos',                   // 照片 metadata (圖片本身才會計費)
+
+  // —— Place Details Enterprise 等級 ——
+  'rating',                   // 平均評分 (列表卡顯示)
+  'userRatingCount',          // 評論數 (列表卡顯示)
+  'priceLevel',               // 價位 (列表卡顯示)
+  'regularOpeningHours',      // 營業時間 (列表卡 + 詳情頁)
+  'nationalPhoneNumber',      // 電話 (詳情頁)
+  'websiteURI',               // 官網 (詳情頁)
+
+  // —— 刻意不請求 (省錢) ——
+  // 'reviews'                ❌ 文字評論,我們只顯示星等,用不到
+  // 'editorialSummary'       ❌ Google 編輯摘要,我們自製 description
+  // 'currentOpeningHours'    ❌ 用 regularOpeningHours 已足夠
+  // 'parkingOptions'         ❌ 玩具店場景不需要
+  // 'paymentOptions'         ❌ 詳情頁未顯示
+  // 'accessibilityOptions'   ❌ 詳情頁未顯示
+  // 'iconMaskBaseUri'        ❌ 我們自己畫 marker
+];
+
 async function fetchNearbyWithNewAPI(google, center, radius) {
   const places = google.maps.places;
   if (!_optionalChain([places, 'optionalAccess', _12 => _12.Place]) || typeof places.Place.searchNearby !== 'function') {
@@ -193,13 +264,7 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
   }
   const { Place, SearchNearbyRankPreference } = places;
   const request = {
-    fields: [
-      'id', 'displayName', 'formattedAddress', 'location',
-      'rating', 'userRatingCount', 'types', 'primaryType', 'primaryTypeDisplayName',
-      'priceLevel', 'regularOpeningHours', 'nationalPhoneNumber',
-      'businessStatus', 'websiteURI',
-      'photos', // ⭐ 新增: 請求店家照片
-    ],
+    fields: PLACE_FIELDS, // ⭐ 使用嚴格收斂的 field mask
     locationRestriction: { center, radius },
     includedTypes: ['toy_store'],
     maxResultCount: 20,
@@ -249,7 +314,7 @@ function normalizeLegacyPlace(p) {
     priceLevel: typeof p.price_level === 'number' ? priceMap[p.price_level] : null,
     regularOpeningHours: _optionalChain([p, 'access', _18 => _18.opening_hours, 'optionalAccess', _19 => _19.weekday_text]) ? { weekdayDescriptions: p.opening_hours.weekday_text } : null,
     nationalPhoneNumber: '', businessStatus: p.business_status, websiteURI: '',
-    photos: p.photos || [], // ⭐ 保留 legacy 的 photos (內含 getUrl 方法)
+    photos: p.photos || [],
     __legacy: true,
   };
 }
@@ -354,17 +419,19 @@ function placeToShop(place, userPos, idx) {
     ? place.primaryTypeDisplayName
     : (_optionalChain([place, 'access', _31 => _31.primaryTypeDisplayName, 'optionalAccess', _32 => _32.text]) || '');
 
-  // ⭐ 取出小、中、大三種尺寸的店家照片 URL (避免下載過大圖)
-  const photoSmall = extractPhotoUrl(place, { maxWidth: 200, maxHeight: 200 });
-  const photoMedium = extractPhotoUrl(place, { maxWidth: 400, maxHeight: 400 });
-  const photoLarge = extractPhotoUrl(place, { maxWidth: 800, maxHeight: 600 });
+  // ⭐ 優化 #2: 不再預先呼叫 getURI/getUrl,只儲存 photo 物件本身
+  // 真正呼叫 buildPhotoUrl() 的時機延後到 ShopThumb 進入視窗時
+  const photoRef = (place.photos && place.photos.length) ? place.photos[0] : null;
 
   return {
-    id: place.id || `place-${idx}`, name: nameStr, rating: Math.round(rating * 100) / 100,
+    id: place.id || `place-${idx}`,
+    placeId: place.id || `place-${idx}`, // 給 buildPhotoUrl 當 cache key 用
+    name: nameStr, rating: Math.round(rating * 100) / 100,
     reviews, category, tags, area, price, hours,
     phone: place.nationalPhoneNumber || '未提供', website: place.websiteURI || '',
     badge, image: GRADIENTS[idx % GRADIENTS.length], emoji: EMOJIS[category] || '🧸',
-    photoSmall, photoMedium, photoLarge,
+    _photoRef: photoRef,
+    _hasPhoto: !!photoRef,
     description: `${primaryDisplay || '玩具店'}・位於${area},距離 ${distance.toFixed(1)} km。${isClosed ? ' (目前暫停營業)' : ''}`,
     highlights, lat: pos.lat, lng: pos.lng, distance, address: addr, isClosed,
     __legacy: !!place.__legacy,
@@ -373,17 +440,54 @@ function placeToShop(place, userPos, idx) {
   };
 }
 
-// ⭐ 共用元件: 顯示店家照片 (有 photoUrl 時優先顯示;載入失敗或無照片時 fallback 至 gradient + emoji)
-function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', className = '', children }) {
+// ============================================================================
+// ⭐ 優化 #1: 用 IntersectionObserver 延遲載入照片
+// + 優化 #2: 只在進入視窗時才產生 URL (= 才真的會被 Google 計費)
+// ============================================================================
+function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', className = '', eager = false, children }) {
+  const containerRef = _react.useRef.call(void 0, null);
+  const [inView, setInView] = _react.useState.call(void 0, eager);
   const [photoFailed, setPhotoFailed] = _react.useState.call(void 0, false);
-  const photoUrl = photoSize === 'large' ? shop.photoLarge : photoSize === 'small' ? shop.photoSmall : shop.photoMedium;
-  const showPhoto = photoUrl && !photoFailed;
+
+  _react.useEffect.call(void 0, () => {
+    if (eager || inView) return;
+    const el = containerRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      // 老瀏覽器 fallback: 直接視為 inView
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setInView(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      {
+        // 提前 200px 觸發,讓使用者捲動時感覺照片是「即時出現」的
+        rootMargin: '200px 200px 200px 200px',
+        threshold: 0.01,
+      }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [eager, inView]);
+
+  // 只有當 (1) 進入視窗 + (2) 有照片引用 + (3) 未曾載入失敗 三條件都成立時
+  // 才真的去產生 URL — 此時瀏覽器才會 fetch,Google 才會計費
+  const photoUrl = (inView && shop._hasPhoto && !photoFailed)
+    ? buildPhotoUrl(shop._photoRef, shop.placeId, photoSize)
+    : '';
+
   return (
-    _react2.default.createElement('div', { className: `relative overflow-hidden ${className}`, style: { background: shop.image },}
-      // 底層永遠是 emoji + 漸層 (照片載入失敗時自然露出)
+    _react2.default.createElement('div', { ref: containerRef, className: `relative overflow-hidden ${className}`, style: { background: shop.image },}
       , _react2.default.createElement('div', { className: `absolute inset-0 flex items-center justify-center ${emojiSize}`,}, shop.emoji)
-      // 上層: 店家實照 (若有)
-      , showPhoto && (
+      , photoUrl && (
         _react2.default.createElement('img', {
           src: photoUrl,
           alt: shop.name,
@@ -394,7 +498,6 @@ function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', classNa
           className: "absolute inset-0 w-full h-full object-cover"      ,
         })
       )
-      // 額外覆蓋元素 (徽章、序號等)
       , children
     )
   );
@@ -485,7 +588,6 @@ function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = fal
       , shops.map(shop => (
         _react2.default.createElement('button', { key: shop.id, type: "button", onClick: () => onSelect(shop), className: "flex-shrink-0 bg-white rounded-xl shadow-lg overflow-hidden text-left w-64 focus:outline-none"       , draggable: false,}
           , _react2.default.createElement('div', { className: "flex",}
-            // ⭐ 用 ShopThumb 替代原本的 emoji icon
             , _react2.default.createElement(ShopThumb, { shop: shop, photoSize: "small", emojiSize: "text-2xl", className: "w-16 h-16 flex-shrink-0",} )
             , _react2.default.createElement('div', { className: "flex-1 p-2 min-w-0"  ,}
               , _react2.default.createElement('p', { className: "text-sm font-bold text-gray-900 truncate"   ,}, shop.name)
@@ -658,8 +760,8 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , mapPinShop && _react2.default.createElement('div', { className: "px-4 pointer-events-auto"  ,}
           , _react2.default.createElement('div', { className: "bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up"     ,}
             , _react2.default.createElement('div', { className: "flex",}
-              // ⭐ 改用 ShopThumb
-              , _react2.default.createElement(ShopThumb, { shop: mapPinShop, photoSize: "medium", emojiSize: "text-4xl", className: "w-24 h-24 flex-shrink-0",} )
+              // ⭐ map popup 是使用者主動點擊產生的 → eager 載入,不要用 IntersectionObserver
+              , _react2.default.createElement(ShopThumb, { shop: mapPinShop, photoSize: "medium", emojiSize: "text-4xl", className: "w-24 h-24 flex-shrink-0", eager: true,} )
               , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
                 , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
                   , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
@@ -729,6 +831,13 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const [filterStats, setFilterStats] = _react.useState.call(void 0, { total: 0, kept: 0, removed: 0, rejected: [] });
   const [refreshTick, setRefreshTick] = _react.useState.call(void 0, 0);
   const [showRejected, setShowRejected] = _react.useState.call(void 0, false);
+
+  // ⭐ 顯示 photo cache 統計用 (每秒輪詢一次)
+  const [photoStats, setPhotoStats] = _react.useState.call(void 0, getPhotoCacheStats());
+  _react.useEffect.call(void 0, () => {
+    const id = setInterval(() => setPhotoStats(getPhotoCacheStats()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const mapListScrollRef = _react.useRef.call(void 0, 0);
 
@@ -807,8 +916,8 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         rejected.forEach(r => console.log(`  ✗ ${r.name} [${r.primaryType}] - ${r.reason}`));
 
         const shops = kept.map((p, i) => placeToShop(p, userPos, i)).filter(Boolean);
-        const photoCount = shops.filter(s => s.photoMedium).length;
-        console.log(`[照片] ${photoCount}/${shops.length} 家有照片`);
+        const photoCount = shops.filter(s => s._hasPhoto).length;
+        console.log(`[照片] ${photoCount}/${shops.length} 家可用實照 (但不會立刻載入,進視窗才載)`);
         setApiUsed(usedApi);
         setPlacesShops(shops);
         setFilterStats({ total: results.length, kept: kept.length, removed: rejected.length, rejected });
@@ -829,6 +938,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const categories = ['全部', '玩具', '扭蛋', '模型', '積木', '絕版懷舊', '公仔', '盒玩', '手作'];
   const shops = placesShops;
   const usingDefaultLocation = locationStatus !== 'granted' && locationStatus !== 'requesting';
+  const photosAvailable = _react.useMemo.call(void 0, () => shops.filter(s => s._hasPhoto).length, [shops]);
 
   const availableCategories = _react.useMemo.call(void 0, () => new Set(['全部', ...shops.map(s => s.category)]), [shops]);
 
@@ -884,8 +994,8 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     const backLabel = detailFrom === 'map' ? '返回地圖' : '返回';
     return (
       _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20"  ,}
-        // ⭐ 詳情頁的大圖頭區: 用 ShopThumb 顯示大尺寸店家照片
-        , _react2.default.createElement(ShopThumb, { shop: cur, photoSize: "large", emojiSize: "text-8xl", className: "h-64 w-full",}
+        // ⭐ 詳情頁的大圖頭區: eager 載入 (使用者主動進來,期待立刻看到)
+        , _react2.default.createElement(ShopThumb, { shop: cur, photoSize: "large", emojiSize: "text-8xl", className: "h-64 w-full", eager: true,}
           , _react2.default.createElement('button', { onClick: closeDetail, title: backLabel, className: "absolute top-4 left-4 z-10 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg flex items-center gap-1 pr-3"           ,}
             , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5" ,} )
             , detailFrom === 'map' && _react2.default.createElement('span', { className: "text-xs font-semibold text-gray-700"  ,}, "地圖")
@@ -896,8 +1006,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
           , _react2.default.createElement('div', { className: "absolute bottom-3 left-4 z-10 bg-white/90 text-xs font-bold text-gray-700 px-2 py-0.5 rounded-full shadow flex items-center gap-1"              ,}
             , _react2.default.createElement(_lucidereact.Shield, { className: "w-3 h-3 text-emerald-500"  ,} ), "已驗證玩具店"
           )
-          // 若有實照,加一層底部漸黑遮罩讓「已驗證」標籤更易讀
-          , cur.photoLarge && _react2.default.createElement('div', { className: "absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"      ,})
+          , cur._hasPhoto && _react2.default.createElement('div', { className: "absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"      ,})
         )
         , _react2.default.createElement('div', { className: "bg-white px-5 py-5 border-b"   ,}
           , _react2.default.createElement('div', { className: "mb-2",}, _react2.default.createElement(BadgeIcon, { badge: cur.badge,} ))
@@ -1046,6 +1155,24 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
                 )
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "text-xs flex items-center gap-1 hover:bg-white/10 px-1.5 py-0.5 rounded"       ,}
                   , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重新整理"
+                )
+              )
+              // ⭐ 新增: 照片計費節省統計
+              , _react2.default.createElement('div', { className: "bg-blue-500/20 border border-blue-300/30 rounded-lg px-3 py-1.5 text-xs"      ,}
+                , _react2.default.createElement('div', { className: "flex items-center justify-between"  ,}
+                  , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
+                    , _react2.default.createElement(_lucidereact.ImageIcon, { className: "w-3 h-3" ,} )
+                    , _react2.default.createElement('span', null, "照片優化: ")
+                  )
+                  , _react2.default.createElement('div', { className: "flex items-center gap-2 text-white/90"   ,}
+                    , _react2.default.createElement('span', null, "可用 " , _react2.default.createElement('strong', null, photosAvailable))
+                    , _react2.default.createElement('span', null, "·")
+                    , _react2.default.createElement('span', null, "已載 " , _react2.default.createElement('strong', null, photoStats.cachedUrls))
+                    , _react2.default.createElement('span', null, "·")
+                    , _react2.default.createElement('span', { className: "text-emerald-200" ,}, "省 "
+                      , Math.max(0, photosAvailable * 3 - photoStats.cachedUrls), " 次計費"
+                    )
+                  )
                 )
               )
               , filterStats.removed > 0 && (
@@ -1209,7 +1336,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , filteredShops.map((shop, idx) => (
           _react2.default.createElement('div', { key: shop.id, onClick: () => openDetail(shop), className: "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"      ,}
             , _react2.default.createElement('div', { className: "flex",}
-              // ⭐ 改用 ShopThumb,序號和驗證盾牌作為 children 疊在上層
+              // ⭐ 列表卡: 不傳 eager,使用 IntersectionObserver lazy load
               , _react2.default.createElement(ShopThumb, { shop: shop, photoSize: "medium", emojiSize: "text-5xl", className: "w-28 h-28 flex-shrink-0",}
                 , idx < 3 && activeCategory === '全部' && sortBy === 'distance' && _react2.default.createElement('div', { className: "absolute top-1.5 left-1.5 bg-white/90 text-gray-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shadow"             ,}, idx + 1)
                 , _react2.default.createElement('div', { className: "absolute bottom-1 right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow"      , title: "已驗證為玩具店",}, _react2.default.createElement(_lucidereact.Shield, { className: "w-2.5 h-2.5" ,} ))
