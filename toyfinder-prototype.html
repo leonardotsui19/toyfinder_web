@@ -1,13 +1,10 @@
-<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
+<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; img-src 'self' data: blob: https: ; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
     <meta charset="utf-8">
     <title>ToyFinder Prototype</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
   <script src="https://puc.poecdn.net/authenticated_preview_page/disableWebRTC.9710cebe07429a9e8e06.js"></script><meta name="x-poe-allow-downloads" content="true"><meta name="x-poe-datastore-behavior" content="disabled"><script src="https://puc.poecdn.net/authenticated_preview_page/tw.50ec1b0612bf5b0c30a5.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/deps.faccd16000d314dc16d5.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/exports.b0f0f482cdeb5302b0b9.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/renderer.75c73ae6b4235f62945a.js"></script><script>Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _react = require('react'); var _react2 = _interopRequireDefault(_react);
 var _lucidereact = require('lucide-react');
 
-// ============================================================
-// 請把下面這個常數換成你自己的 Google Maps API Key
-// ============================================================
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
 
 const DEFAULT_USER_POS = { lat: 25.0421, lng: 121.5082 };
@@ -26,7 +23,6 @@ function haversine(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-// ============ Google Maps Bootstrap ============
 function bootstrapGoogleMaps(params) {
   if (typeof window === 'undefined') return;
   if (_optionalChain([window, 'access', _ => _.google, 'optionalAccess', _2 => _2.maps, 'optionalAccess', _3 => _3.importLibrary])) return;
@@ -67,11 +63,6 @@ function loadGoogleMaps(apiKey) {
   return gmapsLoaderPromise;
 }
 
-// ======================================================================
-// ⭐ 玩具店真偽判定 - 適配「廣義 store + 關鍵字搜尋」
-// ======================================================================
-
-// [黑名單] 已知非玩具/興趣店的店名 pattern
 const NAME_BLACKLIST = [
   /7-?\s?11|7-?eleven|seven-?eleven|統一超商/i,
   /全家便利|family\s?mart|famima/i,
@@ -90,7 +81,7 @@ const NAME_BLACKLIST = [
   /無印良品|muji/i,
   /新光三越|sogo|崇光|遠東百貨|太平洋百貨|微風|bellavita/i,
   /統一時代|京站|環球購物中心|大江購物中心|台茂|美麗華/i,
-  /誠品(?!.*(玩具|模型|公仔))/i,  // 誠品 (除非名字帶玩具/模型/公仔)
+  /誠品(?!.*(玩具|模型|公仔))/i,
   /金石堂|墊腳石|何嘉仁書店/i,
   /星巴克|starbucks|路易莎|louisa|cama\s?cafe/i,
   /麥當勞|mcdonald|肯德基|kfc|漢堡王|摩斯|subway|必勝客|pizza\s?hut|達美樂/i,
@@ -107,11 +98,10 @@ const NAME_BLACKLIST = [
   /超市|supermarket/i,
   /花店|florist|flower\s?shop/i,
   /寵物|pet\s?shop/i,
-  /書局|書店|bookstore|bookshop/i,  // 純書店
+  /書局|書店|bookstore|bookshop/i,
   /文具店|stationery(?!.*(玩具|hobby|模型))/i,
 ];
 
-// [寬類型] 這些類型若無玩具關鍵字佐證即剔除
 const BROAD_TYPES = new Set([
   'shopping_mall', 'department_store', 'supermarket', 'convenience_store',
   'grocery_or_supermarket', 'grocery_store', 'discount_store', 'wholesaler',
@@ -121,13 +111,11 @@ const BROAD_TYPES = new Set([
   'bicycle_store', 'bakery', 'cafe', 'restaurant', 'food',
 ]);
 
-// [肯定玩具/興趣類型] 只要有這些就直接通過 (不論店名)
 const POSITIVE_TYPES = new Set([
   'toy_store',
-  'hobby_shop',   // Places API 有時會標這個
+  'hobby_shop',
 ]);
 
-// [玩具/興趣關鍵字] 店名含這些 → 強力證明是玩具/興趣店
 const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具/i;
 
 function extractName(place) {
@@ -136,38 +124,47 @@ function extractName(place) {
     : (_optionalChain([place, 'access', _10 => _10.displayName, 'optionalAccess', _11 => _11.text]) || place.name || '');
 }
 
-/**
- * 判定是否為真正的玩具/興趣店 (適配 store + keyword 廣義搜尋)
- * @returns {{ ok: boolean, reason?: string }}
- */
+// ⭐ 從 Place 物件取出第一張照片的 URL,同時兼容新舊 API
+function extractPhotoUrl(place, opts = {}) {
+  try {
+    const photos = place.photos;
+    if (!photos || !photos.length) return '';
+    const photo = photos[0];
+    const maxWidth = opts.maxWidth || 600;
+    const maxHeight = opts.maxHeight || 600;
+    // 新 API: photo.getURI({maxWidth, maxHeight})
+    if (typeof photo.getURI === 'function') {
+      return photo.getURI({ maxWidth, maxHeight });
+    }
+    // Legacy API: photo.getUrl({maxWidth, maxHeight})
+    if (typeof photo.getUrl === 'function') {
+      return photo.getUrl({ maxWidth, maxHeight });
+    }
+  } catch (e) {
+    console.warn('[photo] 取得失敗:', e);
+  }
+  return '';
+}
+
 function classifyToyStore(place) {
   const name = extractName(place);
   const types = place.types || [];
   const primaryType = place.primaryType || '';
 
-  // ========== Layer 1: 黑名單 (最優先) ==========
-  // 連鎖超商、百貨、書店、餐廳等,即使 Google 標了 toy_store 也剔除
   for (const re of NAME_BLACKLIST) {
     if (re.test(name)) {
       return { ok: false, reason: `店名符合黑名單 (${re.source.slice(0, 25)}...)` };
     }
   }
 
-  // ========== Layer 2: 強訊號 (直接通過) ==========
-  // 2a. primaryType 就是玩具/興趣店
   if (POSITIVE_TYPES.has(primaryType)) return { ok: true };
 
-  // 2b. types 陣列含玩具店類型
   const hasPositiveType = types.some(t => POSITIVE_TYPES.has(t));
   const nameHasToyKeyword = TOY_KEYWORDS.test(name);
 
-  // 2c. 店名有玩具關鍵字 (就算 Google 沒標 toy_store,店名有就算)
   if (nameHasToyKeyword) return { ok: true };
-
-  // 2d. 有 toy_store/hobby_shop tag + 沒被黑名單剔除 → 通過
   if (hasPositiveType) return { ok: true };
 
-  // ========== Layer 3: 寬類型剔除 ==========
   const primaryIsBroad = BROAD_TYPES.has(primaryType);
   const hasBroadType = types.some(t => BROAD_TYPES.has(t));
 
@@ -179,10 +176,6 @@ function classifyToyStore(place) {
     return { ok: false, reason: `含寬類型 (${broadList}) 且店名無玩具關鍵字` };
   }
 
-  // ========== Layer 4: 純 store / establishment ==========
-  // 到此: 不在黑名單、沒玩具 tag、店名沒關鍵字、沒寬類型
-  // Legacy API 用 keyword 搜尋雖然是 Google 認為相關,但證據不足 → 剔除
-  // 這層可以決定是否保守
   const onlyGenericTypes = types.every(t =>
     t === 'store' || t === 'establishment' || t === 'point_of_interest' || t === 'food'
   );
@@ -190,11 +183,9 @@ function classifyToyStore(place) {
     return { ok: false, reason: `僅通用類型 (${types.join(',')}) 且無玩具關鍵字` };
   }
 
-  // 其他情況 (e.g. 有小眾但非寬類型的 tag) → 保守通過
   return { ok: true };
 }
 
-// ============ Places API: 新版 ============
 async function fetchNearbyWithNewAPI(google, center, radius) {
   const places = google.maps.places;
   if (!_optionalChain([places, 'optionalAccess', _12 => _12.Place]) || typeof places.Place.searchNearby !== 'function') {
@@ -207,6 +198,7 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
       'rating', 'userRatingCount', 'types', 'primaryType', 'primaryTypeDisplayName',
       'priceLevel', 'regularOpeningHours', 'nationalPhoneNumber',
       'businessStatus', 'websiteURI',
+      'photos', // ⭐ 新增: 請求店家照片
     ],
     locationRestriction: { center, radius },
     includedTypes: ['toy_store'],
@@ -219,7 +211,6 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
   return results || [];
 }
 
-// ============ Places API: 舊版 (廣義 store + 玩具/興趣 keyword) ============
 function fetchNearbyWithLegacyAPI(google, center, radius) {
   return new Promise((resolve, reject) => {
     const places = google.maps.places;
@@ -257,7 +248,9 @@ function normalizeLegacyPlace(p) {
     types: p.types || [], primaryType: _optionalChain([p, 'access', _16 => _16.types, 'optionalAccess', _17 => _17[0]]) || '', primaryTypeDisplayName: '',
     priceLevel: typeof p.price_level === 'number' ? priceMap[p.price_level] : null,
     regularOpeningHours: _optionalChain([p, 'access', _18 => _18.opening_hours, 'optionalAccess', _19 => _19.weekday_text]) ? { weekdayDescriptions: p.opening_hours.weekday_text } : null,
-    nationalPhoneNumber: '', businessStatus: p.business_status, websiteURI: '', __legacy: true,
+    nationalPhoneNumber: '', businessStatus: p.business_status, websiteURI: '',
+    photos: p.photos || [], // ⭐ 保留 legacy 的 photos (內含 getUrl 方法)
+    __legacy: true,
   };
 }
 
@@ -281,7 +274,6 @@ async function fetchNearbyToyStores(google, center, radius) {
   throw combined;
 }
 
-// ============ 分類推斷 ============
 function inferCategory(name = '', types = []) {
   const n = name;
   if (/扭蛋|轉蛋|ガチャ|gacha|gashapon|カプセル/i.test(n)) return '扭蛋';
@@ -361,17 +353,51 @@ function placeToShop(place, userPos, idx) {
   const primaryDisplay = typeof place.primaryTypeDisplayName === 'string'
     ? place.primaryTypeDisplayName
     : (_optionalChain([place, 'access', _31 => _31.primaryTypeDisplayName, 'optionalAccess', _32 => _32.text]) || '');
+
+  // ⭐ 取出小、中、大三種尺寸的店家照片 URL (避免下載過大圖)
+  const photoSmall = extractPhotoUrl(place, { maxWidth: 200, maxHeight: 200 });
+  const photoMedium = extractPhotoUrl(place, { maxWidth: 400, maxHeight: 400 });
+  const photoLarge = extractPhotoUrl(place, { maxWidth: 800, maxHeight: 600 });
+
   return {
     id: place.id || `place-${idx}`, name: nameStr, rating: Math.round(rating * 100) / 100,
     reviews, category, tags, area, price, hours,
     phone: place.nationalPhoneNumber || '未提供', website: place.websiteURI || '',
     badge, image: GRADIENTS[idx % GRADIENTS.length], emoji: EMOJIS[category] || '🧸',
+    photoSmall, photoMedium, photoLarge,
     description: `${primaryDisplay || '玩具店'}・位於${area},距離 ${distance.toFixed(1)} km。${isClosed ? ' (目前暫停營業)' : ''}`,
     highlights, lat: pos.lat, lng: pos.lng, distance, address: addr, isClosed,
     __legacy: !!place.__legacy,
     __primaryType: place.primaryType || '',
     __types: place.types || [],
   };
+}
+
+// ⭐ 共用元件: 顯示店家照片 (有 photoUrl 時優先顯示;載入失敗或無照片時 fallback 至 gradient + emoji)
+function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', className = '', children }) {
+  const [photoFailed, setPhotoFailed] = _react.useState.call(void 0, false);
+  const photoUrl = photoSize === 'large' ? shop.photoLarge : photoSize === 'small' ? shop.photoSmall : shop.photoMedium;
+  const showPhoto = photoUrl && !photoFailed;
+  return (
+    _react2.default.createElement('div', { className: `relative overflow-hidden ${className}`, style: { background: shop.image },}
+      // 底層永遠是 emoji + 漸層 (照片載入失敗時自然露出)
+      , _react2.default.createElement('div', { className: `absolute inset-0 flex items-center justify-center ${emojiSize}`,}, shop.emoji)
+      // 上層: 店家實照 (若有)
+      , showPhoto && (
+        _react2.default.createElement('img', {
+          src: photoUrl,
+          alt: shop.name,
+          loading: "lazy",
+          referrerPolicy: "no-referrer",
+          draggable: false,
+          onError: () => setPhotoFailed(true),
+          className: "absolute inset-0 w-full h-full object-cover"      ,
+        })
+      )
+      // 額外覆蓋元素 (徽章、序號等)
+      , children
+    )
+  );
 }
 
 function buildMarkerIcon(google, shop, color, selected) {
@@ -407,9 +433,36 @@ const LIGHT_STYLE = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#aad3df' }] },
 ];
 
-function HorizontalShopList({ shops, onSelect }) {
+function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = false }) {
   const scrollRef = _react.useRef.call(void 0, null);
   const dragRef = _react.useRef.call(void 0, { active: false, startX: 0, startScroll: 0, moved: false });
+
+  _react.useLayoutEffect.call(void 0, () => {
+    if (isHidden) return;
+    const el = scrollRef.current;
+    if (!el || !scrollPositionRef) return;
+    const saved = scrollPositionRef.current;
+    if (typeof saved === 'number' && saved > 0) {
+      el.scrollLeft = saved;
+    }
+  }, [isHidden, shops.length]);
+
+  _react.useEffect.call(void 0, () => {
+    const el = scrollRef.current;
+    if (!el || !scrollPositionRef) return;
+    const onScroll = () => {
+      if (el.offsetParent === null) return;
+      scrollPositionRef.current = el.scrollLeft;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (el.offsetParent !== null) {
+        scrollPositionRef.current = el.scrollLeft;
+      }
+      el.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
   _react.useEffect.call(void 0, () => {
     const el = scrollRef.current; if (!el) return;
     const onWheel = (e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); el.scrollLeft += e.deltaY; } };
@@ -432,7 +485,8 @@ function HorizontalShopList({ shops, onSelect }) {
       , shops.map(shop => (
         _react2.default.createElement('button', { key: shop.id, type: "button", onClick: () => onSelect(shop), className: "flex-shrink-0 bg-white rounded-xl shadow-lg overflow-hidden text-left w-64 focus:outline-none"       , draggable: false,}
           , _react2.default.createElement('div', { className: "flex",}
-            , _react2.default.createElement('div', { className: "w-16 h-16 flex-shrink-0 flex items-center justify-center text-2xl"      , style: { background: shop.image },}, shop.emoji)
+            // ⭐ 用 ShopThumb 替代原本的 emoji icon
+            , _react2.default.createElement(ShopThumb, { shop: shop, photoSize: "small", emojiSize: "text-2xl", className: "w-16 h-16 flex-shrink-0",} )
             , _react2.default.createElement('div', { className: "flex-1 p-2 min-w-0"  ,}
               , _react2.default.createElement('p', { className: "text-sm font-bold text-gray-900 truncate"   ,}, shop.name)
               , _react2.default.createElement('div', { className: "flex items-center gap-1 mt-0.5"   ,}
@@ -449,7 +503,7 @@ function HorizontalShopList({ shops, onSelect }) {
   );
 }
 
-function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocation, allShops, visibleShops, mapPinShop, setMapPinShop, favorites, toggleFav, openDetail, getCategoryColor, searchQuery, setSearchQuery, categories, activeCategory, setActiveCategory, setView, StarRating, BadgeIcon, placesStatus, apiUsed, filterStats }) {
+function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocation, allShops, visibleShops, mapPinShop, setMapPinShop, favorites, toggleFav, openDetail, getCategoryColor, searchQuery, setSearchQuery, categories, activeCategory, setActiveCategory, setView, StarRating, BadgeIcon, placesStatus, apiUsed, filterStats, listScrollRef }) {
   const mapRef = _react.useRef.call(void 0, null);
   const mapInstanceRef = _react.useRef.call(void 0, null);
   const markersRef = _react.useRef.call(void 0, new Map());
@@ -586,55 +640,57 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
 
       , _react2.default.createElement('div', { className: "absolute left-4 bottom-44 z-30 bg-white/90 rounded px-2 py-0.5 text-xs text-gray-600 shadow"          ,}, "Zoom " , zoom)
 
-      , mapPinShop ? (
-        _react2.default.createElement('div', { className: "absolute bottom-4 left-4 right-4 z-40 bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up"         ,}
-          , _react2.default.createElement('div', { className: "flex",}
-            , _react2.default.createElement('div', { className: "w-24 h-24 flex-shrink-0 flex items-center justify-center text-4xl"      , style: { background: mapPinShop.image },}, mapPinShop.emoji)
-            , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
-              , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
-                , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
-                  , mapPinShop.badge && _react2.default.createElement('div', { className: "mb-1",}, _react2.default.createElement(BadgeIcon, { badge: mapPinShop.badge,} ))
-                  , _react2.default.createElement('h3', { className: "font-bold text-gray-900 truncate"  ,}, mapPinShop.name)
-                  , _react2.default.createElement('div', { className: "flex items-center gap-1 mt-0.5"   ,}
-                    , _react2.default.createElement('span', { className: "text-sm font-bold text-amber-500"  ,}, mapPinShop.rating || '–')
-                    , _react2.default.createElement(StarRating, { rating: mapPinShop.rating,} )
-                    , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "(", mapPinShop.reviews, ")")
-                  )
-                )
-                , _react2.default.createElement('button', { onClick: () => setMapPinShop(null), className: "text-gray-400",}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4" ,} ))
-              )
-              , _react2.default.createElement('div', { className: "flex items-center gap-2 mt-1 text-xs text-gray-500"     ,}
-                , _react2.default.createElement('span', { className: "flex items-center gap-0.5"  ,}, _react2.default.createElement(_lucidereact.Navigation, { className: "w-3 h-3" ,} ), mapPinShop.distance.toFixed(1), " km" )
-                , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', null, mapPinShop.price)
-                , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', { className: "truncate",}, mapPinShop.area)
-              )
-            )
-          )
-          , _react2.default.createElement('div', { className: "flex border-t border-gray-100"  ,}
-            , _react2.default.createElement('button', { onClick: () => toggleFav(mapPinShop.id), className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold border-r border-gray-100"         ,}
-              , _react2.default.createElement(_lucidereact.Heart, { className: `w-4 h-4 ${favorites.includes(mapPinShop.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`,} )
-              , _react2.default.createElement('span', { className: favorites.includes(mapPinShop.id) ? 'text-red-500' : 'text-gray-600',}, "收藏")
-            )
-            , _react2.default.createElement('a', { href: `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${mapPinShop.lat},${mapPinShop.lng}&destination_place_id=${mapPinShop.id}`, target: "_blank", rel: "noopener noreferrer" , className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-600"        ,}
-              , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4" ,} ), "導航"
-            )
-            , _react2.default.createElement('button', { onClick: () => openDetail(mapPinShop), className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-rose-500"           ,}, "查看詳情")
+      , _react2.default.createElement('div', { className: "absolute bottom-4 left-0 right-0 z-30 pointer-events-none"     ,}
+        , !mapPinShop && _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto"     ,}
+          , _react2.default.createElement('span', { className: "text-xs font-bold text-gray-700 bg-white px-2.5 py-1 rounded-full shadow"       ,}, "📍 "
+             , visibleShops.length > 0 ? `${visibleShops.length} 家玩具店` : (placesStatus === 'loading' ? '搜尋中...' : '沒有符合的店家')
           )
         )
-      ) : (
-        _react2.default.createElement('div', { className: "absolute bottom-4 left-0 right-0 z-30 pointer-events-none"     ,}
-          , _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto"     ,}
-            , _react2.default.createElement('span', { className: "text-xs font-bold text-gray-700 bg-white px-2.5 py-1 rounded-full shadow"       ,}, "📍 "
-               , visibleShops.length > 0 ? `${visibleShops.length} 家玩具店` : (placesStatus === 'loading' ? '搜尋中...' : '沒有符合的店家')
-            )
-          )
+        , _react2.default.createElement('div', { className: `pointer-events-auto ${mapPinShop ? 'hidden' : ''}`,}
           , sorted.length > 0 ? (
-            _react2.default.createElement('div', { className: "pointer-events-auto",}, _react2.default.createElement(HorizontalShopList, { shops: sorted, onSelect: setMapPinShop,} ))
+            _react2.default.createElement(HorizontalShopList, { shops: sorted, onSelect: setMapPinShop, scrollPositionRef: listScrollRef, isHidden: !!mapPinShop,} )
           ) : placesStatus === 'empty' ? (
-            _react2.default.createElement('div', { className: "mx-4 bg-white rounded-xl p-3 shadow-lg text-center text-xs text-gray-500 pointer-events-auto"        ,}, "此範圍內沒有玩具店"
+            _react2.default.createElement('div', { className: "mx-4 bg-white rounded-xl p-3 shadow-lg text-center text-xs text-gray-500"       ,}, "此範圍內沒有玩具店"
 
             )
           ) : null
+        )
+        , mapPinShop && _react2.default.createElement('div', { className: "px-4 pointer-events-auto"  ,}
+          , _react2.default.createElement('div', { className: "bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up"     ,}
+            , _react2.default.createElement('div', { className: "flex",}
+              // ⭐ 改用 ShopThumb
+              , _react2.default.createElement(ShopThumb, { shop: mapPinShop, photoSize: "medium", emojiSize: "text-4xl", className: "w-24 h-24 flex-shrink-0",} )
+              , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
+                , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
+                  , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
+                    , mapPinShop.badge && _react2.default.createElement('div', { className: "mb-1",}, _react2.default.createElement(BadgeIcon, { badge: mapPinShop.badge,} ))
+                    , _react2.default.createElement('h3', { className: "font-bold text-gray-900 truncate"  ,}, mapPinShop.name)
+                    , _react2.default.createElement('div', { className: "flex items-center gap-1 mt-0.5"   ,}
+                      , _react2.default.createElement('span', { className: "text-sm font-bold text-amber-500"  ,}, mapPinShop.rating || '–')
+                      , _react2.default.createElement(StarRating, { rating: mapPinShop.rating,} )
+                      , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "(", mapPinShop.reviews, ")")
+                    )
+                  )
+                  , _react2.default.createElement('button', { onClick: () => setMapPinShop(null), className: "text-gray-400",}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4" ,} ))
+                )
+                , _react2.default.createElement('div', { className: "flex items-center gap-2 mt-1 text-xs text-gray-500"     ,}
+                  , _react2.default.createElement('span', { className: "flex items-center gap-0.5"  ,}, _react2.default.createElement(_lucidereact.Navigation, { className: "w-3 h-3" ,} ), mapPinShop.distance.toFixed(1), " km" )
+                  , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', null, mapPinShop.price)
+                  , _react2.default.createElement('span', null, "·"), _react2.default.createElement('span', { className: "truncate",}, mapPinShop.area)
+                )
+              )
+            )
+            , _react2.default.createElement('div', { className: "flex border-t border-gray-100"  ,}
+              , _react2.default.createElement('button', { onClick: () => toggleFav(mapPinShop.id), className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold border-r border-gray-100"         ,}
+                , _react2.default.createElement(_lucidereact.Heart, { className: `w-4 h-4 ${favorites.includes(mapPinShop.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`,} )
+                , _react2.default.createElement('span', { className: favorites.includes(mapPinShop.id) ? 'text-red-500' : 'text-gray-600',}, "收藏")
+              )
+              , _react2.default.createElement('a', { href: `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${mapPinShop.lat},${mapPinShop.lng}&destination_place_id=${mapPinShop.id}`, target: "_blank", rel: "noopener noreferrer" , className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-600"        ,}
+                , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4" ,} ), "導航"
+              )
+              , _react2.default.createElement('button', { onClick: () => openDetail(mapPinShop), className: "flex-1 py-2.5 flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-gradient-to-r from-red-500 to-rose-500"           ,}, "查看詳情")
+            )
+          )
         )
       )
 
@@ -651,6 +707,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
  function ToyFinder() {
   const [view, setView] = _react.useState.call(void 0, 'home');
   const [selectedShop, setSelectedShop] = _react.useState.call(void 0, null);
+  const [detailFrom, setDetailFrom] = _react.useState.call(void 0, 'home');
   const [searchQuery, setSearchQuery] = _react.useState.call(void 0, '');
   const [activeCategory, setActiveCategory] = _react.useState.call(void 0, '全部');
   const [favorites, setFavorites] = _react.useState.call(void 0, []);
@@ -672,6 +729,8 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const [filterStats, setFilterStats] = _react.useState.call(void 0, { total: 0, kept: 0, removed: 0, rejected: [] });
   const [refreshTick, setRefreshTick] = _react.useState.call(void 0, 0);
   const [showRejected, setShowRejected] = _react.useState.call(void 0, false);
+
+  const mapListScrollRef = _react.useRef.call(void 0, 0);
 
   const requestLocation = _react.useCallback.call(void 0, () => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -729,7 +788,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         const { results, apiUsed: usedApi } = await fetchNearbyToyStores(google, userPos, SEARCH_RADIUS_M);
         if (cancelled) return;
 
-        // ⭐ 真偽判定 + 統計
         const rejected = [];
         const kept = [];
         results.forEach(p => {
@@ -749,10 +807,13 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         rejected.forEach(r => console.log(`  ✗ ${r.name} [${r.primaryType}] - ${r.reason}`));
 
         const shops = kept.map((p, i) => placeToShop(p, userPos, i)).filter(Boolean);
+        const photoCount = shops.filter(s => s.photoMedium).length;
+        console.log(`[照片] ${photoCount}/${shops.length} 家有照片`);
         setApiUsed(usedApi);
         setPlacesShops(shops);
         setFilterStats({ total: results.length, kept: kept.length, removed: rejected.length, rejected });
         setPlacesStatus(shops.length ? 'ready' : 'empty');
+        mapListScrollRef.current = 0;
       } catch (err) {
         if (cancelled) return;
         console.error('[Places] 全部失敗:', err);
@@ -787,7 +848,16 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const nearbyShops = _react.useMemo.call(void 0, () => [...shops].sort((a, b) => a.distance - b.distance).slice(0, 6), [shops]);
 
   const toggleFav = (id) => setFavorites(f => f.includes(id) ? f.filter(x => x !== id) : [...f, id]);
-  const openDetail = (shop) => { setSelectedShop(shop); setView('detail'); };
+
+  const openDetail = _react.useCallback.call(void 0, (shop) => {
+    setDetailFrom(prev => view === 'detail' ? prev : view);
+    setSelectedShop(shop);
+    setView('detail');
+  }, [view]);
+
+  const closeDetail = _react.useCallback.call(void 0, () => {
+    setView(detailFrom || 'home');
+  }, [detailFrom]);
 
   const getCategoryColor = _react.useCallback.call(void 0, (cat) => ({
     '玩具': '#ef4444', '模型': '#6366f1', '扭蛋': '#ec4899', '積木': '#3b82f6',
@@ -806,22 +876,28 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   };
 
   if (view === 'map') {
-    return _react2.default.createElement(MapView, { mapStatus: mapsStatus, mapsError: mapsError, userPos: userPos, locationStatus: locationStatus, refreshLocation: requestLocation, allShops: shops, visibleShops: filteredShops, mapPinShop: mapPinShop, setMapPinShop: setMapPinShop, favorites: favorites, toggleFav: toggleFav, openDetail: openDetail, getCategoryColor: getCategoryColor, searchQuery: searchQuery, setSearchQuery: setSearchQuery, categories: categories, activeCategory: activeCategory, setActiveCategory: setActiveCategory, setView: setView, StarRating: StarRating, BadgeIcon: BadgeIcon, placesStatus: placesStatus, apiUsed: apiUsed, filterStats: filterStats,} );
+    return _react2.default.createElement(MapView, { mapStatus: mapsStatus, mapsError: mapsError, userPos: userPos, locationStatus: locationStatus, refreshLocation: requestLocation, allShops: shops, visibleShops: filteredShops, mapPinShop: mapPinShop, setMapPinShop: setMapPinShop, favorites: favorites, toggleFav: toggleFav, openDetail: openDetail, getCategoryColor: getCategoryColor, searchQuery: searchQuery, setSearchQuery: setSearchQuery, categories: categories, activeCategory: activeCategory, setActiveCategory: setActiveCategory, setView: setView, StarRating: StarRating, BadgeIcon: BadgeIcon, placesStatus: placesStatus, apiUsed: apiUsed, filterStats: filterStats, listScrollRef: mapListScrollRef,} );
   }
 
   if (view === 'detail' && selectedShop) {
     const cur = shops.find(s => s.id === selectedShop.id) || selectedShop;
+    const backLabel = detailFrom === 'map' ? '返回地圖' : '返回';
     return (
       _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20"  ,}
-        , _react2.default.createElement('div', { className: "relative h-64 w-full flex items-center justify-center text-8xl"      , style: { background: cur.image },}
-          , _react2.default.createElement('button', { onClick: () => setView('home'), className: "absolute top-4 left-4 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg"       ,}, _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5" ,} ))
-          , _react2.default.createElement('button', { onClick: () => toggleFav(cur.id), className: "absolute top-4 right-4 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg"       ,}
+        // ⭐ 詳情頁的大圖頭區: 用 ShopThumb 顯示大尺寸店家照片
+        , _react2.default.createElement(ShopThumb, { shop: cur, photoSize: "large", emojiSize: "text-8xl", className: "h-64 w-full",}
+          , _react2.default.createElement('button', { onClick: closeDetail, title: backLabel, className: "absolute top-4 left-4 z-10 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg flex items-center gap-1 pr-3"           ,}
+            , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5" ,} )
+            , detailFrom === 'map' && _react2.default.createElement('span', { className: "text-xs font-semibold text-gray-700"  ,}, "地圖")
+          )
+          , _react2.default.createElement('button', { onClick: () => toggleFav(cur.id), className: "absolute top-4 right-4 z-10 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg"        ,}
             , _react2.default.createElement(_lucidereact.Heart, { className: `w-5 h-5 ${favorites.includes(cur.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`,} )
           )
-          , _react2.default.createElement('span', { className: "drop-shadow-lg",}, cur.emoji)
-          , _react2.default.createElement('div', { className: "absolute bottom-3 left-4 bg-white/90 text-xs font-bold text-gray-700 px-2 py-0.5 rounded-full shadow flex items-center gap-1"             ,}
+          , _react2.default.createElement('div', { className: "absolute bottom-3 left-4 z-10 bg-white/90 text-xs font-bold text-gray-700 px-2 py-0.5 rounded-full shadow flex items-center gap-1"              ,}
             , _react2.default.createElement(_lucidereact.Shield, { className: "w-3 h-3 text-emerald-500"  ,} ), "已驗證玩具店"
           )
+          // 若有實照,加一層底部漸黑遮罩讓「已驗證」標籤更易讀
+          , cur.photoLarge && _react2.default.createElement('div', { className: "absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"      ,})
         )
         , _react2.default.createElement('div', { className: "bg-white px-5 py-5 border-b"   ,}
           , _react2.default.createElement('div', { className: "mb-2",}, _react2.default.createElement(BadgeIcon, { badge: cur.badge,} ))
@@ -1133,10 +1209,10 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , filteredShops.map((shop, idx) => (
           _react2.default.createElement('div', { key: shop.id, onClick: () => openDetail(shop), className: "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"      ,}
             , _react2.default.createElement('div', { className: "flex",}
-              , _react2.default.createElement('div', { className: "w-28 h-28 flex-shrink-0 flex items-center justify-center text-5xl relative"       , style: { background: shop.image },}
-                , idx < 3 && activeCategory === '全部' && sortBy === 'distance' && _react2.default.createElement('div', { className: "absolute top-1.5 left-1.5 bg-white/90 text-gray-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center"            ,}, idx + 1)
-                , _react2.default.createElement('div', { className: "absolute bottom-1 right-1 bg-emerald-500 text-white rounded-full p-0.5"      , title: "已驗證為玩具店",}, _react2.default.createElement(_lucidereact.Shield, { className: "w-2.5 h-2.5" ,} ))
-                , _react2.default.createElement('span', { className: "drop-shadow",}, shop.emoji)
+              // ⭐ 改用 ShopThumb,序號和驗證盾牌作為 children 疊在上層
+              , _react2.default.createElement(ShopThumb, { shop: shop, photoSize: "medium", emojiSize: "text-5xl", className: "w-28 h-28 flex-shrink-0",}
+                , idx < 3 && activeCategory === '全部' && sortBy === 'distance' && _react2.default.createElement('div', { className: "absolute top-1.5 left-1.5 bg-white/90 text-gray-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shadow"             ,}, idx + 1)
+                , _react2.default.createElement('div', { className: "absolute bottom-1 right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow"      , title: "已驗證為玩具店",}, _react2.default.createElement(_lucidereact.Shield, { className: "w-2.5 h-2.5" ,} ))
               )
               , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
                 , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
@@ -1184,4 +1260,5 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   <body>
   
 
-<div id="preview-app"></div></body></html>
+<div id="preview-app"></div>
+</body></html>
