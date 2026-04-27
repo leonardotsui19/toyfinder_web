@@ -12,13 +12,19 @@ const DEFAULT_USER_LABEL = '台北・西門町';
 const SEARCH_RADIUS_M = 5000;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
-// ============================================================================
-// ⭐ 優化 #4: Module-level 照片 URL 快取
-// 同一個 placeId+size 永遠回傳同一個 URL,瀏覽器才會命中 HTTP cache,
-// Google 也才不會重複計費 (相同 URL 在瀏覽器 cache 期間不會再打 API)
-// ============================================================================
+// ⭐ 縮放限制
+const MAP_MIN_ZOOM = 11;   // 最遠 (約城市等級, 防止看不到任何店家)
+const MAP_MAX_ZOOM = 18;   // 最近 (街道級, 防止瓦片糊掉)
+const MAP_DEFAULT_ZOOM = 14;
+
+// ⭐ fitBounds 的 padding (px),依螢幕上下方 UI 高度設計:
+//   top: 搜尋列+分類膠囊+過濾提示 ≈ 140px
+//   bottom: 底部水平卡片清單 ≈ 200px
+//   left/right: 視覺呼吸空間
+const FIT_PADDING = { top: 140, right: 30, bottom: 220, left: 30 };
+
 const photoUrlCache = new Map();
-let _photoUrlGenCount = 0; // debug: 累計產生過幾次 URL
+let _photoUrlGenCount = 0;
 
 const PHOTO_DIMS = {
   small: { maxWidth: 200, maxHeight: 200 },
@@ -26,10 +32,6 @@ const PHOTO_DIMS = {
   large: { maxWidth: 800, maxHeight: 600 },
 };
 
-// ⭐ 優化 #2: 只有當需要顯示時才把 photo 物件轉成 URL
-// (注意: 呼叫 getURI/getUrl 本身不一定立刻計費,瀏覽器 fetch 那個 URL 才計費,
-//  但每次呼叫產生的 URL 不同 → 換新 URL 等於跳過 HTTP cache → 等於重新計費,
-//  所以這裡用 cache 強制同一張照片永遠用同一個 URL)
 function buildPhotoUrl(photoRef, placeId, size = 'medium') {
   if (!photoRef || !placeId) return '';
   const cacheKey = `${placeId}::${size}`;
@@ -39,9 +41,9 @@ function buildPhotoUrl(photoRef, placeId, size = 'medium') {
   let url = '';
   try {
     if (typeof photoRef.getURI === 'function') {
-      url = photoRef.getURI(dims); // New API
+      url = photoRef.getURI(dims);
     } else if (typeof photoRef.getUrl === 'function') {
-      url = photoRef.getUrl(dims); // Legacy API
+      url = photoRef.getUrl(dims);
     }
   } catch (e) {
     console.warn('[photo] 產生 URL 失敗:', e);
@@ -55,7 +57,6 @@ function buildPhotoUrl(photoRef, placeId, size = 'medium') {
   return url;
 }
 
-// 對外曝露快取狀態,方便 UI 顯示
 function getPhotoCacheStats() {
   return {
     cachedUrls: photoUrlCache.size,
@@ -215,46 +216,11 @@ function classifyToyStore(place) {
   return { ok: true };
 }
 
-// ============================================================================
-// ⭐ 優化 #7: Field Mask 嚴格限制
-// Places API (New) 按欄位分組計費:
-//   • Place IDs Only        → 免費    (id)
-//   • Place Details Pro     → 中等    (displayName, types, location, photos[metadata]...)
-//   • Place Details Enterprise → 較高 (rating, userRatingCount, priceLevel, regularOpeningHours...)
-//   • Enterprise + Atmosphere → 最高  (reviews, editorialSummary...)
-//
-// 這裡只請求「真正會顯示出來」的欄位,任何用不到的欄位都不放,
-// 例如刻意不請求 reviews / editorialSummary / parkingOptions 等高價欄位。
-// 注意: photos 本身只是 metadata (URL 引用),實際圖片計費發生在 <img> 載入時。
-// ============================================================================
 const PLACE_FIELDS = [
-  // —— Place Details Pro 等級 ——
-  'id',                       // 免費等級識別子,做為快取 key
-  'displayName',              // 店名 (必要)
-  'formattedAddress',         // 地址 (詳情頁顯示)
-  'location',                 // 經緯度 (地圖標記必需)
-  'types',                    // 類型陣列 (用於真偽驗證)
-  'primaryType',              // 主要類型 (用於真偽驗證)
-  'primaryTypeDisplayName',   // 類型中文化顯示
-  'businessStatus',           // 是否歇業
-  'photos',                   // 照片 metadata (圖片本身才會計費)
-
-  // —— Place Details Enterprise 等級 ——
-  'rating',                   // 平均評分 (列表卡顯示)
-  'userRatingCount',          // 評論數 (列表卡顯示)
-  'priceLevel',               // 價位 (列表卡顯示)
-  'regularOpeningHours',      // 營業時間 (列表卡 + 詳情頁)
-  'nationalPhoneNumber',      // 電話 (詳情頁)
-  'websiteURI',               // 官網 (詳情頁)
-
-  // —— 刻意不請求 (省錢) ——
-  // 'reviews'                ❌ 文字評論,我們只顯示星等,用不到
-  // 'editorialSummary'       ❌ Google 編輯摘要,我們自製 description
-  // 'currentOpeningHours'    ❌ 用 regularOpeningHours 已足夠
-  // 'parkingOptions'         ❌ 玩具店場景不需要
-  // 'paymentOptions'         ❌ 詳情頁未顯示
-  // 'accessibilityOptions'   ❌ 詳情頁未顯示
-  // 'iconMaskBaseUri'        ❌ 我們自己畫 marker
+  'id', 'displayName', 'formattedAddress', 'location', 'types',
+  'primaryType', 'primaryTypeDisplayName', 'businessStatus', 'photos',
+  'rating', 'userRatingCount', 'priceLevel', 'regularOpeningHours',
+  'nationalPhoneNumber', 'websiteURI',
 ];
 
 async function fetchNearbyWithNewAPI(google, center, radius) {
@@ -264,7 +230,7 @@ async function fetchNearbyWithNewAPI(google, center, radius) {
   }
   const { Place, SearchNearbyRankPreference } = places;
   const request = {
-    fields: PLACE_FIELDS, // ⭐ 使用嚴格收斂的 field mask
+    fields: PLACE_FIELDS,
     locationRestriction: { center, radius },
     includedTypes: ['toy_store'],
     maxResultCount: 20,
@@ -419,13 +385,11 @@ function placeToShop(place, userPos, idx) {
     ? place.primaryTypeDisplayName
     : (_optionalChain([place, 'access', _31 => _31.primaryTypeDisplayName, 'optionalAccess', _32 => _32.text]) || '');
 
-  // ⭐ 優化 #2: 不再預先呼叫 getURI/getUrl,只儲存 photo 物件本身
-  // 真正呼叫 buildPhotoUrl() 的時機延後到 ShopThumb 進入視窗時
   const photoRef = (place.photos && place.photos.length) ? place.photos[0] : null;
 
   return {
     id: place.id || `place-${idx}`,
-    placeId: place.id || `place-${idx}`, // 給 buildPhotoUrl 當 cache key 用
+    placeId: place.id || `place-${idx}`,
     name: nameStr, rating: Math.round(rating * 100) / 100,
     reviews, category, tags, area, price, hours,
     phone: place.nationalPhoneNumber || '未提供', website: place.websiteURI || '',
@@ -440,10 +404,6 @@ function placeToShop(place, userPos, idx) {
   };
 }
 
-// ============================================================================
-// ⭐ 優化 #1: 用 IntersectionObserver 延遲載入照片
-// + 優化 #2: 只在進入視窗時才產生 URL (= 才真的會被 Google 計費)
-// ============================================================================
 function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', className = '', eager = false, children }) {
   const containerRef = _react.useRef.call(void 0, null);
   const [inView, setInView] = _react.useState.call(void 0, eager);
@@ -454,7 +414,6 @@ function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', classNa
     const el = containerRef.current;
     if (!el) return;
     if (typeof IntersectionObserver === 'undefined') {
-      // 老瀏覽器 fallback: 直接視為 inView
       setInView(true);
       return;
     }
@@ -468,18 +427,12 @@ function ShopThumb({ shop, photoSize = 'medium', emojiSize = 'text-2xl', classNa
           }
         }
       },
-      {
-        // 提前 200px 觸發,讓使用者捲動時感覺照片是「即時出現」的
-        rootMargin: '200px 200px 200px 200px',
-        threshold: 0.01,
-      }
+      { rootMargin: '200px 200px 200px 200px', threshold: 0.01 }
     );
     io.observe(el);
     return () => io.disconnect();
   }, [eager, inView]);
 
-  // 只有當 (1) 進入視窗 + (2) 有照片引用 + (3) 未曾載入失敗 三條件都成立時
-  // 才真的去產生 URL — 此時瀏覽器才會 fetch,Google 才會計費
   const photoUrl = (inView && shop._hasPhoto && !photoFailed)
     ? buildPhotoUrl(shop._photoRef, shop.placeId, photoSize)
     : '';
@@ -535,6 +488,21 @@ const LIGHT_STYLE = [
   { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#ffffff' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#aad3df' }] },
 ];
+
+// ⭐ 計算「使用者位置 + 所有店家」的最小邊界,
+// 若沒有店家就 fallback 到搜尋半徑外框
+function computeBoundsForShops(google, userPos, shops) {
+  const bounds = new google.maps.LatLngBounds();
+  bounds.extend(userPos);
+  if (shops && shops.length > 0) {
+    shops.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
+  } else {
+    // 無店家時,以使用者位置為中心、SEARCH_RADIUS_M 為半徑畫出外框
+    const circle = new google.maps.Circle({ center: userPos, radius: SEARCH_RADIUS_M });
+    bounds.union(circle.getBounds());
+  }
+  return bounds;
+}
 
 function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = false }) {
   const scrollRef = _react.useRef.call(void 0, null);
@@ -611,27 +579,39 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const markersRef = _react.useRef.call(void 0, new Map());
   const userMarkerRef = _react.useRef.call(void 0, null);
   const [style, setStyle] = _react.useState.call(void 0, 'standard');
-  const [zoom, setZoom] = _react.useState.call(void 0, 14);
+  const [zoom, setZoom] = _react.useState.call(void 0, MAP_DEFAULT_ZOOM);
+
+  // ⭐ 是否已做過初次自動 fitBounds (避免每次資料變動都覆寫使用者的縮放操作)
+  const didInitialFitRef = _react.useRef.call(void 0, false);
+  // 使用者「最後一次主動操作」的時間戳,用於決定要不要自動重新 fit
+  const lastUserInteractRef = _react.useRef.call(void 0, 0);
 
   _react.useEffect.call(void 0, () => {
     if (mapStatus !== 'ready' || !mapRef.current || mapInstanceRef.current) return;
     const google = window.google;
     const map = new google.maps.Map(mapRef.current, {
-      center: userPos, zoom: 14, disableDefaultUI: true,
-      clickableIcons: false, gestureHandling: 'greedy',
+      center: userPos,
+      zoom: MAP_DEFAULT_ZOOM,
+      // ⭐ 縮放層級限制:小於 11 看不到任何店,大於 18 瓦片會糊
+      minZoom: MAP_MIN_ZOOM,
+      maxZoom: MAP_MAX_ZOOM,
+      disableDefaultUI: true,
+      clickableIcons: false,
+      gestureHandling: 'greedy',
       styles: style === 'light' ? LIGHT_STYLE : undefined,
     });
     mapInstanceRef.current = map;
     map.addListener('zoom_changed', () => setZoom(map.getZoom()));
     map.addListener('click', () => setMapPinShop(null));
+    // ⭐ 偵測使用者主動操作 (拖曳/縮放) → 之後的資料變動就不再自動 fit
+    map.addListener('dragstart', () => { lastUserInteractRef.current = Date.now(); });
     userMarkerRef.current = new google.maps.Marker({ position: userPos, map, icon: buildUserIcon(google), zIndex: 1, title: '我的位置' });
   }, [mapStatus, style, setMapPinShop, userPos]);
 
   _react.useEffect.call(void 0, () => {
     if (!mapInstanceRef.current || !userMarkerRef.current) return;
     userMarkerRef.current.setPosition(userPos);
-    if (locationStatus === 'granted') mapInstanceRef.current.panTo(userPos);
-  }, [userPos, locationStatus]);
+  }, [userPos]);
 
   _react.useEffect.call(void 0, () => {
     if (!mapInstanceRef.current) return;
@@ -663,16 +643,72 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     });
   }, [allShops, visibleShops, mapPinShop, mapStatus, getCategoryColor, setMapPinShop]);
 
+  // ⭐ 自動 fitBounds: 只在「初次」資料載入完成時觸發,
+  // 之後若使用者主動操作過地圖,就不再自動覆寫他的視角
+  _react.useEffect.call(void 0, () => {
+    if (mapStatus !== 'ready' || !mapInstanceRef.current) return;
+    if (didInitialFitRef.current) return;                 // 只做一次
+    if (placesStatus === 'loading') return;               // 等資料載完
+    if (allShops.length === 0 && placesStatus !== 'empty' && placesStatus !== 'error') return;
+
+    const google = window.google;
+    const map = mapInstanceRef.current;
+    const bounds = computeBoundsForShops(google, userPos, allShops);
+
+    // ⚠️ 用 fitBounds 之後,maxZoom 會自動限制 (Google Maps 內建行為),
+    // 但如果只有 1 個點,會放到很近 → 我們手動再壓回合理範圍
+    map.fitBounds(bounds, FIT_PADDING);
+
+    // 等 fitBounds 套用完再校正極端情況
+    google.maps.event.addListenerOnce(map, 'idle', () => {
+      const z = map.getZoom();
+      if (z > 16) map.setZoom(16);   // 只有 1-2 個點時不要放太近
+      if (z < MAP_MIN_ZOOM) map.setZoom(MAP_MIN_ZOOM);
+    });
+
+    didInitialFitRef.current = true;
+  }, [mapStatus, placesStatus, allShops, userPos]);
+
+  // ⭐ 當使用者點擊店家 popup 時,平滑移動但「不超過 maxZoom」
   _react.useEffect.call(void 0, () => {
     if (!mapPinShop || !mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
     map.panTo({ lat: mapPinShop.lat, lng: mapPinShop.lng });
-    if (map.getZoom() < 14) map.setZoom(15);
+    const targetZoom = Math.min(16, MAP_MAX_ZOOM);
+    if (map.getZoom() < targetZoom - 1) map.setZoom(targetZoom);
   }, [mapPinShop]);
 
-  const zoomBy = (d) => { const m = mapInstanceRef.current; if (m) m.setZoom(Math.max(3, Math.min(21, (m.getZoom() || 14) + d))); };
-  const recenter = () => { const m = mapInstanceRef.current; if (!m) return; refreshLocation(); m.panTo(userPos); if (m.getZoom() < 14) m.setZoom(14); };
+  const zoomBy = (d) => {
+    const m = mapInstanceRef.current; if (!m) return;
+    lastUserInteractRef.current = Date.now();
+    const next = (m.getZoom() || MAP_DEFAULT_ZOOM) + d;
+    m.setZoom(Math.max(MAP_MIN_ZOOM, Math.min(MAP_MAX_ZOOM, next)));
+  };
+
+  const recenter = () => {
+    const m = mapInstanceRef.current; if (!m) return;
+    refreshLocation();
+    m.panTo(userPos);
+    if (m.getZoom() < MAP_DEFAULT_ZOOM) m.setZoom(MAP_DEFAULT_ZOOM);
+  };
+
+  // ⭐ 「框選全部」按鈕: 重新計算 bounds 把所有可見店家+使用者都納入螢幕
+  const fitAll = () => {
+    const m = mapInstanceRef.current; if (!m) return;
+    const google = window.google;
+    const bounds = computeBoundsForShops(google, userPos, visibleShops.length ? visibleShops : allShops);
+    m.fitBounds(bounds, FIT_PADDING);
+    google.maps.event.addListenerOnce(m, 'idle', () => {
+      const z = m.getZoom();
+      if (z > 16) m.setZoom(16);
+      if (z < MAP_MIN_ZOOM) m.setZoom(MAP_MIN_ZOOM);
+    });
+  };
+
   const sorted = _react.useMemo.call(void 0, () => [...visibleShops].sort((a, b) => a.distance - b.distance), [visibleShops]);
+
+  const atMinZoom = zoom <= MAP_MIN_ZOOM;
+  const atMaxZoom = zoom >= MAP_MAX_ZOOM;
 
   return (
     _react2.default.createElement('div', { className: "relative h-screen w-full overflow-hidden bg-gray-200 select-none"     ,}
@@ -730,17 +766,23 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
       )
 
       , _react2.default.createElement('div', { className: "absolute right-4 top-40 z-30 flex flex-col gap-2"      ,}
-        , _react2.default.createElement('button', { onClick: () => setStyle(s => s === 'standard' ? 'light' : 'standard'), className: "bg-white rounded-lg p-2.5 shadow-lg"   ,}, _react2.default.createElement(_lucidereact.Layers, { className: "w-4 h-4 text-gray-700"  ,} ))
+        , _react2.default.createElement('button', { onClick: () => setStyle(s => s === 'standard' ? 'light' : 'standard'), className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "切換樣式",}, _react2.default.createElement(_lucidereact.Layers, { className: "w-4 h-4 text-gray-700"  ,} ))
         , _react2.default.createElement('div', { className: "bg-white rounded-lg shadow-lg flex flex-col overflow-hidden"     ,}
-          , _react2.default.createElement('button', { onClick: () => zoomBy(1), className: "p-2.5 border-b border-gray-100"  ,}, _react2.default.createElement(_lucidereact.Plus, { className: "w-4 h-4" ,} ))
-          , _react2.default.createElement('button', { onClick: () => zoomBy(-1), className: "p-2.5",}, _react2.default.createElement('svg', { className: "w-4 h-4" , viewBox: "0 0 24 24"   , fill: "none", stroke: "currentColor", strokeWidth: "2",}, _react2.default.createElement('line', { x1: "5", y1: "12", x2: "19", y2: "12",} )))
+          , _react2.default.createElement('button', { onClick: () => zoomBy(1), disabled: atMaxZoom, className: `p-2.5 border-b border-gray-100 ${atMaxZoom ? 'opacity-30 cursor-not-allowed' : ''}`, title: atMaxZoom ? `已達最近 (${MAP_MAX_ZOOM})` : "放大",}, _react2.default.createElement(_lucidereact.Plus, { className: "w-4 h-4" ,} ))
+          , _react2.default.createElement('button', { onClick: () => zoomBy(-1), disabled: atMinZoom, className: `p-2.5 ${atMinZoom ? 'opacity-30 cursor-not-allowed' : ''}`, title: atMinZoom ? `已達最遠 (${MAP_MIN_ZOOM})` : "縮小",}, _react2.default.createElement('svg', { className: "w-4 h-4" , viewBox: "0 0 24 24"   , fill: "none", stroke: "currentColor", strokeWidth: "2",}, _react2.default.createElement('line', { x1: "5", y1: "12", x2: "19", y2: "12",} )))
         )
-        , _react2.default.createElement('button', { onClick: recenter, className: "bg-white rounded-lg p-2.5 shadow-lg"   ,}
+        , _react2.default.createElement('button', { onClick: fitAll, className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "顯示全部店家",}
+          , _react2.default.createElement(_lucidereact.Maximize2, { className: "w-4 h-4 text-gray-700"  ,} )
+        )
+        , _react2.default.createElement('button', { onClick: recenter, className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "回到我的位置",}
           , locationStatus === 'requesting' ? _react2.default.createElement('div', { className: "w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"      ,}) : locationStatus === 'granted' ? _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-4 h-4 text-blue-500"  ,} ) : _react2.default.createElement(_lucidereact.Locate, { className: "w-4 h-4 text-gray-500"  ,} )
         )
       )
 
-      , _react2.default.createElement('div', { className: "absolute left-4 bottom-44 z-30 bg-white/90 rounded px-2 py-0.5 text-xs text-gray-600 shadow"          ,}, "Zoom " , zoom)
+      , _react2.default.createElement('div', { className: "absolute left-4 bottom-44 z-30 bg-white/90 rounded px-2 py-0.5 text-xs text-gray-600 shadow flex items-center gap-1"            ,}
+        , _react2.default.createElement('span', null, "Zoom " , zoom)
+        , _react2.default.createElement('span', { className: "text-gray-400" ,}, "/" , MAP_MAX_ZOOM)
+      )
 
       , _react2.default.createElement('div', { className: "absolute bottom-4 left-0 right-0 z-30 pointer-events-none"     ,}
         , !mapPinShop && _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto"     ,}
@@ -760,7 +802,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , mapPinShop && _react2.default.createElement('div', { className: "px-4 pointer-events-auto"  ,}
           , _react2.default.createElement('div', { className: "bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up"     ,}
             , _react2.default.createElement('div', { className: "flex",}
-              // ⭐ map popup 是使用者主動點擊產生的 → eager 載入,不要用 IntersectionObserver
               , _react2.default.createElement(ShopThumb, { shop: mapPinShop, photoSize: "medium", emojiSize: "text-4xl", className: "w-24 h-24 flex-shrink-0", eager: true,} )
               , _react2.default.createElement('div', { className: "flex-1 p-3 min-w-0"  ,}
                 , _react2.default.createElement('div', { className: "flex items-start justify-between gap-2"   ,}
@@ -832,7 +873,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const [refreshTick, setRefreshTick] = _react.useState.call(void 0, 0);
   const [showRejected, setShowRejected] = _react.useState.call(void 0, false);
 
-  // ⭐ 顯示 photo cache 統計用 (每秒輪詢一次)
   const [photoStats, setPhotoStats] = _react.useState.call(void 0, getPhotoCacheStats());
   _react.useEffect.call(void 0, () => {
     const id = setInterval(() => setPhotoStats(getPhotoCacheStats()), 1000);
@@ -994,7 +1034,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     const backLabel = detailFrom === 'map' ? '返回地圖' : '返回';
     return (
       _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20"  ,}
-        // ⭐ 詳情頁的大圖頭區: eager 載入 (使用者主動進來,期待立刻看到)
         , _react2.default.createElement(ShopThumb, { shop: cur, photoSize: "large", emojiSize: "text-8xl", className: "h-64 w-full", eager: true,}
           , _react2.default.createElement('button', { onClick: closeDetail, title: backLabel, className: "absolute top-4 left-4 z-10 bg-white/90 backdrop-blur rounded-full p-2 shadow-lg flex items-center gap-1 pr-3"           ,}
             , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5" ,} )
@@ -1157,7 +1196,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
                   , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重新整理"
                 )
               )
-              // ⭐ 新增: 照片計費節省統計
               , _react2.default.createElement('div', { className: "bg-blue-500/20 border border-blue-300/30 rounded-lg px-3 py-1.5 text-xs"      ,}
                 , _react2.default.createElement('div', { className: "flex items-center justify-between"  ,}
                   , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
@@ -1336,7 +1374,6 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , filteredShops.map((shop, idx) => (
           _react2.default.createElement('div', { key: shop.id, onClick: () => openDetail(shop), className: "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"      ,}
             , _react2.default.createElement('div', { className: "flex",}
-              // ⭐ 列表卡: 不傳 eager,使用 IntersectionObserver lazy load
               , _react2.default.createElement(ShopThumb, { shop: shop, photoSize: "medium", emojiSize: "text-5xl", className: "w-28 h-28 flex-shrink-0",}
                 , idx < 3 && activeCategory === '全部' && sortBy === 'distance' && _react2.default.createElement('div', { className: "absolute top-1.5 left-1.5 bg-white/90 text-gray-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shadow"             ,}, idx + 1)
                 , _react2.default.createElement('div', { className: "absolute bottom-1 right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow"      , title: "已驗證為玩具店",}, _react2.default.createElement(_lucidereact.Shield, { className: "w-2.5 h-2.5" ,} ))
