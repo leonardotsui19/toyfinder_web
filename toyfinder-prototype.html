@@ -288,7 +288,7 @@ async function fetchNearbyWithLegacyAPI(google, center, radius) {
   });
 
   // ⭐ 對每個結果補打 getDetails 以取得電話/網站/完整營業時間
-  console.log(`[legacy] 開始補完 ${rawResults.length} 家店家詳情...`);
+  console.log(`[legacy] 開始補完 ${rawResults.length} 間店舖詳情...`);
   const enriched = await Promise.all(
     rawResults.map(async (r) => {
       const details = await fetchPlaceDetailsLegacy(google, r.place_id);
@@ -444,22 +444,23 @@ function placeToShop(place, userPos, idx) {
   let badge = null;
   if (rating >= 4.7 && reviews >= 100) badge = 'Gold';
   else if (rating >= 4.3 && reviews >= 30) badge = 'Silver';
-  const nameStr = extractName(place) || '未命名店家';
+  const nameStr = extractName(place) || '未命名店舖';
   const category = inferCategory(nameStr, place.types || []);
   const typeTagMap = {
     toy_store: '玩具店', hobby_shop: '興趣專賣', gift_shop: '禮品',
-    shopping_mall: '商場', department_store: '百貨', store: '零售', establishment: '店家',
+    shopping_mall: '商場', department_store: '百貨',
   };
   const tags = Array.from(new Set((place.types || []).map(t => typeTagMap[t]).filter(Boolean))).slice(0, 3);
   if (!tags.length) tags.push(category);
   const highlights = [];
   if (reviews >= 200) highlights.push('超高人氣');
-  else if (reviews >= 50) highlights.push('好評眾多');
-  else if (reviews > 0) highlights.push('私房選擇');
-  else highlights.push('新進店家');
+  else if (reviews >= 50) highlights.push('評論眾多');
+  else if (reviews > 0) highlights.push('評論不多');
+  else highlights.push('新店舖');
   if (rating >= 4.6) highlights.push('高評分');
   else if (rating >= 4.0) highlights.push('評價良好');
-  else if (rating > 0) highlights.push('評分中等');
+  else if (rating > 3) highlights.push('評分中等');
+  else if (rating > 0) highlights.push('好壞參半');
   else highlights.push('尚無評分');
   if (distance <= 1) highlights.push('步行可達');
   else if (distance <= 3) highlights.push('交通便利');
@@ -835,18 +836,17 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         , filterStats && filterStats.removed > 0 && (
           _react2.default.createElement('div', { className: "mt-2 pointer-events-auto bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 text-xs text-emerald-800 flex items-center gap-1.5 shadow"             ,}
             , _react2.default.createElement(_lucidereact.Shield, { className: "w-3.5 h-3.5 flex-shrink-0"  ,} )
-            , _react2.default.createElement('span', null, "已過濾 " , filterStats.removed, " 家非玩具店 (保留 "   , filterStats.kept, " 家)" )
+            , _react2.default.createElement('span', null, "已過濾 " , filterStats.removed, " 間非玩具店 (保留 "   , filterStats.kept, " 間)" )
           )
         )
       )
 
       , _react2.default.createElement('div', { className: "absolute right-4 top-40 z-30 flex flex-col gap-2"      ,}
-        , _react2.default.createElement('button', { onClick: () => setStyle(s => s === 'standard' ? 'light' : 'standard'), className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "切換樣式",}, _react2.default.createElement(_lucidereact.Layers, { className: "w-4 h-4 text-gray-700"  ,} ))
         , _react2.default.createElement('div', { className: "bg-white rounded-lg shadow-lg flex flex-col overflow-hidden"     ,}
           , _react2.default.createElement('button', { onClick: () => zoomBy(1), disabled: atMaxZoom, className: `p-2.5 border-b border-gray-100 ${atMaxZoom ? 'opacity-30 cursor-not-allowed' : ''}`, title: atMaxZoom ? `已達最近 (${MAP_MAX_ZOOM})` : "放大",}, _react2.default.createElement(_lucidereact.Plus, { className: "w-4 h-4" ,} ))
           , _react2.default.createElement('button', { onClick: () => zoomBy(-1), disabled: atMinZoom, className: `p-2.5 ${atMinZoom ? 'opacity-30 cursor-not-allowed' : ''}`, title: atMinZoom ? `已達最遠 (${MAP_MIN_ZOOM})` : "縮小",}, _react2.default.createElement('svg', { className: "w-4 h-4" , viewBox: "0 0 24 24"   , fill: "none", stroke: "currentColor", strokeWidth: "2",}, _react2.default.createElement('line', { x1: "5", y1: "12", x2: "19", y2: "12",} )))
         )
-        , _react2.default.createElement('button', { onClick: fitAll, className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "顯示全部店家",}
+        , _react2.default.createElement('button', { onClick: fitAll, className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "顯示全部店舖",}
           , _react2.default.createElement(_lucidereact.Maximize2, { className: "w-4 h-4 text-gray-700"  ,} )
         )
         , _react2.default.createElement('button', { onClick: recenter, className: "bg-white rounded-lg p-2.5 shadow-lg"   , title: "回到我的位置",}
@@ -854,15 +854,10 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         )
       )
 
-      , _react2.default.createElement('div', { className: "absolute left-4 bottom-44 z-30 bg-white/90 rounded px-2 py-0.5 text-xs text-gray-600 shadow flex items-center gap-1"            ,}
-        , _react2.default.createElement('span', null, "Zoom " , zoom)
-        , _react2.default.createElement('span', { className: "text-gray-400" ,}, "/" , MAP_MAX_ZOOM)
-      )
-
       , _react2.default.createElement('div', { className: "absolute bottom-4 left-0 right-0 z-30 pointer-events-none"     ,}
         , !mapPinShop && _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto"     ,}
           , _react2.default.createElement('span', { className: "text-xs font-bold text-gray-700 bg-white px-2.5 py-1 rounded-full shadow"       ,}, "📍 "
-             , visibleShops.length > 0 ? `${visibleShops.length} 家玩具店` : (placesStatus === 'loading' ? '搜尋中...' : '沒有符合的店家')
+             , visibleShops.length > 0 ? `${visibleShops.length} 間玩具店` : (placesStatus === 'loading' ? '搜尋中...' : '沒有符合的店舗')
           )
         )
         , _react2.default.createElement('div', { className: `pointer-events-auto ${mapPinShop ? 'hidden' : ''}`,}
@@ -1062,10 +1057,10 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
         const webCount = shops.filter(s => s.website).length;
         const hoursCount = shops.filter(s => s.weekdayHours && s.weekdayHours.length).length;
         console.log(`[資料完整度] 照片 ${photoCount}/${shops.length} | 電話 ${phoneCount}/${shops.length} | 網站 ${webCount}/${shops.length} | 完整時間 ${hoursCount}/${shops.length}`);
-        // ⭐ 印出第一筆店家的完整資料供逐筆對帳用
+        // ⭐ 印出第一筆店舖的完整資料供逐筆對帳用
         if (shops.length > 0) {
           const s0 = shops[0];
-          console.log(`[範例店家] ${s0.name}`);
+          console.log(`[範例店舖] ${s0.name}`);
           console.log(`  電話: ${s0.phone || '(無)'}`);
           console.log(`  網站: ${s0.website || '(無)'}`);
           console.log(`  今天: ${s0.hours}`);
@@ -1134,8 +1129,8 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
   };
 
   const BadgeIcon = ({ badge }) => {
-    if (badge === 'Gold') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"            ,}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3" ,} ), "金牌店家");
-    if (badge === 'Silver') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-gray-400 to-gray-300 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"            ,}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3" ,} ), "銀牌店家");
+    if (badge === 'Gold') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"            ,}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3" ,} ), "金牌店舗");
+    if (badge === 'Silver') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-gray-400 to-gray-300 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow"            ,}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3" ,} ), "銀牌店舗");
     return null;
   };
 
@@ -1186,7 +1181,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
           )
         )
         , _react2.default.createElement('div', { className: "bg-white mt-2 px-5 py-4"   ,}
-          , _react2.default.createElement('h2', { className: "font-bold text-gray-900 mb-3 flex items-center gap-2"     ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店家介紹")
+          , _react2.default.createElement('h2', { className: "font-bold text-gray-900 mb-3 flex items-center gap-2"     ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店舗介紹")
           , _react2.default.createElement('p', { className: "text-sm text-gray-700 leading-relaxed"  ,}, cur.description)
           , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-2 mt-4"   ,}
             , cur.highlights.map(h => _react2.default.createElement('div', { key: h, className: "bg-gradient-to-br from-amber-50 to-red-50 rounded-lg p-2.5 text-center"     ,}, _react2.default.createElement('p', { className: "text-xs font-semibold text-red-700"  ,}, h)))
@@ -1194,7 +1189,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
         )
         , _react2.default.createElement('div', { className: "bg-white mt-2 px-5 py-4"   ,}
           , _react2.default.createElement('div', { className: "flex items-center justify-between mb-3"   ,}
-            , _react2.default.createElement('h2', { className: "font-bold text-gray-900 flex items-center gap-2"    ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店家資訊")
+            , _react2.default.createElement('h2', { className: "font-bold text-gray-900 flex items-center gap-2"    ,}, _react2.default.createElement('span', { className: "w-1 h-4 bg-red-500 rounded"   ,}), "店舗資訊")
             , _react2.default.createElement('a', { href: cur.googleMapsURI, target: "_blank", rel: "noopener noreferrer" , className: "text-xs text-blue-500 font-semibold flex items-center gap-1"      ,}
               , _react2.default.createElement(_lucidereact.ExternalLink, { className: "w-3 h-3" ,} ), '在 Google Maps 開啟'
             )
@@ -1226,12 +1221,6 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
               ) : (
                 _react2.default.createElement('span', { className: "text-sm text-gray-400" ,}, '未提供')
               )
-            )
-          )
-          , cur.__legacy && (
-            _react2.default.createElement('div', { className: "mt-3 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 text-xs text-amber-800 flex items-start gap-1.5"             ,}
-              , _react2.default.createElement(_lucidereact.Info, { className: "w-3.5 h-3.5 flex-shrink-0 mt-0.5"   ,} )
-              , _react2.default.createElement('span', null, '此店家資料來自 Legacy API,可能略晚於 Google Maps 即時更新')
             )
           )
         )
@@ -1279,7 +1268,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
 
         , _react2.default.createElement('div', { className: "mt-3 bg-white rounded-xl flex items-center px-3 py-2.5 shadow-lg"       ,}
           , _react2.default.createElement(_lucidereact.Search, { className: "w-4 h-4 text-gray-400"  ,} )
-          , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋店家、區域或關鍵字...", className: "flex-1 ml-2 text-sm text-gray-800 outline-none bg-transparent"     ,} )
+          , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋店舗、區域或關鍵字...", className: "flex-1 ml-2 text-sm text-gray-800 outline-none bg-transparent"     ,} )
           , searchQuery && _react2.default.createElement('button', { onClick: () => setSearchQuery(''),}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4 text-gray-400"  ,} ))
         )
 
@@ -1289,7 +1278,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
             , _react2.default.createElement('div', { className: "text-left",}
               , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "地圖模式 · Google Maps"   )
               , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}
-                , placesStatus === 'ready' ? `${shops.length} 家已驗證玩具店` : placesStatus === 'loading' ? '搜尋中...' : placesStatus === 'empty' ? '附近無結果' : '進入地圖'
+                , placesStatus === 'ready' ? `${shops.length} 間已驗證玩具店` : placesStatus === 'loading' ? '搜尋中...' : placesStatus === 'empty' ? '附近無結果' : '進入地圖'
               )
             )
           )
@@ -1327,42 +1316,25 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
               , _react2.default.createElement('div', { className: "flex items-center justify-between bg-emerald-500/25 border border-emerald-300/40 rounded-lg px-3 py-1.5"        ,}
                 , _react2.default.createElement('div', { className: "flex items-center gap-1.5 text-xs font-semibold"    ,}
                   , _react2.default.createElement('div', { className: "w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse"    ,})
-                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "Places (Legacy + 詳情補完)"  )
-                  , _react2.default.createElement('span', null, "· " , shops.length, " 筆" )
+                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3" ,} ), "Places API (New)"  ) : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3" ,} ), "搜尋附近店舗結果"  )
+                  , _react2.default.createElement('span', null, "· " , shops.length, " 間" )
                 )
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "text-xs flex items-center gap-1 hover:bg-white/10 px-1.5 py-0.5 rounded"       ,}
                   , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重新整理"
-                )
-              )
-              , _react2.default.createElement('div', { className: "bg-blue-500/20 border border-blue-300/30 rounded-lg px-3 py-1.5 text-xs"      ,}
-                , _react2.default.createElement('div', { className: "flex items-center justify-between"  ,}
-                  , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
-                    , _react2.default.createElement(_lucidereact.ImageIcon, { className: "w-3 h-3" ,} )
-                    , _react2.default.createElement('span', null, "照片優化: ")
-                  )
-                  , _react2.default.createElement('div', { className: "flex items-center gap-2 text-white/90"   ,}
-                    , _react2.default.createElement('span', null, "可用 " , _react2.default.createElement('strong', null, photosAvailable))
-                    , _react2.default.createElement('span', null, "·")
-                    , _react2.default.createElement('span', null, "已載 " , _react2.default.createElement('strong', null, photoStats.cachedUrls))
-                    , _react2.default.createElement('span', null, "·")
-                    , _react2.default.createElement('span', { className: "text-emerald-200" ,}, "省 "
-                      , Math.max(0, photosAvailable * 3 - photoStats.cachedUrls), " 次計費"
-                    )
-                  )
                 )
               )
               , filterStats.removed > 0 && (
                 _react2.default.createElement('button', { onClick: () => setShowRejected(v => !v), className: "w-full bg-emerald-500/20 border border-emerald-300/30 rounded-lg px-3 py-1.5 text-xs flex items-center justify-between hover:bg-emerald-500/30"           ,}
                   , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
                     , _react2.default.createElement(_lucidereact.Shield, { className: "w-3 h-3" ,} )
-                    , _react2.default.createElement('span', null, "真偽驗證: 已過濾 "  , _react2.default.createElement('strong', null, filterStats.removed), " 家非玩具店 (保留 "   , _react2.default.createElement('strong', null, filterStats.kept), "/", filterStats.total, ")")
+                    , _react2.default.createElement('span', null, "真偽驗證: 已過濾 "  , _react2.default.createElement('strong', null, filterStats.removed), " 間非玩具店 (保留 "   , _react2.default.createElement('strong', null, filterStats.kept), "/", filterStats.total, ")")
                   )
                   , _react2.default.createElement('span', { className: "text-white/80",}, showRejected ? '▲ 隱藏' : '▼ 詳情')
                 )
               )
               , showRejected && filterStats.rejected.length > 0 && (
                 _react2.default.createElement('div', { className: "bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-xs max-h-40 overflow-y-auto"        ,}
-                  , _react2.default.createElement('p', { className: "font-bold mb-1.5 text-white/90"  ,}, "已過濾的店家:")
+                  , _react2.default.createElement('p', { className: "font-bold mb-1.5 text-white/90"  ,}, "已過濾的店舗:")
                   , _react2.default.createElement('div', { className: "space-y-1",}
                     , filterStats.rejected.map((r, i) => (
                       _react2.default.createElement('div', { key: i, className: "flex items-start gap-1.5 text-white/85"   ,}
@@ -1389,7 +1361,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "underline",}, "重試")
               )
               , filterStats.total > 0 && filterStats.kept === 0 && (
-                _react2.default.createElement('p', { className: "mt-1 text-white/85" ,}, "Google 回傳 "  , filterStats.total, " 家,但真偽驗證後全部被剔除" )
+                _react2.default.createElement('p', { className: "mt-1 text-white/85" ,}, "Google 回傳 "  , filterStats.total, " 間,但真偽驗證後全部被剔除" )
               )
             )
           ) : placesStatus === 'error' ? (
@@ -1406,7 +1378,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
         , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-2 mt-3"   ,}
           , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center"    ,}
             , _react2.default.createElement('p', { className: "text-lg font-bold" ,}, shops.length)
-            , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}, "已驗證店家")
+            , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}, "已驗證店舗")
           )
           , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center"    ,}
             , _react2.default.createElement('p', { className: "text-lg font-bold" ,}, nearbyShops[0] ? `${nearbyShops[0].distance.toFixed(1)}km` : '–')
@@ -1424,7 +1396,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
           , _react2.default.createElement('div', { className: "flex items-center justify-between px-5 mb-2"    ,}
             , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
               , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4 text-blue-500"  ,} )
-              , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, usingDefaultLocation ? `${DEFAULT_USER_LABEL}附近` : '您附近的店家')
+              , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, usingDefaultLocation ? `${DEFAULT_USER_LABEL}附近` : '您附近的店舗')
               , _react2.default.createElement('span', { className: "text-xs text-green-600 font-semibold"  ,}, "· 即時" )
             )
             , _react2.default.createElement('button', { onClick: () => setView('map'), className: "text-xs text-red-500 font-semibold"  ,}, "地圖 →" )
@@ -1450,8 +1422,8 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
       , _react2.default.createElement('div', { className: "px-5 py-3 flex items-center justify-between"    ,}
         , _react2.default.createElement('div', { className: "flex items-center gap-2"  ,}
           , _react2.default.createElement(_lucidereact.TrendingUp, { className: "w-4 h-4 text-red-500"  ,} )
-          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, activeCategory === '全部' ? '附近玩具店' : `${activeCategory}類店家`)
-          , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "· " , filteredShops.length, " 家" )
+          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, activeCategory === '全部' ? '附近玩具店' : `${activeCategory}類店舗`)
+          , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "· " , filteredShops.length, " 間" )
         )
         , _react2.default.createElement('button', { onClick: () => setShowFilter(!showFilter), className: "flex items-center gap-1 text-xs text-gray-600 bg-white border rounded-full px-3 py-1"         ,}
           , _react2.default.createElement(_lucidereact.Filter, { className: "w-3 h-3" ,} ), sortBy === 'rating' ? '評分' : sortBy === 'reviews' ? '人氣' : '距離'
@@ -1492,7 +1464,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
             , _react2.default.createElement('div', { className: "flex items-start gap-2 text-red-700"   ,}
               , _react2.default.createElement(_lucidereact.AlertCircle, { className: "w-5 h-5 flex-shrink-0 mt-0.5"   ,} )
               , _react2.default.createElement('div', { className: "flex-1 min-w-0" ,}
-                , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "無法載入店家資料")
+                , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "無法載入店舗資料")
                 , _react2.default.createElement('p', { className: "text-xs mt-1 break-words whitespace-pre-line"   ,}, placesError)
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "mt-3 inline-flex items-center gap-1 bg-red-500 text-white rounded px-3 py-1 text-xs font-semibold"          ,}
                   , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重試"
@@ -1504,7 +1476,7 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
         , !isLoading && !isEmpty && placesStatus !== 'error' && filteredShops.length === 0 && shops.length > 0 && (
           _react2.default.createElement('div', { className: "text-center py-12 text-gray-400"  ,}
             , _react2.default.createElement('div', { className: "text-4xl mb-2" ,}, "🔍")
-            , _react2.default.createElement('p', { className: "text-sm",}, "目前分類或搜尋條件下沒有店家")
+            , _react2.default.createElement('p', { className: "text-sm",}, "目前分類或搜尋條件下沒有店舗")
             , _react2.default.createElement('button', { onClick: () => { setActiveCategory('全部'); setSearchQuery(''); }, className: "mt-2 text-xs text-red-500 font-semibold"   ,}, "清除篩選")
           )
         )
@@ -1562,5 +1534,5 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
   <body>
   
 
-<div id="preview-app"></div>
+<div id="toyfinder-prototype"></div>
 </body></html>
