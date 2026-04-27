@@ -665,6 +665,8 @@ function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = fal
   );
 }
 
+let map, marker, watchId;
+
 function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocation, allShops, visibleShops, mapPinShop, setMapPinShop, favorites, toggleFav, openDetail, getCategoryColor, searchQuery, setSearchQuery, categories, activeCategory, setActiveCategory, setView, StarRating, BadgeIcon, placesStatus, apiUsed, filterStats, listScrollRef }) {
   const mapRef = _react.useRef.call(void 0, null);
   const mapInstanceRef = _react.useRef.call(void 0, null);
@@ -678,7 +680,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   _react.useEffect.call(void 0, () => {
     if (mapStatus !== 'ready' || !mapRef.current || mapInstanceRef.current) return;
     const google = window.google;
-    const map = new google.maps.Map(mapRef.current, {
+    map = new google.maps.Map(mapRef.current, {
       center: userPos,
       zoom: MAP_DEFAULT_ZOOM,
       minZoom: MAP_MIN_ZOOM,
@@ -692,7 +694,9 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     map.addListener('zoom_changed', () => setZoom(map.getZoom()));
     map.addListener('click', () => setMapPinShop(null));
     map.addListener('dragstart', () => { lastUserInteractRef.current = Date.now(); });
-    userMarkerRef.current = new google.maps.Marker({ position: userPos, map, icon: buildUserIcon(google), zIndex: 1, title: '我的位置' });
+	marker = new google.maps.Marker({ position: userPos, map, icon: buildUserIcon(google), zIndex: 1, title: '我的位置' });
+    userMarkerRef.current = marker;
+	startTracking();
   }, [mapStatus, style, setMapPinShop, userPos]);
 
   _react.useEffect.call(void 0, () => {
@@ -941,6 +945,43 @@ function WeekdayHoursList({ weekdayHours, todayIdx }) {
       )
     )
   );
+}
+
+function startTracking() {
+  if (navigator.geolocation) {
+    // 開始監聽位置變化
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const newPos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+
+        // 更新標記位置
+        marker.setPosition(newPos);
+        
+        // 平滑移動地圖中心
+        map.panTo(newPos);
+        
+        console.log("位置已更新:", newPos);
+      },
+      (error) => {
+        console.error("定位失敗:", error);
+      },
+      {
+        enableHighAccuracy: true, // 強制使用 GPS 以獲得高精度
+        maximumAge: 0,            // 不使用快取位置
+        timeout: 5000             // 超時時間
+      }
+    );
+  }
+}
+
+// 停止監聽（例如使用者關閉功能時）
+function stopTracking() {
+  if (watchId) {
+    navigator.geolocation.clearWatch(watchId);
+  }
 }
 
  function ToyFinder() {
