@@ -162,7 +162,7 @@ const POSITIVE_TYPES = new Set([
   'hobby_shop',
 ]);
 
-const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具/i;
+const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具|軟膠|搪膠|sofubi|sofvi|ソフビ/i;
 
 function extractName(place) {
   return typeof place.displayName === 'string'
@@ -362,8 +362,8 @@ function inferCategory(name = '', types = []) {
   if (/積木|樂高|lego|brick|ブロック|nanoblock/i.test(n)) return '積木';
   if (/公仔|figure|figurine|手辦|景品|黏土人|nendoroid|figma|scale/i.test(n)) return '公仔';
   if (/盒玩|食玩|盲盒|blind ?box|popmart|泡泡瑪特|molly|labubu/i.test(n)) return '盒玩';
-  if (/手作|手工|diy|craft|工房|ハンドメイド/i.test(n)) return '手作';
-  if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '絕版懷舊';
+  if (/設計師|手作|手工|diy|craft|工房|ハンドメイド|軟膠|搪膠|sofubi|sofvi|ソフビ/i.test(n)) return '設計師/手作玩具';
+  if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '懷舊玩具';
   return '玩具';
 }
 
@@ -399,7 +399,7 @@ function todayIndexInDescriptions(weekdayDescriptions) {
   return -1;
 }
 
-const EMOJIS = { '玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '絕版懷舊': '🎪', '公仔': '🦸', '盒玩': '📦', '手作': '🎨' };
+const EMOJIS = { '玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '懷舊玩具': '🎪', '公仔': '🦸', '盒玩': '📦', '設計師/手作玩具': '🎨' };
 const GRADIENTS = [
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -1138,7 +1138,7 @@ function stopTracking() {
     return () => { cancelled = true; };
   }, [mapsStatus, locationStatus, userPos, refreshTick]);
 
-  const categories = ['全部', '玩具', '扭蛋', '模型', '積木', '絕版懷舊', '公仔', '盒玩', '手作'];
+  const categories = ['全部', '玩具', '扭蛋', '模型', '積木', '懷舊玩具', '公仔', '盒玩', '設計師/手作玩具'];
   const shops = placesShops;
   const usingDefaultLocation = locationStatus !== 'granted' && locationStatus !== 'requesting';
   const photosAvailable = _react.useMemo.call(void 0, () => shops.filter(s => s._hasPhoto).length, [shops]);
@@ -1174,7 +1174,7 @@ function stopTracking() {
 
   const getCategoryColor = _react.useCallback.call(void 0, (cat) => ({
     '玩具': '#ef4444', '模型': '#6366f1', '扭蛋': '#ec4899', '積木': '#3b82f6',
-    '絕版懷舊': '#f59e0b', '公仔': '#10b981', '手作': '#a855f7', '盒玩': '#f97316'
+    '懷舊玩具': '#f59e0b', '公仔': '#10b981', '設計師/手作玩具': '#a855f7', '盒玩': '#f97316'
   }[cat] || '#ef4444'), []);
 
   const StarRating = ({ rating, size = 'sm' }) => {
