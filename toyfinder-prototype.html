@@ -1036,7 +1036,7 @@ function stopTracking() {
 		geocoder.geocode({ location: userPos }, (results, status) => {
 			if (status === "OK") {
 			  if (results[0]) {
-				// results[0].formatted_address is the full readable name/address
+				const components = results[0].address_components;
 				let country, city, district;
 
 				components.forEach(comp => {
