@@ -8,7 +8,7 @@ var _lucidereact = require('lucide-react');
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
 
 const DEFAULT_USER_POS = { lat: 25.0421, lng: 121.5082 };
-const DEFAULT_USER_LABEL = '台北・西門町';
+const DEFAULT_USER_LABEL = '台北';
 const SEARCH_RADIUS_M = 5000;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
@@ -996,7 +996,7 @@ function stopTracking() {
   const [mapPinShop, setMapPinShop] = _react.useState.call(void 0, null);
 
   const [userPos, setUserPos] = _react.useState.call(void 0, DEFAULT_USER_POS);
-  const [userPosLabel, setUserPosLabel] = _react.useState.call(void 0, DEFAULT_USER_LABEL);
+  //const [userPosLabel, setUserPosLabel] = _react.useState.call(void 0, DEFAULT_USER_LABEL);
   const [locationStatus, setLocationStatus] = _react.useState.call(void 0, 'requesting');
   const [locationError, setLocationError] = _react.useState.call(void 0, '');
 
