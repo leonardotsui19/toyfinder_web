@@ -1037,7 +1037,15 @@ function stopTracking() {
 			if (status === "OK") {
 			  if (results[0]) {
 				// results[0].formatted_address is the full readable name/address
-				setUserPosLabel(results[0].formatted_address);
+				let country, city, district;
+
+				components.forEach(comp => {
+					if (comp.types.includes("country")) country = comp.long_name;
+					if (comp.types.includes("administrative_area_level_1")) city = comp.long_name;
+					if (comp.types.includes("locality")) district = comp.long_name;
+				});
+				
+				setUserPosLabel(country + ", " + city + ", " + district);
 			  }
 			}
 		});
