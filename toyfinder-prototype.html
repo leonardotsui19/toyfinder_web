@@ -1033,7 +1033,7 @@ function stopTracking() {
 		setLocationError(''); 
 		
 		const geocoder = new google.maps.Geocoder();
-		geocoder.geocode({ location: latlng }, (results, status) => {
+		geocoder.geocode({ location: userPos }, (results, status) => {
 			if (status === "OK") {
 			  if (results[0]) {
 				// results[0].formatted_address is the full readable name/address
