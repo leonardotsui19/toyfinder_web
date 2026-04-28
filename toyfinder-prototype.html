@@ -996,6 +996,7 @@ function stopTracking() {
   const [mapPinShop, setMapPinShop] = _react.useState.call(void 0, null);
 
   const [userPos, setUserPos] = _react.useState.call(void 0, DEFAULT_USER_POS);
+  const [userPosLabel, setUserPosLabel] = _react.useState.call(void 0, DEFAULT_USER_LABEL);
   const [locationStatus, setLocationStatus] = _react.useState.call(void 0, 'requesting');
   const [locationError, setLocationError] = _react.useState.call(void 0, '');
 
@@ -1026,14 +1027,26 @@ function stopTracking() {
     }
     setLocationStatus('requesting');
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationStatus('granted'); setLocationError(''); },
-      (err) => {
-        const codes = { 1: ['denied', '定位權限被拒,已使用預設位置'], 2: ['fallback', '無法取得位置訊號,已使用預設位置'], 3: ['fallback', '定位逾時,已使用預設位置'] };
+	(pos) => { 
+		setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }); 
+		setLocationStatus('granted'); 
+		setLocationError(''); 
+		
+		const geocoder = new google.maps.Geocoder();
+		geocoder.geocode({ location: latlng }, (results, status) => {
+			if (status === "OK") {
+			  if (results[0]) {
+				// results[0].formatted_address is the full readable name/address
+				setUserPosLabel(results[0].formatted_address);
+			  }
+			}
+		});
+	},
+	(err) => {
+		const codes = { 1: ['denied', '定位權限被拒,已使用預設位置'], 2: ['fallback', '無法取得位置訊號,已使用預設位置'], 3: ['fallback', '定位逾時,已使用預設位置'] };
         const [s, m] = codes[err.code] || ['fallback', '定位失敗,已使用預設位置'];
-        setUserPos(DEFAULT_USER_POS); setLocationStatus(s); setLocationError(m);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
+        setUserPos(DEFAULT_USER_POS); setUserPosLabel(DEFAULT_USER_LABEL); setLocationStatus(s); setLocationError(m);
+	}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
   }, []);
 
   _react.useEffect.call(void 0, () => { requestLocation(); }, [requestLocation]);
@@ -1044,6 +1057,7 @@ function stopTracking() {
       setLocationStatus(prev => {
         if (prev !== 'requesting') return prev;
         setUserPos(DEFAULT_USER_POS);
+		setUserPosLabel(DEFAULT_USER_LABEL);
         setLocationError('定位超時,已使用預設位置');
         return 'fallback';
       });
@@ -1201,7 +1215,6 @@ function stopTracking() {
         , _react2.default.createElement('div', { className: "bg-white px-5 py-5 border-b"   ,}
           , _react2.default.createElement('div', { className: "mb-2",}, _react2.default.createElement(BadgeIcon, { badge: cur.badge,} ))
           , _react2.default.createElement('h1', { className: "text-2xl font-bold text-gray-900"  ,}, cur.name)
-          , cur.address && _react2.default.createElement('p', { className: "text-sm text-gray-500 mt-0.5"  ,}, cur.address)
           , _react2.default.createElement('div', { className: "flex items-center gap-3 mt-3"   ,}
             , _react2.default.createElement('div', { className: "flex items-baseline gap-1"  ,}
               , _react2.default.createElement('span', { className: "text-3xl font-bold text-amber-500"  ,}, cur.rating || '–')
@@ -1239,8 +1252,7 @@ function stopTracking() {
             , _react2.default.createElement('button', { onClick: () => { setMapPinShop(cur); setView('map'); }, className: "w-full flex items-start gap-3 text-left"    ,}
               , _react2.default.createElement(_lucidereact.MapPin, { className: "w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0"    ,} )
               , _react2.default.createElement('div', { className: "flex-1",}
-                , _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.area)
-                , _react2.default.createElement('span', { className: "text-xs text-red-500 ml-2"  ,}, "在地圖上查看 →" )
+                , _react2.default.createElement('span', { className: "text-sm text-gray-700" ,}, cur.address)
               )
             )
             , _react2.default.createElement('div', { className: "flex items-start gap-3"  ,}
@@ -1298,7 +1310,7 @@ function stopTracking() {
             )
           ) : locationStatus === 'granted' ? (
             _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30"         ,}
-              , _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-3 h-3" ,} ), "已定位 · "  , userPos.lat.toFixed(4), ", " , userPos.lng.toFixed(4)
+              , _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-3 h-3" ,} ), "現在地 · "  , userPosLabel
             )
           ) : (
             _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-400/90 text-amber-900"         ,}
@@ -1317,7 +1329,7 @@ function stopTracking() {
           , _react2.default.createElement('div', { className: "flex items-center gap-3"  ,}
             , _react2.default.createElement('div', { className: "bg-white rounded-lg p-2"  ,}, _react2.default.createElement(_lucidereact.Map, { className: "w-4 h-4 text-red-500"  ,} ))
             , _react2.default.createElement('div', { className: "text-left",}
-              , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "地圖模式 · Google Maps"   )
+              , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "地圖模式"   )
               , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}
                 , placesStatus === 'ready' ? `${shops.length} 間已驗證玩具店` : placesStatus === 'loading' ? '搜尋中...' : placesStatus === 'empty' ? '附近無結果' : '進入地圖'
               )
