@@ -1677,19 +1677,19 @@ function stopTracking() {
         )
       )
 
-      , shops.length > 0 && (
-        _react2.default.createElement('div', { className: "bg-gradient-to-b from-gray-50 to-white pt-4 pb-2"    ,}
-          , _react2.default.createElement('div', { className: "flex items-center justify-between px-5 mb-2"    ,}
-            , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
-              , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4 text-blue-500"  ,} )
-              , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, usingDefaultLocation ? `${DEFAULT_USER_LABEL}附近` : '您附近的店舗')
-              , _react2.default.createElement('span', { className: "text-xs text-green-600 font-semibold"  ,}, "· 即時" )
-            )
-            //, _react2.default.createElement('button', { onClick: () => setView('map'), className: "text-xs text-red-500 font-semibold"  ,}, "地圖 →" )
-          )
-          , _react2.default.createElement(HorizontalShopList, { shops: nearbyShops, onSelect: openDetail,} )
-        )
-      )
+      //, shops.length > 0 && (
+      //  _react2.default.createElement('div', { className: "bg-gradient-to-b from-gray-50 to-white pt-4 pb-2"    ,}
+      //    , _react2.default.createElement('div', { className: "flex items-center justify-between px-5 mb-2"    ,}
+      //      , _react2.default.createElement('div', { className: "flex items-center gap-1.5"  ,}
+      //        , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4 text-blue-500"  ,} )
+      //        , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, usingDefaultLocation ? `${DEFAULT_USER_LABEL}附近` : '您附近的店舗')
+      //        , _react2.default.createElement('span', { className: "text-xs text-green-600 font-semibold"  ,}, "· 即時" )
+      //      )
+      //      //, _react2.default.createElement('button', { onClick: () => setView('map'), className: "text-xs text-red-500 font-semibold"  ,}, "地圖 →" )
+      //    )
+      //    , _react2.default.createElement(HorizontalShopList, { shops: nearbyShops, onSelect: openDetail,} )
+      //  )
+      //)
 
       , _react2.default.createElement('div', { className: "bg-white border-b sticky top-0 z-10"    ,}
         , _react2.default.createElement('div', { className: "flex gap-2 overflow-x-auto px-5 py-3 scrollbar-hide"     ,}
@@ -1707,8 +1707,8 @@ function stopTracking() {
 
       , _react2.default.createElement('div', { className: "px-5 py-3 flex items-center justify-between"    ,}
         , _react2.default.createElement('div', { className: "flex items-center gap-2"  ,}
-          , _react2.default.createElement(_lucidereact.TrendingUp, { className: "w-4 h-4 text-red-500"  ,} )
-          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, activeCategory === '全部' ? '附近玩具店' : `${activeCategory}類店舗`)
+          , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4 text-blue-500"  ,} )
+          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900"  ,}, activeCategory === '全部' ? '附近玩具店' : `附近${activeCategory}類玩具店`)
           , _react2.default.createElement('span', { className: "text-xs text-gray-400" ,}, "· " , filteredShops.length, " 間" )
         )
         , _react2.default.createElement('button', { onClick: () => setShowFilter(!showFilter), className: "flex items-center gap-1 text-xs text-gray-600 bg-white border rounded-full px-3 py-1"         ,}
