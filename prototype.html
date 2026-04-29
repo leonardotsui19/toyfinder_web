@@ -1547,7 +1547,8 @@ function stopTracking() {
             )
           ) : (
             _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-400/90 text-amber-900"         ,}
-              , _react2.default.createElement(_lucidereact.LocateOff, { className: "w-3 h-3" ,} ), locationError || '已使用預設位置', " · 重試定位"
+              , _react2.default.createElement(_lucidereact.LocateOff, { className: "w-3 h-3" ,} ), locationError || '已使用預設位置 ·  ', _react2.default.createElement('strong', null, DEFAULT_USER_LABEL)
+			  , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3" ,} ), "重試定位"
             )
           )
         )
@@ -1564,22 +1565,20 @@ function stopTracking() {
             , _react2.default.createElement('div', { className: "text-left",}
               , _react2.default.createElement('p', { className: "text-sm font-bold" ,}, "地圖模式"   )
               , _react2.default.createElement('p', { className: "text-xs text-white/80" ,}
-                , placesStatus === 'ready' ? `${shops.length} 間已驗證玩具店` : placesStatus === 'loading' ? '搜尋中...' : placesStatus === 'empty' ? '附近無結果' : '進入地圖'
               )
             )
           )
           , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-4 h-4 rotate-180"  ,} )
         )
 
-        , usingDefaultLocation && mapsStatus === 'ready' && (
-          _react2.default.createElement('div', { className: "mt-3 bg-amber-400/25 border border-amber-300/40 rounded-lg px-3 py-2 text-xs flex items-start gap-1.5"          ,}
-            , _react2.default.createElement(_lucidereact.Info, { className: "w-3.5 h-3.5 flex-shrink-0 mt-0.5"   ,} )
-            , _react2.default.createElement('div', { className: "flex-1",}
-              , _react2.default.createElement('p', { className: "font-semibold",}, "已使用預設位置搜尋")
-              , _react2.default.createElement('p', { className: "text-white/90 mt-0.5" ,}, "改以 " , _react2.default.createElement('strong', null, DEFAULT_USER_LABEL), " 為中心。" )
-            )
-          )
-        )
+        //, usingDefaultLocation && mapsStatus === 'ready' && (
+        //  _react2.default.createElement('div', { className: "mt-3 bg-amber-400/25 border border-amber-300/40 rounded-lg px-3 py-2 text-xs flex items-start gap-1.5"          ,}
+        //    , _react2.default.createElement(_lucidereact.Info, { className: "w-3.5 h-3.5 flex-shrink-0 mt-0.5"   ,} )
+        //    , _react2.default.createElement('div', { className: "flex-1",}
+        //      , _react2.default.createElement('p', { className: "font-semibold",}, "已使用預設位置搜尋, 以 " , _react2.default.createElement('strong', null, DEFAULT_USER_LABEL), " 為中心。")
+        //    )
+        //  )
+        //)
 
         , _react2.default.createElement('div', { className: "mt-3",}
           , mapsStatus === 'missing-key' ? (
