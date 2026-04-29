@@ -9,7 +9,7 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
 
 const DEFAULT_USER_POS = { lat: 25.0421, lng: 121.5082 };
 const DEFAULT_USER_LABEL = '台北';
-const SEARCH_RADIUS_M = 5000;
+const SEARCH_RADIUS_M = 1000;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
 const MAP_MIN_ZOOM = 11;
@@ -104,6 +104,7 @@ function loadGoogleMaps(apiKey) {
     await window.google.maps.importLibrary('maps');
     await window.google.maps.importLibrary('marker');
     await window.google.maps.importLibrary('places');
+	await window.google.maps.importLibrary('geometry');
     return window.google;
   })().catch(err => { gmapsLoaderPromise = null; throw err; });
   return gmapsLoaderPromise;
@@ -218,23 +219,94 @@ const PLACE_FIELDS = [
   'googleMapsURI',
 ];
 
-async function fetchNearbyWithNewAPI(google, center, radius) {
+/**
+ * New Places API 網格切割搜尋版（推薦用於玩具店/模型店）
+ * @param {Object} google - Google Maps JavaScript API 物件
+ * @param {Object} center - {lat: number, lng: number}
+ * @param {number} bigRadius - 整體搜尋半徑（單位：米），例如 8000 = 8公里
+ * @param {number} gridSize - 網格間距（米），建議 1500~2500（越小越完整，但費用越高）
+ */
+async function fetchNearbyWithNewAPI(google, center, bigRadius = 2000, gridSize = 500) {
   const places = google.maps.places;
-  if (!_optionalChain([places, 'optionalAccess', _12 => _12.Place]) || typeof places.Place.searchNearby !== 'function') {
+  
+  if (!_optionalChain([places, 'optionalAccess', _12 => _12.Place]) ||
+      typeof places.Place.searchNearby !== 'function') {
     throw new Error('NEW_API_UNAVAILABLE');
   }
-  const { Place, SearchNearbyRankPreference } = places;
-  const request = {
-    fields: PLACE_FIELDS,
-    locationRestriction: { center, radius },
-    includedTypes: ['toy_store'],
-    maxResultCount: 20,
-    rankPreference: SearchNearbyRankPreference.POPULARITY,
-    language: 'zh-TW',
-    region: 'TW',
-  };
-  const { places: results } = await Place.searchNearby(request);
-  return results || [];
+
+  const { Place, SearchNearbyRankPreference } = places
+  
+  if (bigRadius < gridSize)
+	gridSize = bigRadius;
+
+  console.log(`[New API Grid] 開始網格搜尋 | 整體半徑 ${bigRadius}m | 網格間距 ${gridSize}m | 中心: ${center.lat}, ${center.lng}`);
+
+  const allResults = [];
+  const seen = new Set();
+
+  // 產生網格中心點
+  const centers = generateGridCenters(google, center, bigRadius, gridSize);
+
+  console.log(`[New API Grid] 共產生 ${centers.length} 個搜尋網格`);
+
+  // 逐個網格進行搜尋
+  for (let i = 0; i < centers.length; i++) {
+    const gridCenter = centers[i];
+    console.log(`[New API Grid] 搜尋第 ${i + 1}/${centers.length} 個網格...`);
+
+    const results = await searchSingleAreaNewAPI(google, Place, SearchNearbyRankPreference, gridCenter, Math.floor(gridSize * 0.85));
+
+    for (const place of results) {
+      if (place.id && !seen.has(place.id)) {
+        seen.add(place.id);
+        allResults.push(place);
+      }
+    }
+
+    // 避免請求過快被 Google 限制
+    if (i < centers.length - 1) {
+      await new Promise(r => setTimeout(r, 350));   // 每格間隔 350ms
+    }
+  }
+
+  console.log(`[New API Grid] 網格搜尋完成 → 去重後共取得 ${allResults.length} 間獨立店家`);
+
+  // ====================== 補充詳細資料 ======================
+  console.log(`[New API Grid] 開始為 ${allResults.length} 間店舖補充詳情（電話、網站、營業時間）...`);
+
+  const enriched = await Promise.all(
+    allResults.map(async (place) => {
+      try {
+        // 如果你有 fetchPlaceDetailsNewAPI 函數，請改呼叫它
+        // 這裡先用 placeholder，建議你改成 New API 的 Place Details
+        const details = await fetchPlaceDetailsLegacy(google, place.id);   // 暫時共用 legacy 的 details 函數
+
+        if (details) {
+          if (details.formatted_phone_number) place.formatted_phone_number = details.formatted_phone_number;
+          if (details.international_phone_number) place.international_phone_number = details.international_phone_number;
+          if (details.website) place.website = details.website;
+          if (details.url) place.url = details.url;
+          if (details.opening_hours) {
+            place.opening_hours = { ...(place.opening_hours || {}), ...details.opening_hours };
+          }
+        }
+      } catch (err) {
+        console.warn(`[New API Grid] 補詳情失敗 id: ${place.id}`, err.message);
+      }
+      return place;
+    })
+  );
+
+  // 統計資訊
+  const phoneCount = enriched.filter(r => r.formatted_phone_number).length;
+  const webCount = enriched.filter(r => r.website).length;
+  const hoursCount = enriched.filter(r => 
+    _optionalChain([r, 'access', _r => _r.opening_hours, 'optionalAccess', _r2 => _r2.weekday_text])
+  ).length;
+
+  console.log(`[New API Grid] 補完完成 → 電話 ${phoneCount}/${enriched.length} | 網站 ${webCount}/${enriched.length} | 完整時間 ${hoursCount}/${enriched.length}`);
+
+  return enriched;
 }
 
 // ⭐ 新增: Legacy API 的「詳情補完」呼叫
@@ -264,52 +336,214 @@ function fetchPlaceDetailsLegacy(google, placeId) {
   });
 }
 
-async function fetchNearbyWithLegacyAPI(google, center, radius) {
+/**
+ * 使用網格切割方式搜尋 Legacy Places API，可突破 60 筆限制
+ * @param {Object} google - Google Maps JavaScript API 对象
+ * @param {Object} center - {lat: number, lng: number}
+ * @param {number} bigRadius - 整體搜尋半徑（米），例如 8000 表示 8km
+ * @param {number} gridSize - 網格間距（米），建議 1500~3000（越小越精細，但呼叫次數越多）
+ */
+async function fetchNearbyWithLegacyAPI(google, center, bigRadius = 2000, gridSize = 500) {
   const places = google.maps.places;
-  if (!places || !places.PlacesService) throw new Error('LEGACY_API_UNAVAILABLE');
+  if (!places || !places.PlacesService) {
+    throw new Error('LEGACY_API_UNAVAILABLE');
+  }
 
-  const rawResults = await new Promise((resolve, reject) => {
-    const service = new places.PlacesService(document.createElement('div'));
-    const S = places.PlacesServiceStatus;
-    service.nearbySearch(
-      {
-        location: new google.maps.LatLng(center.lat, center.lng),
-        radius,
-        keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR action figures',
-        type: 'store',
-        language: 'zh-TW',
-      },
-      (results, status) => {
-        if (status === S.OK) return resolve(results || []);
-        if (status === S.ZERO_RESULTS) return resolve([]);
-        reject(new Error(`LEGACY_API_FAILED: ${status}`));
+  const service = new places.PlacesService(document.createElement('div'));
+  const S = places.PlacesServiceStatus;
+
+  if (bigRadius < gridSize)
+	gridSize = bigRadius;
+	
+  console.log(`[legacy Grid] 開始網格搜尋 | 整體半徑 ${bigRadius}m | 網格間距 ${gridSize}m | 中心: ${center.lat}, ${center.lng}`);
+
+  const allResults = [];
+  const seen = new Set();
+
+  // 產生網格中心點
+  const centers = generateGridCenters(google, center, bigRadius, gridSize);
+
+  console.log(`[legacy Grid] 共產生 ${centers.length} 個搜尋點`);
+
+  // 逐個小區域搜尋（可改用 Promise.all 加速，但要注意配額）
+  for (let i = 0; i < centers.length; i++) {
+    const gridCenter = centers[i];
+    console.log(`[legacy Grid] 搜尋第 ${i + 1}/${centers.length} 個網格...`);
+
+    const results = await searchSingleAreaLegacy(google, service, S, gridCenter, gridSize * 0.8); // 小半徑 = 網格間距 * 0.8（確保重疊）
+
+    for (const place of results) {
+      if (place.place_id && !seen.has(place.place_id)) {
+        seen.add(place.place_id);
+        allResults.push(place);
       }
-    );
-  });
+    }
 
-  // ⭐ 對每個結果補打 getDetails 以取得電話/網站/完整營業時間
-  console.log(`[legacy] 開始補完 ${rawResults.length} 間店舖詳情...`);
+    // 避免請求過快被 Google 限流
+    if (i < centers.length - 1) {
+      await new Promise(r => setTimeout(r, 300)); // 每格間隔 300ms
+    }
+  }
+
+  console.log(`[legacy Grid] 網格搜尋完成 → 去重後共取得 ${allResults.length} 間獨立店家`);
+
+  // ====================== 補充詳細資料 ======================
+  console.log(`[legacy Grid] 開始為 ${allResults.length} 間店舖補充詳情...`);
+
   const enriched = await Promise.all(
-    rawResults.map(async (r) => {
-      const details = await fetchPlaceDetailsLegacy(google, r.place_id);
-      if (details) {
-        if (details.formatted_phone_number) r.formatted_phone_number = details.formatted_phone_number;
-        if (details.international_phone_number) r.international_phone_number = details.international_phone_number;
-        if (details.website) r.website = details.website;
-        if (details.url) r.url = details.url;
-        if (details.opening_hours) {
-          // 合併 opening_hours,保留 weekday_text
-          r.opening_hours = { ...(r.opening_hours || {}), ...details.opening_hours };
+    allResults.map(async (place) => {
+      try {
+        const details = await fetchPlaceDetailsLegacy(google, place.place_id);
+        if (details) {
+          if (details.formatted_phone_number) place.formatted_phone_number = details.formatted_phone_number;
+          if (details.international_phone_number) place.international_phone_number = details.international_phone_number;
+          if (details.website) place.website = details.website;
+          if (details.url) place.url = details.url;
+          if (details.opening_hours) {
+            place.opening_hours = { ...(place.opening_hours || {}), ...details.opening_hours };
+          }
         }
+      } catch (err) {
+        console.warn(`補詳情失敗: ${place.place_id}`, err.message);
       }
-      return r;
+      return place;
     })
   );
+
+  // 統計
   const phoneCount = enriched.filter(r => r.formatted_phone_number).length;
   const webCount = enriched.filter(r => r.website).length;
-  const hoursCount = enriched.filter(r => _optionalChain([r, 'access', _r => _r.opening_hours, 'optionalAccess', _r2 => _r2.weekday_text])).length;
-  console.log(`[legacy] 補完完成: 電話 ${phoneCount}/${enriched.length} | 網站 ${webCount}/${enriched.length} | 完整時間 ${hoursCount}/${enriched.length}`);
+  const hoursCount = enriched.filter(r => 
+    _optionalChain([r, 'access', _r => _r.opening_hours, 'optionalAccess', _r2 => _r2.weekday_text])
+  ).length;
+
+  console.log(`[legacy Grid] 補完完成 → 電話 ${phoneCount}/${enriched.length} | 網站 ${webCount}/${enriched.length} | 完整時間 ${hoursCount}/${enriched.length}`);
+
   return enriched;
+}
+
+// 產生網格中心點
+function generateGridCenters(google, center, radius, step) {
+  const centers = [];
+  const latStep = step / 111000;
+  const lngStep = step / (111000 * Math.cos(center.lat * Math.PI / 180));
+
+  const latRange = radius / 111000;
+  const lngRange = latRange / Math.cos(center.lat * Math.PI / 180);
+
+  for (let lat = center.lat - latRange; lat <= center.lat + latRange; lat += latStep) {
+    for (let lng = center.lng - lngRange; lng <= center.lng + lngRange; lng += lngStep) {
+      let dist = radius + 1; // 預設超出
+
+      // 優先使用 geometry.spherical（如果已載入）
+      if (google.maps.geometry && google.maps.geometry.spherical) {
+        dist = google.maps.geometry.spherical.computeDistanceBetween(
+          new google.maps.LatLng(center.lat, center.lng),
+          new google.maps.LatLng(lat, lng)
+        );
+      } else {
+        // 降級方案：簡單矩形範圍
+        dist = Math.max(
+          Math.abs(lat - center.lat) * 111000,
+          Math.abs(lng - center.lng) * 111000 * Math.cos(center.lat * Math.PI / 180)
+        );
+      }
+
+      if (dist <= radius) {
+        centers.push({ lat, lng });
+      }
+    }
+  }
+  return centers;
+}
+
+// 單一區域搜尋（包含分頁，最多60筆）
+async function searchSingleAreaLegacy(google, service, S, center, radius) {
+  const all = [];
+  let pagination = null;
+  let page = 0;
+  const MAX_PAGES = 3;
+
+  const request = {
+    location: new google.maps.LatLng(center.lat, center.lng),
+    radius: Math.floor(radius),
+    keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR action figures',
+    type: 'store',
+    language: 'zh-TW',
+  };
+
+  do {
+    const pageData = await new Promise((resolve, reject) => {
+      service.nearbySearch(request, (results, status, paginator) => {
+        if (status === S.OK) {
+          resolve({ results: results || [], pagination: paginator });
+        } else if (status === S.ZERO_RESULTS) {
+          resolve({ results: [], pagination: null });
+        } else {
+          reject(new Error(`Status: ${status}`));
+        }
+      });
+    });
+
+    if (pageData.results.length > 0) {
+      all.push(...pageData.results);
+    }
+
+    pagination = pageData.pagination;
+    page++;
+
+    if (pagination && pagination.hasNextPage && page < MAX_PAGES) {
+      await new Promise(r => setTimeout(r, 2000));
+      pagination.nextPage();
+    } else {
+      break;
+    }
+  } while (page < MAX_PAGES);
+
+  return all;
+}
+
+// 單一小區域搜尋（支援分頁，最多 60 筆）
+async function searchSingleAreaNewAPI(google, Place, RankPreference, center, radius) {
+  const all = [];
+  let pageToken = null;
+  let page = 0;
+  const MAX_PAGES = 3;
+
+  do {
+    const request = {
+      fields: PLACE_FIELDS,
+      locationRestriction: {
+        center: center,
+        radius: radius
+      },
+      includedTypes: ['toy_store'],
+      maxResultCount: 20,
+      rankPreference: RankPreference.DISTANCE,   // 使用 DISTANCE 較不易重複
+      language: 'zh-TW',
+      region: 'TW',
+    };
+
+    if (pageToken) {
+      request.pageToken = pageToken;
+    }
+
+    const response = await Place.searchNearby(request);
+    const results = response.places || [];
+    pageToken = response.nextPageToken;
+
+    if (results.length > 0) {
+      all.push(...results);
+    }
+
+    page++;
+
+    if (pageToken && page < MAX_PAGES) {
+      await new Promise(resolve => setTimeout(resolve, 2200));
+    }
+  } while (pageToken && page < MAX_PAGES);
+
+  return all;
 }
 
 function normalizeLegacyPlace(p) {
