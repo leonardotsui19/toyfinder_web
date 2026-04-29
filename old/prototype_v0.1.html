@@ -1,0 +1,1631 @@
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToyFinder - Discover &amp; Share</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4A49B8'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4&amp;libraries=places&amp;callback=initMap"></script>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body class="bg-white dark:bg-gray-900 transition-colors duration-300">
+    <!-- Dark mode detection -->
+    <script>
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
+    <!-- Header -->
+    <header class="bg-primary dark:bg-primary-dark text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-map-marked-alt mr-2"></i>
+                    ToyFinder
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <button id="profileBtn" class="flex items-center space-x-2 hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-lg transition-colors">
+                        <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&amp;h=40&amp;fit=crop&amp;crop=face" alt="Profile" class="w-8 h-8 rounded-full">
+                        <span id="userName" class="hidden sm:inline">ToyCollector123</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-8">
+                <button id="mapTab" class="tab-btn active py-4 px-2 border-b-2 border-primary font-medium text-primary">
+                    <i class="fas fa-map mr-2"></i>Store Map
+                </button>
+                <button id="collectionTab" class="tab-btn py-4 px-2 border-b-2 border-transparent font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-images mr-2"></i>Collections
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Map Section -->
+    <div id="mapSection" class="tab-content">
+        <!-- Search and Filters -->
+        <div class="bg-gray-50 dark:bg-gray-800 py-4">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Search toy stores or toy types..." class="w-full pl-10 pr-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button id="getCurrentLocationBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
+                            <i class="fas fa-location-arrow mr-2"></i>
+                            <span class="hidden sm:inline">My Location</span>
+                            <span class="sm:hidden">Location</span>
+                        </button>
+                        <button id="getRecommendationsBtn" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
+                            <i class="fas fa-robot mr-2"></i>
+                            <span class="hidden sm:inline">Get AI Recommendations</span>
+                            <span class="sm:hidden">AI Recommendations</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="container mx-auto px-4 py-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Google Map -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-200 dark:bg-gray-700 rounded-lg h-96 relative overflow-hidden">
+                        <div id="map" class="w-full h-full rounded-lg"></div>
+                        <div id="mapLoading" class="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                            <div class="text-center">
+                                <i class="fas fa-spinner fa-spin text-3xl text-primary mb-2"></i>
+                                <p class="text-gray-600 dark:text-gray-400">Loading map...</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500">Finding toy stores near you</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Map Legend -->
+                        <div class="absolute top-4 right-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg z-10">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Legend</h4>
+                            <div class="space-y-1 text-xs">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                    <span class="text-gray-700 dark:text-gray-300">Regular Store</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                                    <span class="text-gray-700 dark:text-gray-300">AI Recommended</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                    <span class="text-gray-700 dark:text-gray-300">Top Match</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Store List -->
+                <div class="lg:col-span-1">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Nearby Stores</h3>
+                    <div id="storeList" class="space-y-4">
+                        <!-- Stores will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Recommendations Section -->
+        <div id="recommendationsSection" class="hidden container mx-auto px-4 py-6">
+            <div class="bg-gradient-to-r from-primary to-purple-600 rounded-lg p-6 text-white mb-6">
+                <h3 class="text-xl font-bold mb-2">
+                    <i class="fas fa-sparkles mr-2"></i>AI Recommendations
+                </h3>
+                <p>Based on your preferences and location</p>
+            </div>
+            <div id="recommendationsContent" class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                <div id="recommendationsLoading" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-3xl text-primary mb-4"></i>
+                    <p class="text-gray-600 dark:text-gray-400">Getting personalized recommendations...</p>
+                </div>
+                <div id="recommendationsResult" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collections Section -->
+    <div id="collectionSection" class="tab-content hidden">
+        <!-- Create Post Button -->
+        <div class="bg-gray-50 dark:bg-gray-800 py-4">
+            <div class="container mx-auto px-4">
+                <button id="createPostBtn" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Share Your Collection
+                </button>
+            </div>
+        </div>
+
+        <!-- Collection Feed -->
+        <div class="container mx-auto px-4 py-6">
+            <div class="max-w-2xl mx-auto">
+                <div id="collectionFeed" class="space-y-6">
+                    <!-- Posts will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div id="createPostModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Share Your Collection</h3>
+                    <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="createPostForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Photo URL</label>
+                        <input type="url" id="postImageUrl" placeholder="https://example.com/your-toy-photo.jpg" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                        <textarea id="postDescription" rows="3" placeholder="Tell us about your amazing collection..." class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tags</label>
+                        <input type="text" id="postTags" placeholder="action-figures, collectibles, vintage" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" id="cancelPostBtn" class="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-lg transition-colors">Share</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Maps and Places variables
+        let map;
+        let service;
+        let infoWindow;
+        let userLocation;
+        let userLocationMarker = null;
+        let toyStores = [];
+        let storeMarkers = [];
+        let isMapInitialized = false;
+
+        const samplePosts = [
+            {
+                id: 1,
+                user: 'ActionFigureFan',
+                avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=40&h=40&fit=crop&crop=face',
+                image: 'https://images.unsplash.com/photo-1558877385-1c2d4c6eae1d?w=500&h=500&fit=crop',
+                description: 'Just completed my Marvel Legends collection! The details on these figures are incredible. Took me 2 years to find all of them!',
+                tags: ['marvel', 'action-figures', 'collectibles'],
+                likes: 47,
+                comments: 12,
+                timeAgo: '2 hours ago'
+            },
+            {
+                id: 2,
+                user: 'LEGOMaster',
+                avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
+                image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=500&fit=crop',
+                description: 'My custom LEGO city is finally complete! Features working lights and a monorail system. What do you think?',
+                tags: ['lego', 'custom-build', 'city'],
+                likes: 89,
+                comments: 23,
+                timeAgo: '5 hours ago'
+            },
+            {
+                id: 3,
+                user: 'VintageToyHunter',
+                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+                image: 'https://images.unsplash.com/photo-1515594313313-31e145e8e8e4?w=500&h=500&fit=crop',
+                description: 'Found this rare 1980s Transformer at a local antique shop! Still in original packaging. Sometimes the best finds are in unexpected places.',
+                tags: ['vintage', 'transformers', 'rare-find'],
+                likes: 134,
+                comments: 31,
+                timeAgo: '1 day ago'
+            }
+        ];
+
+        // DOM elements
+        const mapTab = document.getElementById('mapTab');
+        const collectionTab = document.getElementById('collectionTab');
+        const mapSection = document.getElementById('mapSection');
+        const collectionSection = document.getElementById('collectionSection');
+        const storeList = document.getElementById('storeList');
+        const collectionFeed = document.getElementById('collectionFeed');
+        const createPostBtn = document.getElementById('createPostBtn');
+        const createPostModal = document.getElementById('createPostModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelPostBtn = document.getElementById('cancelPostBtn');
+        const createPostForm = document.getElementById('createPostForm');
+        const getRecommendationsBtn = document.getElementById('getRecommendationsBtn');
+        const recommendationsSection = document.getElementById('recommendationsSection');
+
+        // Tab switching
+        function switchTab(activeTab, activeSection) {
+            // Remove active classes
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-primary', 'text-primary');
+                btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Add active classes
+            activeTab.classList.add('active', 'border-primary', 'text-primary');
+            activeTab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            activeSection.classList.remove('hidden');
+        }
+
+        mapTab.addEventListener('click', () => switchTab(mapTab, mapSection));
+        collectionTab.addEventListener('click', () => switchTab(collectionTab, collectionSection));
+
+        // Store recommendation tracking
+        let recommendedStores = [];
+        let topMatchStore = null;
+
+
+
+        // Populate store list
+        function renderStores() {
+            storeList.innerHTML = toyStores.map(store => {
+                const isRecommended = recommendedStores.includes(store.id);
+                const isTopMatch = topMatchStore === store.id;
+                
+                let badgeHtml = '';
+                if (isTopMatch) {
+                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top AI Match</span></div>';
+                } else if (isRecommended) {
+                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>AI Recommended</span></div>';
+                }
+                
+                return `
+                    <div onclick="focusStoreOnMap('${store.id}')" class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:scale-105 transition-all cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                        ${badgeHtml}
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
+                            <div class="flex items-center text-yellow-500">
+                                <i class="fas fa-star mr-1"></i>
+                                <span class="text-sm">${store.rating}</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                        <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            ${store.specialties.map(spec => `
+                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
+                            `).join('')}
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
+                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
+                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                        <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+                            <div class="flex items-center text-blue-500 dark:text-blue-400 text-xs">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                <span>Click to view on map</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Populate collection feed
+        function renderCollectionFeed() {
+            collectionFeed.innerHTML = samplePosts.map(post => `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <!-- Post Header -->
+                    <div class="p-4 flex items-center space-x-3">
+                        <img src="${post.avatar}" alt="${post.user}" class="w-10 h-10 rounded-full">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 dark:text-white">${post.user}</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">${post.timeAgo}</p>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Post Image -->
+                    <img src="${post.image}" alt="Collection" class="w-full h-64 object-cover">
+                    
+                    <!-- Post Content -->
+                    <div class="p-4">
+                        <div class="flex items-center space-x-4 mb-3">
+                            <button class="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors">
+                                <i class="far fa-heart"></i>
+                                <span>${post.likes}</span>
+                            </button>
+                            <button class="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors">
+                                <i class="far fa-comment"></i>
+                                <span>${post.comments}</span>
+                            </button>
+                            <button class="text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors">
+                                <i class="far fa-share-square"></i>
+                            </button>
+                        </div>
+                        
+                        <p class="text-gray-900 dark:text-white mb-2">${post.description}</p>
+                        
+                        <div class="flex flex-wrap gap-1">
+                            ${post.tags.map(tag => `
+                                <span class="text-sm text-primary hover:text-primary-dark cursor-pointer">#${tag}</span>
+                            `).join(' ')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modal handling
+        createPostBtn.addEventListener('click', () => {
+            createPostModal.classList.remove('hidden');
+        });
+
+        [closeModalBtn, cancelPostBtn].forEach(btn => {
+            btn.addEventListener('click', () => {
+                createPostModal.classList.add('hidden');
+                createPostForm.reset();
+            });
+        });
+
+        // Create post form
+        createPostForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const imageUrl = document.getElementById('postImageUrl').value;
+            const description = document.getElementById('postDescription').value;
+            const tags = document.getElementById('postTags').value;
+
+            if (!imageUrl || !description) {
+                showAlert('Please fill in all required fields');
+                return;
+            }
+
+            // Add new post to feed
+            const newPost = {
+                id: Date.now(),
+                user: 'ToyCollector123',
+                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&h=40&fit=crop&crop=face',
+                image: imageUrl,
+                description: description,
+                tags: tags.split(',').map(tag => tag.trim()),
+                likes: 0,
+                comments: 0,
+                timeAgo: 'Just now'
+            };
+
+            samplePosts.unshift(newPost);
+            renderCollectionFeed();
+            createPostModal.classList.add('hidden');
+            createPostForm.reset();
+            
+            showAlert('Your collection has been shared successfully!');
+        });
+
+        // AI Recommendations
+        getRecommendationsBtn.addEventListener('click', async () => {
+            recommendationsSection.classList.remove('hidden');
+            document.getElementById('recommendationsLoading').classList.remove('hidden');
+            document.getElementById('recommendationsResult').classList.add('hidden');
+
+            try {
+                if (window.Poe && window.Poe.sendUserMessage) {
+                    // Register handler for AI recommendations
+                    window.Poe.registerHandler('toy-recommendations', (result) => {
+                        if (result.status === 'complete') {
+                            const response = result.responses[0];
+                            
+                            // Process AI response to extract store recommendations
+                            processAIRecommendations(response.content);
+                            
+                            document.getElementById('recommendationsLoading').classList.add('hidden');
+                            document.getElementById('recommendationsResult').classList.remove('hidden');
+                            document.getElementById('recommendationsResult').innerHTML = `
+                                <div class="space-y-6">
+                                    <div class="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-4 mb-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-map-marked-alt text-green-600 dark:text-green-400 mr-2"></i>
+                                            <span class="text-green-800 dark:text-green-200 font-medium">Recommendations are now highlighted on the map!</span>
+                                        </div>
+                                    </div>
+                                    <div class="prose dark:prose-invert max-w-none">
+                                        ${formatRecommendations(response.content)}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    await window.Poe.sendUserMessage(
+                        "@Claude-Sonnet-4 As a toy store recommendation AI, analyze these nearby stores and provide personalized recommendations: 1) Toys R Us (action figures, LEGO, board games), 2) Target Toys (dolls, educational toys, outdoor toys), 3) Walmart Toys (budget toys, electronic toys, craft supplies), 4) Little Dreamers Toy Shop (handmade toys, vintage collectibles, puzzles). User preferences: loves action figures, collects vintage toys, enjoys LEGO builds, has children aged 6-10, budget is moderate ($50-200 per item). Which stores should they prioritize and why? Mention specific store names. Provide ONLY raw JSON in your response with no explanations, additional text, or code block formatting (no ```) with this structure: {\"topMatch\": \"store_name\", \"recommended\": [\"store1\", \"store2\"], \"reasoning\": \"explanation\"}",
+                        {
+                            handler: 'toy-recommendations',
+                            stream: false,
+                            openChat: false
+                        }
+                    );
+                } else {
+                    // Fallback mock recommendations with map integration
+                    setTimeout(() => {
+                        // Set mock recommendations
+                        recommendedStores = ['local', 'toysrus'];
+                        topMatchStore = 'local';
+                        
+                        // Update map and store list
+                        updateMapPins();
+                        renderStores();
+                        
+                        document.getElementById('recommendationsLoading').classList.add('hidden');
+                        document.getElementById('recommendationsResult').classList.remove('hidden');
+                        document.getElementById('recommendationsResult').innerHTML = `
+                            <div class="space-y-6">
+                                <div class="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-4 mb-4">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-map-marked-alt text-green-600 dark:text-green-400 mr-2"></i>
+                                        <span class="text-green-800 dark:text-green-200 font-medium">Recommendations are now highlighted on the map!</span>
+                                    </div>
+                                </div>
+                                
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">🎯 Top Match</h4>
+                                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-4">
+                                    <h5 class="font-bold text-lg">Little Dreamers Toy Shop</h5>
+                                    <p class="mt-2">Perfect for vintage collectibles and unique finds. Their handmade toys section and vintage collectibles make this store ideal for your interests. High customer satisfaction rating and personalized service.</p>
+                                    <div class="mt-3 flex items-center">
+                                        <i class="fas fa-crown mr-2"></i>
+                                        <span class="text-sm">Best match for your preferences</span>
+                                    </div>
+                                </div>
+                                
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">🤖 AI Recommended</h4>
+                                <div class="grid gap-4">
+                                    <div class="border border-yellow-200 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900 rounded-lg p-4">
+                                        <h5 class="font-semibold text-yellow-800 dark:text-yellow-200">Toys R Us</h5>
+                                        <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">Great selection of action figures and LEGO sets. Family-friendly environment with competitive prices. Strong inventory for current collectibles.</p>
+                                    </div>
+                                </div>
+                                
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">💡 Specific Toy Recommendations</h4>
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                    <ul class="space-y-2 text-sm">
+                                        <li class="flex items-center"><i class="fas fa-star text-yellow-500 mr-2"></i>Marvel Legends Series action figures</li>
+                                        <li class="flex items-center"><i class="fas fa-star text-yellow-500 mr-2"></i>LEGO Creator Expert sets</li>
+                                        <li class="flex items-center"><i class="fas fa-star text-yellow-500 mr-2"></i>Vintage Transformers (1984-1987)</li>
+                                        <li class="flex items-center"><i class="fas fa-star text-yellow-500 mr-2"></i>Star Wars Black Series collectibles</li>
+                                        <li class="flex items-center"><i class="fas fa-star text-yellow-500 mr-2"></i>Educational STEM toys for children</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    }, 2000);
+                }
+            } catch (error) {
+                document.getElementById('recommendationsLoading').classList.add('hidden');
+                document.getElementById('recommendationsResult').classList.remove('hidden');
+                document.getElementById('recommendationsResult').innerHTML = `
+                    <div class="text-center text-red-500">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Unable to get recommendations at this time. Please try again later.</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Process AI recommendations to update map
+        function processAIRecommendations(content) {
+            try {
+                // Try to parse JSON response from AI
+                const aiResponse = JSON.parse(content);
+                
+                // Map store names to IDs
+                const storeNameToId = {
+                    'Toys R Us': 'toysrus',
+                    'Target Toys': 'target', 
+                    'Walmart Toys': 'walmart',
+                    'Little Dreamers Toy Shop': 'local'
+                };
+                
+                // Set top match
+                if (aiResponse.topMatch && storeNameToId[aiResponse.topMatch]) {
+                    topMatchStore = storeNameToId[aiResponse.topMatch];
+                }
+                
+                // Set recommended stores
+                if (aiResponse.recommended && Array.isArray(aiResponse.recommended)) {
+                    recommendedStores = aiResponse.recommended
+                        .map(storeName => storeNameToId[storeName])
+                        .filter(id => id); // Remove undefined values
+                }
+                
+                // Update map and store list
+                updateMapPins();
+                renderStores();
+                
+            } catch (error) {
+                console.log('Failed to parse AI response as JSON, using fallback recommendations');
+                // Fallback to mock recommendations
+                recommendedStores = ['local', 'toysrus'];
+                topMatchStore = 'local';
+                updateMapPins();
+                renderStores();
+            }
+        }
+
+        function formatRecommendations(content) {
+            // Convert markdown-like content to HTML
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/^/, '<p>')
+                .replace(/$/, '</p>');
+        }
+
+        // Custom alert function
+        function showAlert(message) {
+            const alertModal = document.createElement('div');
+            alertModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            alertModal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                    <div class="flex justify-end">
+                        <button class="px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded transition-colors" onclick="this.closest('.fixed').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alertModal);
+        }
+
+        // Google Maps Initialization
+        function initMap() {
+            try {
+                // Default location (San Francisco) if geolocation fails
+                const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+                
+                // Check if Google Maps is available
+                if (typeof google === 'undefined' || !google.maps) {
+                    console.error('Google Maps API not loaded');
+                    showAlert('Map service is currently unavailable. Please refresh the page.');
+                    return;
+                }
+                
+                // Initialize map
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 13,
+                    center: defaultLocation,
+                    styles: [
+                        {
+                            featureType: 'poi',
+                            elementType: 'labels',
+                            stylers: [{ visibility: 'off' }]
+                        }
+                    ]
+                });
+
+                // Initialize info window
+                infoWindow = new google.maps.InfoWindow();
+
+                // Initialize Places service
+                service = new google.maps.places.PlacesService(map);
+                
+                // Mark map as initialized
+                isMapInitialized = true;
+
+                // Try to get user's location
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            userLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            map.setCenter(userLocation);
+                            
+                            // Add user location marker
+                            userLocationMarker = new google.maps.Marker({
+                                position: userLocation,
+                                map: map,
+                                title: 'Your Location',
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 8,
+                                    fillColor: '#4285F4',
+                                    fillOpacity: 1,
+                                    strokeColor: '#ffffff',
+                                    strokeWeight: 2
+                                }
+                            });
+
+                            // Search for toy stores near user location
+                            searchToyStores(userLocation);
+                        },
+                        (error) => {
+                            console.log('Geolocation error:', error);
+                            // Geolocation failed, use default location
+                            userLocation = defaultLocation;
+                            searchToyStores(defaultLocation);
+                        }
+                    );
+                } else {
+                    // Browser doesn't support geolocation
+                    userLocation = defaultLocation;
+                    searchToyStores(defaultLocation);
+                }
+
+                // Hide loading overlay
+                const loadingElement = document.getElementById('mapLoading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                showAlert('Error loading map. Please refresh the page and try again.');
+            }
+        }
+
+        // Search for toy stores using Google Places API
+        function searchToyStores(location) {
+            if (!service || !isMapInitialized) {
+                console.log('Service or map not ready, using fallback data');
+                loadMockData();
+                return;
+            }
+
+            const request = {
+                location: location,
+                radius: 5000, // 5km radius
+                keyword: 'toy store toys',
+                type: 'store'
+            };
+
+            try {
+                service.nearbySearch(request, (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        processToyStores(results);
+                    } else {
+                        console.log('Places search failed:', status);
+                        // Fallback to mock data
+                        loadMockData();
+                    }
+                });
+            } catch (error) {
+                console.error('Error during places search:', error);
+                loadMockData();
+            }
+        }
+
+        // Process toy store results from Google Places
+        function processToyStores(places) {
+            toyStores = [];
+            storeMarkers = [];
+
+            places.forEach((place, index) => {
+                if (place.geometry && place.geometry.location) {
+                    // Create store object
+                    const store = {
+                        id: `store_${index}`,
+                        name: place.name,
+                        address: place.vicinity || place.formatted_address || 'Address not available',
+                        rating: place.rating || 'N/A',
+                        distance: calculateDistance(userLocation, place.geometry.location),
+                        specialties: getStoreSpecialties(place.name, place.types),
+                        hours: 'Hours not available',
+                        place_id: place.place_id,
+                        location: {
+                            lat: place.geometry.location.lat(),
+                            lng: place.geometry.location.lng()
+                        }
+                    };
+
+                    toyStores.push(store);
+
+                    // Create map marker
+                    const marker = new google.maps.Marker({
+                        position: place.geometry.location,
+                        map: map,
+                        title: place.name,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 8,
+                            fillColor: '#EF4444',
+                            fillOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 2
+                        }
+                    });
+
+                    // Add click listener to marker
+                    marker.addListener('click', () => {
+                        showStoreInfo(store, marker);
+                    });
+
+                    storeMarkers.push({ marker, store });
+
+                    // Get detailed place information
+                    getPlaceDetails(place.place_id, store);
+                }
+            });
+
+            // Sort stores by distance
+            toyStores.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+            // Update UI
+            renderStores();
+        }
+
+        // Get detailed information about a place
+        function getPlaceDetails(placeId, store) {
+            const request = {
+                placeId: placeId,
+                fields: ['opening_hours', 'formatted_phone_number', 'website', 'photos']
+            };
+
+            service.getDetails(request, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    // Update store hours
+                    if (place.opening_hours) {
+                        const now = new Date();
+                        const day = now.getDay();
+                        if (place.opening_hours.periods && place.opening_hours.periods[day]) {
+                            store.hours = place.opening_hours.isOpen() ? 
+                                'Open now' : 'Closed';
+                        }
+                    }
+                    
+                    // Store additional details
+                    store.phone = place.formatted_phone_number;
+                    store.website = place.website;
+                    store.photos = place.photos;
+
+                    // Re-render stores to update information
+                    renderStores();
+                }
+            });
+        }
+
+        // Calculate distance between two points
+        function calculateDistance(pos1, pos2) {
+            const lat1 = pos1.lat;
+            const lng1 = pos1.lng;
+            const lat2 = typeof pos2.lat === 'function' ? pos2.lat() : pos2.lat;
+            const lng2 = typeof pos2.lng === 'function' ? pos2.lng() : pos2.lng;
+
+            const R = 3959; // Earth's radius in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            
+            return distance.toFixed(1) + ' miles';
+        }
+
+        // Determine store specialties based on name and types
+        function getStoreSpecialties(name, types) {
+            const nameUpper = name.toUpperCase();
+            const specialties = [];
+
+            // Brand-specific specialties
+            if (nameUpper.includes('TOYS R US') || nameUpper.includes('TOYSRUS')) {
+                specialties.push('Action Figures', 'LEGO', 'Board Games');
+            } else if (nameUpper.includes('TARGET')) {
+                specialties.push('Dolls', 'Educational Toys', 'Outdoor Toys');
+            } else if (nameUpper.includes('WALMART')) {
+                specialties.push('Budget Toys', 'Electronic Toys', 'Craft Supplies');
+            } else if (nameUpper.includes('GAMESTOP')) {
+                specialties.push('Video Games', 'Collectibles', 'Action Figures');
+            } else if (nameUpper.includes('BARNES') && nameUpper.includes('NOBLE')) {
+                specialties.push('Educational Toys', 'Books', 'Puzzles');
+            } else {
+                // Generic toy store specialties
+                specialties.push('Toys', 'Games', 'Collectibles');
+            }
+
+            return specialties;
+        }
+
+        // Show store information in info window
+        function showStoreInfo(store, marker) {
+            const content = `
+                <div class="p-2">
+                    <h3 class="font-bold text-lg">${store.name}</h3>
+                    <p class="text-sm text-gray-600">${store.address}</p>
+                    <div class="flex items-center mt-1">
+                        <i class="fas fa-star text-yellow-500 mr-1"></i>
+                        <span class="text-sm">${store.rating}</span>
+                        <span class="mx-2">•</span>
+                        <span class="text-sm">${store.distance}</span>
+                    </div>
+                    <div class="mt-2">
+                        ${store.specialties.map(spec => 
+                            `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">${spec}</span>`
+                        ).join('')}
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">${store.hours}</p>
+                </div>
+            `;
+            
+            infoWindow.setContent(content);
+            infoWindow.open(map, marker);
+        }
+
+        // Update marker styles based on AI recommendations
+        function updateMarkerStyles() {
+            storeMarkers.forEach(({ marker, store }) => {
+                const isRecommended = recommendedStores.includes(store.id);
+                const isTopMatch = topMatchStore === store.id;
+
+                let fillColor = '#EF4444'; // Default red
+                let scale = 8;
+
+                if (isTopMatch) {
+                    fillColor = '#10B981'; // Green
+                    scale = 12;
+                } else if (isRecommended) {
+                    fillColor = '#F59E0B'; // Yellow
+                    scale = 10;
+                }
+
+                marker.setIcon({
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: scale,
+                    fillColor: fillColor,
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                });
+            });
+        }
+
+        // Override the updateMapPins function for Google Maps
+        function updateMapPins() {
+            updateMarkerStyles();
+        }
+
+        // Load mock data as fallback
+        function loadMockData() {
+            toyStores = [
+                {
+                    id: 'toysrus',
+                    name: 'Toys R Us',
+                    address: '123 Fun Street',
+                    distance: '0.3 miles',
+                    rating: 4.5,
+                    specialties: ['Action Figures', 'LEGO', 'Board Games'],
+                    hours: 'Open until 9 PM'
+                },
+                {
+                    id: 'target',
+                    name: 'Target Toys',
+                    address: '456 Shopping Ave',
+                    distance: '0.7 miles',
+                    rating: 4.2,
+                    specialties: ['Dolls', 'Educational Toys', 'Outdoor Toys'],
+                    hours: 'Open until 10 PM'
+                },
+                {
+                    id: 'walmart',
+                    name: 'Walmart Toys',
+                    address: '789 Retail Blvd',
+                    distance: '1.2 miles',
+                    rating: 4.0,
+                    specialties: ['Budget Toys', 'Electronic Toys', 'Craft Supplies'],
+                    hours: 'Open 24 hours'
+                },
+                {
+                    id: 'local',
+                    name: 'Little Dreamers Toy Shop',
+                    address: '321 Local St',
+                    distance: '0.9 miles',
+                    rating: 4.8,
+                    specialties: ['Handmade Toys', 'Vintage Collectibles', 'Puzzles'],
+                    hours: 'Open until 6 PM'
+                }
+            ];
+            renderStores();
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredStores = toyStores.filter(store => 
+                store.name.toLowerCase().includes(searchTerm) ||
+                store.specialties.some(spec => spec.toLowerCase().includes(searchTerm))
+            );
+            
+            // Update store list with filtered results
+            const storeListElement = document.getElementById('storeList');
+            storeListElement.innerHTML = filteredStores.map(store => {
+                const isRecommended = recommendedStores.includes(store.id);
+                const isTopMatch = topMatchStore === store.id;
+                
+                let badgeHtml = '';
+                if (isTopMatch) {
+                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full flex items-center"><i class="fas fa-crown mr-1"></i>Top AI Match</span></div>';
+                } else if (isRecommended) {
+                    badgeHtml = '<div class="flex items-center mb-2"><span class="text-xs bg-yellow-400 text-gray-900 px-2 py-1 rounded-full flex items-center"><i class="fas fa-robot mr-1"></i>AI Recommended</span></div>';
+                }
+                
+                return `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer ${isRecommended ? 'ring-2 ring-yellow-200 dark:ring-yellow-600' : ''} ${isTopMatch ? 'ring-2 ring-green-200 dark:ring-green-600' : ''}">
+                        ${badgeHtml}
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-gray-900 dark:text-white">${store.name}</h4>
+                            <div class="flex items-center text-yellow-500">
+                                <i class="fas fa-star mr-1"></i>
+                                <span class="text-sm">${store.rating}</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                        <p class="text-sm text-primary font-medium mb-2">${store.distance} away</p>
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            ${store.specialties.map(spec => `
+                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">${spec}</span>
+                            `).join('')}
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${store.hours}</p>
+                        ${isTopMatch ? '<div class="mt-2"><p class="text-xs text-green-600 dark:text-green-400 font-medium">🎯 Perfect match for your preferences!</p></div>' : ''}
+                        ${isRecommended && !isTopMatch ? '<div class="mt-2"><p class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">🤖 Recommended by AI</p></div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        });
+
+        // Get Current Location Button functionality
+
+        function getCurrentLocation() {
+            const locationBtn = document.getElementById('getCurrentLocationBtn');
+            const originalText = locationBtn.innerHTML;
+            
+            // Check if we're on HTTPS or localhost
+            const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            
+            if (!isSecure) {
+                showLocationFixDialog();
+                return;
+            }
+            
+            // Show loading state
+            locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Finding...';
+            locationBtn.disabled = true;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Update user location
+                        userLocation = newLocation;
+                        
+                        // Center map on new location
+                        if (map) {
+                            map.setCenter(newLocation);
+                            map.setZoom(13);
+                        }
+                        
+                        // Remove existing user location marker if it exists
+                        if (userLocationMarker) {
+                            userLocationMarker.setMap(null);
+                        }
+                        
+                        // Add new user location marker
+                        if (map) {
+                            userLocationMarker = new google.maps.Marker({
+                                position: newLocation,
+                                map: map,
+                                title: 'Your Current Location',
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 8,
+                                    fillColor: '#4285F4',
+                                    fillOpacity: 1,
+                                    strokeColor: '#ffffff',
+                                    strokeWeight: 2
+                                },
+                                animation: google.maps.Animation.DROP
+                            });
+                        }
+
+                        // Clear existing stores and markers
+                        storeMarkers.forEach(({ marker }) => {
+                            marker.setMap(null);
+                        });
+                        toyStores = [];
+                        storeMarkers = [];
+                        
+                        // Search for toy stores near new location
+                        searchToyStores(newLocation);
+                        
+                        // Reset button
+                        locationBtn.innerHTML = originalText;
+                        locationBtn.disabled = false;
+                        
+                        // Show success message
+                        showAlert('Location updated! Finding toy stores near you...');
+                    },
+                    (error) => {
+                        console.log('Geolocation error details:', error);
+                        
+                        // Reset button first
+                        locationBtn.innerHTML = originalText;
+                        locationBtn.disabled = false;
+                        
+                        // Handle specific geolocation errors
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                showPermissionFixDialog();
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                showLocationUnavailableDialog();
+                                break;
+                            case error.TIMEOUT:
+                                showTimeoutDialog();
+                                break;
+                            default:
+                                showGenericLocationDialog();
+                                break;
+                        }
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000, // Increased timeout
+                        maximumAge: 300000 // 5 minutes cache
+                    }
+                );
+            } else {
+                locationBtn.innerHTML = originalText;
+                locationBtn.disabled = false;
+                showLocationFixDialog();
+            }
+        }
+
+        // Specific error dialog functions
+        function showLocationFixDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">HTTPS Required</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Location services require a secure connection. Please:</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4">
+                            <p class="text-sm"><strong>Quick Fix:</strong></p>
+                            <p class="text-sm">1. Deploy to <strong>Netlify</strong> or <strong>GitHub Pages</strong></p>
+                            <p class="text-sm">2. Or use <strong>localhost</strong> for testing</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showPermissionFixDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-location-arrow text-red-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Access Denied</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">To enable location access:</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                            <p><strong>Chrome/Edge:</strong> Click 🔒 in address bar → Location → Allow</p>
+                            <p><strong>Firefox:</strong> Click 🛡️ → Clear permissions</p>
+                            <p><strong>Safari:</strong> Settings → Privacy → Location Services</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="window.location.reload()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Refresh & Try Again</button>
+                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showLocationUnavailableDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-satellite-dish text-orange-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Unavailable</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">GPS signal not found. Try:</p>
+                        <div class="text-left bg-gray-50 dark:bg-gray-700 p-3 rounded mb-4 text-sm">
+                            <p>• Move outdoors or near a window</p>
+                            <p>• Check if location services are enabled</p>
+                            <p>• Try again in a few moments</p>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="getCurrentLocation(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
+                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showTimeoutDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-clock text-yellow-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Timeout</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Location request took too long. This can happen with poor GPS signal.</p>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="getCurrentLocation(); this.closest('.fixed').remove()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Try Again</button>
+                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showGenericLocationDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-question-circle text-gray-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Location Error</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Something went wrong with location detection.</p>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="showManualLocationDialog()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">Enter Location Manually</button>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showManualLocationDialog() {
+            // Close any existing modals
+            document.querySelectorAll('.fixed').forEach(modal => {
+                if (modal.classList.contains('bg-black')) modal.remove();
+            });
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-map-pin text-blue-500 text-3xl mb-4"></i>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Enter Your Location</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Enter a city or address to find nearby toy stores:</p>
+                        <input type="text" id="manualLocationInput" placeholder="e.g., San Francisco, CA" 
+                               class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4">
+                        <div class="flex flex-col gap-2">
+                            <button onclick="searchManualLocation()" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">Search Stores</button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="usePresetLocation('New York, NY')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">NYC</button>
+                                <button onclick="usePresetLocation('Los Angeles, CA')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">LA</button>
+                                <button onclick="usePresetLocation('Chicago, IL')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">Chicago</button>
+                                <button onclick="usePresetLocation('Houston, TX')" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors">Houston</button>
+                            </div>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Focus on input
+            setTimeout(() => {
+                document.getElementById('manualLocationInput').focus();
+            }, 100);
+            
+            // Handle enter key
+            document.getElementById('manualLocationInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchManualLocation();
+                }
+            });
+        }
+
+        function usePresetLocation(locationName) {
+            document.getElementById('manualLocationInput').value = locationName;
+            searchManualLocation();
+        }
+
+        function searchManualLocation() {
+            const locationInput = document.getElementById('manualLocationInput');
+            const location = locationInput.value.trim();
+            
+            if (!location) {
+                showAlert('Please enter a location');
+                return;
+            }
+            
+            // Use Google Geocoding to convert address to coordinates
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: location }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const newLocation = {
+                        lat: results[0].geometry.location.lat(),
+                        lng: results[0].geometry.location.lng()
+                    };
+                    
+                    // Update location and search for stores
+                    userLocation = newLocation;
+                    
+                    if (map) {
+                        map.setCenter(newLocation);
+                        map.setZoom(13);
+                        
+                        // Remove existing user location marker
+                        if (userLocationMarker) {
+                            userLocationMarker.setMap(null);
+                        }
+                        
+                        // Add new location marker
+                        userLocationMarker = new google.maps.Marker({
+                            position: newLocation,
+                            map: map,
+                            title: 'Your Location: ' + location,
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 8,
+                                fillColor: '#4285F4',
+                                fillOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 2
+                            },
+                            animation: google.maps.Animation.DROP
+                        });
+                    }
+                    
+                    // Clear existing stores
+                    storeMarkers.forEach(({ marker }) => {
+                        marker.setMap(null);
+                    });
+                    toyStores = [];
+                    storeMarkers = [];
+                    
+                    // Search for toy stores
+                    searchToyStores(newLocation);
+                    
+                    // Close modal
+                    document.querySelector('.fixed').remove();
+                    
+                    showAlert(`Location set to ${results[0].formatted_address}. Finding toy stores...`);
+                } else {
+                    showAlert('Location not found. Please try a different address or city.');
+                }
+            });
+        }
+
+        // Simple User Profile System
+        let currentUser = {
+            username: 'ToyCollector123',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&h=40&fit=crop&crop=face',
+            preferences: {
+                favoriteTypes: ['action-figures', 'vintage', 'lego'],
+                budget: 'moderate',
+                ageRange: '6-10'
+            },
+            location: null
+        };
+
+        // Profile button functionality
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            showUserProfileDialog();
+        });
+
+        function showUserProfileDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                    <div class="text-center">
+                        <img src="${currentUser.avatar}" alt="Profile" class="w-20 h-20 rounded-full mx-auto mb-4">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">User Profile</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+                                <input type="text" id="profileUsername" value="${currentUser.username}" 
+                                       class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Avatar URL</label>
+                                <input type="url" id="profileAvatar" value="${currentUser.avatar}" 
+                                       class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favorite Toy Types</label>
+                                <input type="text" id="profileTypes" value="${currentUser.preferences.favoriteTypes.join(', ')}" 
+                                       placeholder="action-figures, vintage, lego"
+                                       class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Budget</label>
+                                    <select id="profileBudget" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <option value="low" ${currentUser.preferences.budget === 'low' ? 'selected' : ''}>Low ($10-50)</option>
+                                        <option value="moderate" ${currentUser.preferences.budget === 'moderate' ? 'selected' : ''}>Moderate ($50-200)</option>
+                                        <option value="high" ${currentUser.preferences.budget === 'high' ? 'selected' : ''}>High ($200+)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Age Range</label>
+                                    <input type="text" id="profileAge" value="${currentUser.preferences.ageRange}" 
+                                           placeholder="6-10"
+                                           class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3 mt-6">
+                            <button onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
+                            <button onclick="saveUserProfile()" class="flex-1 px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-lg transition-colors">Save Profile</button>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                            <p class="text-xs text-blue-600 dark:text-blue-300">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Note: This profile is stored locally in your browser. Poe user account integration is not available.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function saveUserProfile() {
+            // Get values from form
+            const username = document.getElementById('profileUsername').value.trim();
+            const avatar = document.getElementById('profileAvatar').value.trim();
+            const types = document.getElementById('profileTypes').value.split(',').map(t => t.trim());
+            const budget = document.getElementById('profileBudget').value;
+            const ageRange = document.getElementById('profileAge').value.trim();
+
+            if (!username) {
+                showAlert('Please enter a username');
+                return;
+            }
+
+            // Update current user
+            currentUser.username = username;
+            currentUser.avatar = avatar || currentUser.avatar;
+            currentUser.preferences.favoriteTypes = types.filter(t => t);
+            currentUser.preferences.budget = budget;
+            currentUser.preferences.ageRange = ageRange;
+
+            // Update UI
+            document.getElementById('userName').textContent = username;
+            document.getElementById('userAvatar').src = currentUser.avatar;
+
+            // Save to localStorage (since we can't use sessionStorage)
+            try {
+                const userData = JSON.stringify(currentUser);
+                // Create a simple storage mechanism using URL parameters or other methods
+                // For demo purposes, we'll just update the display
+                console.log('User profile saved:', currentUser);
+            } catch (error) {
+                console.log('Storage not available, using in-memory only');
+            }
+
+            // Close modal
+            document.querySelector('.fixed').remove();
+            
+            showAlert('Profile updated successfully!');
+        }
+
+        // Load user profile on app start
+        function loadUserProfile() {
+            // In a real app, you'd load from your backend or storage
+            // For demo, we'll use the default profile
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userAvatar').src = currentUser.avatar;
+        }
+
+        // Generate user ID for posts
+        function generateUserId() {
+            return currentUser.username || 'Anonymous';
+        }
+
+        // Focus store on map when clicked from list
+        function focusStoreOnMap(storeId) {
+            // Find the store data
+            const store = toyStores.find(s => s.id === storeId);
+            if (!store || !map) {
+                console.log('Store not found or map not ready');
+                return;
+            }
+
+            // Find the corresponding marker
+            const storeMarker = storeMarkers.find(sm => sm.store.id === storeId);
+            if (!storeMarker) {
+                console.log('Marker not found for store:', storeId);
+                return;
+            }
+
+            // Scroll to map view first with smooth animation
+            const mapContainer = document.getElementById('map').parentElement.parentElement; // Get the map section
+            
+            // Add a subtle loading indicator to show something is happening
+            const storeElement = document.querySelector(`[onclick="focusStoreOnMap('${storeId}')"]`);
+            if (storeElement) {
+                // Add immediate visual feedback
+                storeElement.style.transform = 'scale(1.02)';
+                storeElement.style.boxShadow = '0 8px 25px rgba(93, 92, 222, 0.3)';
+                storeElement.style.transition = 'all 0.3s ease';
+            }
+
+            // Scroll to map with smooth behavior
+            mapContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start',
+                inline: 'nearest' 
+            });
+
+            // Add a small delay to let the scroll animation start, then focus the map
+            setTimeout(() => {
+                // Center map on store location with smooth animation
+                map.panTo(new google.maps.LatLng(store.location.lat, store.location.lng));
+                
+                // Zoom in to get a closer view of the store
+                if (map.getZoom() < 15) {
+                    map.setZoom(15);
+                }
+
+                // Highlight the marker temporarily
+                const originalIcon = storeMarker.marker.getIcon();
+                
+                // Create pulsing effect
+                storeMarker.marker.setIcon({
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 15,
+                    fillColor: '#3B82F6', // Blue color for focus
+                    fillOpacity: 0.8,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 3
+                });
+
+                // Add bounce animation
+                storeMarker.marker.setAnimation(google.maps.Animation.BOUNCE);
+
+                // Show info window after the map has settled
+                setTimeout(() => {
+                    showStoreInfo(store, storeMarker.marker);
+                    
+                    // Stop animation after showing info
+                    storeMarker.marker.setAnimation(null);
+                    
+                    // Restore original icon after 3 seconds
+                    setTimeout(() => {
+                        storeMarker.marker.setIcon(originalIcon);
+                    }, 3000);
+                }, 800);
+
+            }, 300); // Wait for scroll to start
+
+            // Remove list item highlight after scroll completes
+            setTimeout(() => {
+                if (storeElement) {
+                    storeElement.style.transform = '';
+                    storeElement.style.boxShadow = '';
+                }
+            }, 2500);
+
+            // For mobile devices, provide haptic feedback if available
+            if ('vibrate' in navigator) {
+                navigator.vibrate(50); // Short vibration
+            }
+
+            // Show a toast notification for better UX
+            showLocationToast(store.name);
+        }
+
+        // Show a temporary toast notification when focusing on a store
+        function showLocationToast(storeName) {
+            // Remove any existing toast
+            const existingToast = document.querySelector('.location-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'location-toast fixed top-20 left-1/2 transform -translate-x-1/2 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+            toast.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span class="text-sm font-medium">Showing ${storeName} on map</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translate(-50%, 0)';
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -20px)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 2500);
+        }
+
+        // Make focusStoreOnMap globally available
+        window.focusStoreOnMap = focusStoreOnMap;
+
+        // Add event listener for location button
+        document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+
+        // Initialize the app
+        loadUserProfile();
+        renderCollectionFeed();
+
+        // Make initMap globally available for Google Maps callback
+        window.initMap = initMap;
+    </script>
+
+
+</body></html>

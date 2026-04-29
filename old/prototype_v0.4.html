@@ -1,0 +1,3838 @@
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://api.poe.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta name="x-poe-datastore-behavior" content="local_only">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://api.poe.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToyFinder - Find Toy Stores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1A73E8',
+                        'primary-dark': '#1557B0',
+                        'google-blue': '#4285F4',
+                        'google-red': '#EA4335',
+                        'google-yellow': '#FBBC04',
+                        'google-green': '#34A853',
+                        'gray-50': '#F8F9FA',
+                        'gray-100': '#F1F3F4',
+                        'gray-200': '#E8EAED',
+                        'gray-300': '#DADCE0',
+                        'gray-400': '#BDC1C6',
+                        'gray-500': '#9AA0A6',
+                        'gray-600': '#80868B',
+                        'gray-700': '#5F6368',
+                        'gray-800': '#3C4043',
+                        'gray-900': '#202124'
+                    },
+                    fontFamily: {
+                        'google': ['Roboto', 'Arial', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'google': '0 2px 10px 0 rgba(0,0,0,0.2)',
+                        'google-lg': '0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2)',
+                        'google-xl': '0 16px 24px 2px rgba(0,0,0,0.14), 0 6px 30px 5px rgba(0,0,0,0.12), 0 8px 10px -5px rgba(0,0,0,0.2)'
+                    },
+                    screens: {
+                        'xs': '475px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        /* Root CSS Variables for Universal Responsive Scaling */
+        :root {
+            /* Base scaling unit - adapts to both viewport dimensions */
+            --base-unit: clamp(3px, 0.4vmin, 12px);
+            --scale-factor: clamp(0.8, 1vmin, 1.5);
+            
+            /* Responsive font system using vmin for consistent scaling */
+            --font-2xs: clamp(8px, 1.5vmin, 10px);
+            --font-xs: clamp(10px, 1.8vmin, 12px);
+            --font-sm: clamp(12px, 2.1vmin, 14px);
+            --font-base: clamp(14px, 2.4vmin, 16px);
+            --font-lg: clamp(16px, 2.7vmin, 18px);
+            --font-xl: clamp(18px, 3vmin, 20px);
+            --font-2xl: clamp(20px, 3.5vmin, 24px);
+            --font-3xl: clamp(24px, 4vmin, 28px);
+            --font-4xl: clamp(28px, 4.5vmin, 32px);
+            
+            /* Comprehensive spacing system */
+            --spacing-0: 0;
+            --spacing-px: 1px;
+            --spacing-0-5: calc(var(--base-unit) * 0.5);
+            --spacing-1: calc(var(--base-unit) * 1);
+            --spacing-1-5: calc(var(--base-unit) * 1.5);
+            --spacing-2: calc(var(--base-unit) * 2);
+            --spacing-2-5: calc(var(--base-unit) * 2.5);
+            --spacing-3: calc(var(--base-unit) * 3);
+            --spacing-3-5: calc(var(--base-unit) * 3.5);
+            --spacing-4: calc(var(--base-unit) * 4);
+            --spacing-5: calc(var(--base-unit) * 5);
+            --spacing-6: calc(var(--base-unit) * 6);
+            --spacing-7: calc(var(--base-unit) * 7);
+            --spacing-8: calc(var(--base-unit) * 8);
+            --spacing-9: calc(var(--base-unit) * 9);
+            --spacing-10: calc(var(--base-unit) * 10);
+            --spacing-11: calc(var(--base-unit) * 11);
+            --spacing-12: calc(var(--base-unit) * 12);
+            --spacing-14: calc(var(--base-unit) * 14);
+            --spacing-16: calc(var(--base-unit) * 16);
+            --spacing-20: calc(var(--base-unit) * 20);
+            --spacing-24: calc(var(--base-unit) * 24);
+            --spacing-28: calc(var(--base-unit) * 28);
+            --spacing-32: calc(var(--base-unit) * 32);
+            
+            /* Responsive border radius system */
+            --border-radius-none: 0;
+            --border-radius-sm: clamp(2px, 0.3vmin, 4px);
+            --border-radius-md: clamp(4px, 0.6vmin, 8px);
+            --border-radius-lg: clamp(6px, 1vmin, 12px);
+            --border-radius-xl: clamp(8px, 1.5vmin, 16px);
+            --border-radius-2xl: clamp(12px, 2vmin, 20px);
+            --border-radius-3xl: clamp(16px, 2.5vmin, 24px);
+            --border-radius-full: 9999px;
+            
+            /* Component-specific responsive sizes */
+            --icon-xs: clamp(10px, 2vmin, 12px);
+            --icon-sm: clamp(12px, 2.5vmin, 14px);
+            --icon-md: clamp(14px, 3vmin, 16px);
+            --icon-lg: clamp(16px, 3.5vmin, 20px);
+            --icon-xl: clamp(20px, 4vmin, 24px);
+            --icon-2xl: clamp(24px, 5vmin, 28px);
+            
+            --fab-xs: clamp(24px, 4vmin, 32px);
+            --fab-sm: clamp(28px, 5vmin, 36px);
+            --fab-md: clamp(32px, 6vmin, 44px);
+            --fab-lg: clamp(40px, 7vmin, 52px);
+            --fab-xl: clamp(48px, 8vmin, 60px);
+            
+            --button-height-sm: clamp(28px, 5vmin, 36px);
+            --button-height-md: clamp(32px, 6vmin, 40px);
+            --button-height-lg: clamp(36px, 7vmin, 44px);
+            --button-height-xl: clamp(44px, 8vmin, 52px);
+            
+            --input-height-sm: clamp(32px, 6vmin, 40px);
+            --input-height-md: clamp(36px, 7vmin, 44px);
+            --input-height-lg: clamp(40px, 8vmin, 48px);
+            --input-height-xl: clamp(48px, 9vmin, 56px);
+            
+            --panel-handle-width: clamp(20px, 4vmin, 40px);
+            --panel-handle-height: clamp(3px, 0.5vmin, 6px);
+            
+            /* Container and layout responsive sizes */
+            --container-xs: clamp(280px, 90vw, 480px);
+            --container-sm: clamp(320px, 95vw, 640px);
+            --container-md: clamp(480px, 90vw, 768px);
+            --container-lg: clamp(640px, 85vw, 1024px);
+            --container-xl: clamp(768px, 80vw, 1280px);
+            --container-2xl: clamp(896px, 75vw, 1536px);
+            
+            /* Shadow system with responsive scaling */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 clamp(2px, 0.5vmin, 4px) clamp(6px, 1vmin, 10px) -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 clamp(4px, 1vmin, 8px) clamp(10px, 2vmin, 15px) -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 clamp(8px, 2vmin, 12px) clamp(20px, 3vmin, 25px) -5px rgba(0, 0, 0, 0.25);
+            
+            /* Z-index system */
+            --z-dropdown: 1000;
+            --z-sticky: 1020;
+            --z-fixed: 1030;
+            --z-modal-backdrop: 1040;
+            --z-modal: 1050;
+            --z-popover: 1060;
+            --z-tooltip: 1070;
+            --z-toast: 1080;
+        }
+
+        /* Ultra-responsive breakpoints for all screen sizes */
+        @media (max-width: 240px) {
+            /* Smartwatch and tiny screens */
+            :root {
+                --base-unit: clamp(2px, 0.3vmin, 6px);
+                --scale-factor: 0.6;
+            }
+        }
+
+        @media (max-width: 320px) {
+            /* Small mobile devices */
+            :root {
+                --base-unit: clamp(3px, 0.35vmin, 8px);
+                --scale-factor: 0.7;
+            }
+        }
+
+        @media (min-width: 321px) and (max-width: 480px) {
+            /* Standard mobile devices */
+            :root {
+                --base-unit: clamp(3.5px, 0.4vmin, 9px);
+                --scale-factor: 0.8;
+            }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            /* Large mobile/Small tablet */
+            :root {
+                --base-unit: clamp(4px, 0.45vmin, 10px);
+                --scale-factor: 0.9;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            /* Tablet devices */
+            :root {
+                --base-unit: clamp(4.5px, 0.5vmin, 11px);
+                --scale-factor: 1.0;
+            }
+        }
+
+        @media (min-width: 1025px) and (max-width: 1366px) {
+            /* Small desktop/Laptop */
+            :root {
+                --base-unit: clamp(5px, 0.55vmin, 12px);
+                --scale-factor: 1.1;
+            }
+        }
+
+        @media (min-width: 1367px) and (max-width: 1920px) {
+            /* Standard desktop */
+            :root {
+                --base-unit: clamp(5.5px, 0.6vmin, 13px);
+                --scale-factor: 1.2;
+            }
+        }
+
+        @media (min-width: 1921px) and (max-width: 2560px) {
+            /* Large desktop/4K */
+            :root {
+                --base-unit: clamp(6px, 0.65vmin, 14px);
+                --scale-factor: 1.3;
+            }
+        }
+
+        @media (min-width: 2561px) and (max-width: 3440px) {
+            /* Ultra-wide/5K displays */
+            :root {
+                --base-unit: clamp(7px, 0.7vmin, 16px);
+                --scale-factor: 1.4;
+            }
+        }
+
+        @media (min-width: 3441px) {
+            /* 8K and beyond */
+            :root {
+                --base-unit: clamp(8px, 0.8vmin, 20px);
+                --scale-factor: 1.6;
+            }
+        }
+
+        /* Extreme aspect ratios */
+        @media (max-aspect-ratio: 1/2) {
+            /* Very tall screens */
+            :root {
+                --base-unit: clamp(2px, 0.8vw, 8px);
+                --font-base: clamp(12px, 3vw, 16px);
+            }
+        }
+
+        @media (min-aspect-ratio: 3/1) {
+            /* Very wide screens */
+            :root {
+                --base-unit: clamp(4px, 0.6vh, 12px);
+                --font-base: clamp(14px, 2.5vh, 18px);
+            }
+        }
+
+        /* Portrait orientation optimizations */
+        @media (orientation: portrait) {
+            :root {
+                --panel-height: clamp(45vh, 55vh, 65vh);
+                --fab-spacing: clamp(12px, 3vw, 20px);
+                --header-spacing: clamp(12px, 3vw, 16px);
+            }
+
+            .store-info-sheet {
+                height: var(--panel-height);
+                max-height: var(--panel-height);
+                min-height: var(--panel-height);
+            }
+
+            .store-info-content {
+                height: calc(var(--panel-height) - clamp(48px, 8vw, 64px));
+                max-height: calc(var(--panel-height) - clamp(48px, 8vw, 64px));
+            }
+
+            /* Portrait mobile specific */
+            @media (max-width: 767px) {
+                :root {
+                    --panel-height: 50vh;
+                    --font-xs: clamp(11px, 2.2vw, 13px);
+                    --font-sm: clamp(13px, 2.5vw, 15px);
+                    --font-base: clamp(15px, 2.8vw, 17px);
+                }
+
+                .google-tab {
+                    font-size: clamp(11px, 2.2vw, 13px);
+                    padding: var(--spacing-2) var(--spacing-3);
+                }
+
+                .travel-mode-option {
+                    min-height: clamp(65px, 13vw, 85px);
+                    padding: var(--spacing-2);
+                }
+
+                .travel-mode-option i {
+                    font-size: clamp(14px, 3.5vw, 18px);
+                }
+
+                /* Adjust search bar for portrait mobile */
+                header .px-4 {
+                    padding-left: var(--spacing-3);
+                    padding-right: var(--spacing-3);
+                }
+
+                header .mr-24 {
+                    margin-right: clamp(80px, 20vw, 100px);
+                }
+            }
+
+            /* Portrait tablet specific */
+            @media (min-width: 768px) and (max-width: 1024px) {
+                :root {
+                    --panel-height: 55vh;
+                    --fab-size: clamp(40px, 5vw, 52px);
+                }
+
+                .grid-cols-4 {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: var(--spacing-4);
+                }
+
+                .travel-mode-option {
+                    min-height: clamp(70px, 10vw, 90px);
+                }
+            }
+        }
+
+        /* Landscape orientation optimizations */
+        @media (orientation: landscape) {
+            :root {
+                --panel-height: clamp(60vh, 70vh, 80vh);
+                --fab-spacing: clamp(16px, 2vw, 24px);
+                --header-spacing: clamp(16px, 2vw, 20px);
+            }
+
+            .store-info-sheet {
+                height: var(--panel-height);
+                max-height: var(--panel-height);
+                min-height: var(--panel-height);
+            }
+
+            .store-info-content {
+                height: calc(var(--panel-height) - clamp(48px, 6vw, 64px));
+                max-height: calc(var(--panel-height) - clamp(48px, 6vw, 64px));
+            }
+
+            /* Landscape mobile specific */
+            @media (max-height: 500px) {
+                :root {
+                    --panel-height: 75vh;
+                    --font-xs: clamp(10px, 1.5vh, 12px);
+                    --font-sm: clamp(12px, 1.8vh, 14px);
+                    --font-base: clamp(14px, 2vh, 16px);
+                    --fab-size: clamp(30px, 4vh, 44px);
+                    --button-height: clamp(32px, 5vh, 40px);
+                }
+
+                .google-tab {
+                    font-size: var(--font-xs);
+                    padding: var(--spacing-1) var(--spacing-3);
+                    min-height: var(--button-height);
+                }
+
+                .travel-mode-option {
+                    min-height: clamp(50px, 8vh, 70px);
+                    padding: var(--spacing-2);
+                }
+
+                .travel-mode-option i {
+                    font-size: clamp(12px, 2.5vh, 16px);
+                    margin-bottom: var(--spacing-1);
+                }
+
+                /* Compact header for landscape mobile */
+                header .py-3 {
+                    padding-top: var(--spacing-2);
+                    padding-bottom: var(--spacing-2);
+                }
+
+                /* Side-by-side panels for landscape */
+                @media (min-width: 768px) {
+                    .store-info-sheet.landscape-mode {
+                        width: 45vw;
+                        right: auto;
+                        left: 0;
+                        border-radius: 0 var(--border-radius-xl) var(--border-radius-xl) 0;
+                    }
+
+                    #navigationPanel.landscape-mode {
+                        width: 45vw;
+                        right: 0;
+                        left: auto;
+                        border-radius: var(--border-radius-xl) 0 0 var(--border-radius-xl);
+                    }
+                }
+            }
+
+            /* Landscape tablet specific */
+            @media (min-height: 500px) and (max-height: 900px) {
+                :root {
+                    --panel-height: 65vh;
+                }
+
+                .grid-cols-4 {
+                    gap: var(--spacing-4);
+                }
+
+                .travel-mode-option {
+                    min-height: clamp(60px, 8vh, 80px);
+                }
+            }
+
+            /* Landscape desktop/large screens */
+            @media (min-height: 900px) {
+                :root {
+                    --panel-height: 60vh;
+                }
+
+                .store-info-sheet {
+                    max-width: clamp(450px, 35vw, 650px);
+                    margin: 0 auto;
+                }
+            }
+        }
+
+        /* Specific aspect ratio optimizations */
+        @media (aspect-ratio: 16/9) {
+            :root {
+                --panel-height: 65vh;
+            }
+        }
+
+        @media (aspect-ratio: 4/3) {
+            :root {
+                --panel-height: 55vh;
+            }
+        }
+
+        @media (aspect-ratio: 3/2) {
+            :root {
+                --panel-height: 60vh;
+            }
+        }
+
+        /* Ultra-wide landscape (21:9 and wider) */
+        @media (orientation: landscape) and (min-aspect-ratio: 21/9) {
+            .store-info-sheet {
+                max-width: clamp(400px, 25vw, 600px);
+                left: var(--fab-spacing);
+                right: auto;
+                border-radius: var(--border-radius-xl);
+                margin: 0;
+            }
+
+            #navigationPanel {
+                max-width: clamp(400px, 25vw, 600px);
+                right: var(--fab-spacing);
+                left: auto;
+                border-radius: var(--border-radius-xl);
+                margin: 0;
+            }
+
+            /* Adjust map controls for ultra-wide */
+            .fixed.bottom-6.right-6 {
+                right: clamp(420px, 27vw, 620px);
+            }
+
+            .map-legend {
+                left: clamp(420px, 27vw, 620px);
+            }
+        }
+
+        /* Google Maps style components with responsive sizing */
+        .google-card {
+            background: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 2px 10px 0 rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .google-card:hover {
+            box-shadow: 0 4px 15px 0 rgba(0,0,0,0.3);
+        }
+
+        .google-button {
+            background: white;
+            border: 1px solid #DADCE0;
+            border-radius: var(--border-radius-sm);
+            color: #3C4043;
+            font-weight: 500;
+            font-size: var(--font-sm);
+            padding: var(--spacing-2) var(--spacing-4);
+            min-height: var(--button-height-lg);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .google-button:hover {
+            background: #F8F9FA;
+            box-shadow: 0 2px 6px 0 rgba(60,64,67,0.4);
+        }
+
+        .google-button-primary {
+            background: #1A73E8;
+            border: 1px solid #1A73E8;
+            color: white;
+        }
+
+        .google-button-primary:hover {
+            background: #1557B0;
+            box-shadow: 0 2px 6px 0 rgba(26,115,232,0.4);
+        }
+
+        .google-fab {
+            background: white;
+            border-radius: var(--border-radius-full);
+            width: var(--fab-md);
+            height: var(--fab-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .google-fab:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .google-fab i {
+            font-size: var(--icon-md);
+        }
+
+        .google-fab.w-8.h-8 {
+            width: var(--fab-xs);
+            height: var(--fab-xs);
+        }
+
+        .google-fab.w-8.h-8 i {
+            font-size: var(--icon-xs);
+        }
+
+        .google-search-bar {
+            background: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 2px 10px 0 rgba(0,0,0,0.2);
+            padding: var(--spacing-3) var(--spacing-4);
+            border: none;
+            outline: none;
+            font-size: var(--font-base);
+            color: #3C4043;
+            min-height: var(--search-height);
+        }
+
+        .google-search-bar::placeholder {
+            color: #9AA0A6;
+        }
+
+        .google-bottom-sheet {
+            background: white;
+            border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
+            box-shadow: 0 -2px 16px 0 rgba(0,0,0,0.2);
+        }
+
+        .google-panel-handle {
+            width: var(--panel-handle-width);
+            height: var(--panel-handle-height);
+            background: #DADCE0;
+            border-radius: calc(var(--panel-handle-height) / 2);
+            margin: var(--spacing-3) auto var(--spacing-2);
+        }
+
+        .google-tab {
+            background: #F1F3F4;
+            color: #5F6368;
+            border-radius: var(--border-radius-xl);
+            padding: var(--spacing-2) var(--spacing-4);
+            font-weight: 500;
+            font-size: var(--font-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            min-height: var(--button-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .google-tab.active {
+            background: #E8F0FE;
+            color: #1A73E8;
+        }
+
+        .google-tab:hover:not(.active) {
+            background: #E8EAED;
+        }
+
+        .google-input {
+            border: 1px solid #DADCE0;
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-3) var(--spacing-4);
+            font-size: var(--font-base);
+            color: #3C4043;
+            background: white;
+            transition: all 0.2s ease;
+            min-height: var(--button-height);
+        }
+
+        .google-input:focus {
+            border-color: #1A73E8;
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+            outline: none;
+        }
+
+        .google-checkbox {
+            appearance: none;
+            width: clamp(16px, 3vw, 20px);
+            height: clamp(16px, 3vw, 20px);
+            border: 2px solid #5F6368;
+            border-radius: var(--border-radius-sm);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .google-checkbox:checked {
+            background: #1A73E8;
+            border-color: #1A73E8;
+        }
+
+        .google-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            font-size: clamp(10px, 2vw, 12px);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .google-store-card {
+            background: white;
+            border-radius: var(--border-radius-md);
+            border: 1px solid #E8EAED;
+            padding: var(--spacing-4);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .google-store-card:hover {
+            border-color: #DADCE0;
+            box-shadow: 0 2px 8px 0 rgba(0,0,0,0.1);
+        }
+
+        .google-badge {
+            background: #FFF3CD;
+            color: #856404;
+            border: 1px solid #FFEAA7;
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-1) var(--spacing-2);
+            font-size: var(--font-xs);
+            font-weight: 500;
+        }
+
+        .google-badge.recommended {
+            background: #E8F5E8;
+            color: #2E7D2E;
+            border-color: #C8E6C8;
+        }
+
+        .google-specialty-tag {
+            background: #F1F3F4;
+            color: #5F6368;
+            border-radius: var(--border-radius-xl);
+            padding: var(--spacing-1) var(--spacing-2);
+            font-size: var(--font-xs);
+            font-weight: 500;
+        }
+
+        /* Interest Tags */
+        .interest-tag {
+            background: #F1F3F4;
+            color: #5F6368;
+            border: 1px solid #E8EAED;
+            border-radius: var(--border-radius-xl);
+            padding: var(--spacing-1) var(--spacing-3);
+            font-size: var(--font-xs);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .interest-tag:hover {
+            background: #E8EAED;
+        }
+
+        .interest-tag.active {
+            background: #E8F0FE;
+            color: #1A73E8;
+            border-color: #1A73E8;
+        }
+
+        /* Navigation styles with responsive sizing */
+        .travel-mode-option {
+            background: #F8F9FA;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-3);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: clamp(60px, 12vw, 80px);
+        }
+
+        .travel-mode-option:hover {
+            background: #F1F3F4;
+        }
+
+        .travel-mode-option.active {
+            background: #E8F0FE;
+            border-color: #1A73E8;
+            color: #1A73E8;
+        }
+
+        .travel-mode-option i {
+            font-size: clamp(16px, 4vw, 20px);
+            margin-bottom: var(--spacing-2);
+        }
+
+        .travel-mode-option .text-xs {
+            font-size: var(--font-xs);
+        }
+
+        .route-option {
+            background: white;
+            border: 1px solid #E8EAED;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .route-option:hover {
+            border-color: #DADCE0;
+            box-shadow: 0 1px 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .route-option.selected {
+            border-color: #1A73E8;
+            background: #F8F9FF;
+        }
+
+        /* Loading and overlay styles */
+        .google-loading {
+            background: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 2px 10px 0 rgba(0,0,0,0.2);
+            padding: var(--spacing-8);
+            text-align: center;
+        }
+
+        .google-spinner {
+            border: 3px solid #F1F3F4;
+            border-top: 3px solid #1A73E8;
+            border-radius: 50%;
+            width: clamp(24px, 5vw, 40px);
+            height: clamp(24px, 5vw, 40px);
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--spacing-4);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive typography */
+        .text-xs { font-size: var(--font-xs) !important; }
+        .text-sm { font-size: var(--font-sm) !important; }
+        .text-base { font-size: var(--font-base) !important; }
+        .text-lg { font-size: var(--font-lg) !important; }
+        .text-xl { font-size: var(--font-xl) !important; }
+        .text-2xl { font-size: var(--font-2xl) !important; }
+        .text-3xl { font-size: var(--font-3xl) !important; }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .dark .google-card,
+            .dark .google-button,
+            .dark .google-search-bar,
+            .dark .google-bottom-sheet,
+            .dark .google-input,
+            .dark .google-store-card,
+            .dark .route-option,
+            .dark .google-loading {
+                background: #2D2E30;
+                color: #E8EAED;
+                border-color: #5F6368;
+            }
+
+            .dark .google-tab {
+                background: #3C4043;
+                color: #9AA0A6;
+            }
+
+            .dark .google-tab.active {
+                background: #1E3A5F;
+                color: #8AB4F8;
+            }
+
+            .dark .google-specialty-tag {
+                background: #3C4043;
+                color: #9AA0A6;
+            }
+        }
+
+        /* Responsive Store Info Bottom Sheet */
+        .store-info-sheet {
+            height: clamp(40vh, 50vh, 60vh);
+            max-height: clamp(40vh, 50vh, 60vh);
+            min-height: clamp(40vh, 50vh, 60vh);
+        }
+
+        .store-info-content {
+            height: calc(clamp(40vh, 50vh, 60vh) - clamp(48px, 8vw, 64px));
+            max-height: calc(clamp(40vh, 50vh, 60vh) - clamp(48px, 8vw, 64px));
+            overflow-y: auto;
+            padding: var(--spacing-2);
+        }
+
+        /* Responsive breakpoint adjustments */
+        @media (max-width: 480px) {
+            .store-info-sheet {
+                height: 45vh;
+                max-height: 45vh;
+                min-height: 45vh;
+            }
+            
+            .store-info-content {
+                height: calc(45vh - 48px);
+                max-height: calc(45vh - 48px);
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .store-info-sheet {
+                height: 55vh;
+                max-height: 55vh;
+                min-height: 55vh;
+            }
+            
+            .store-info-content {
+                height: calc(55vh - 56px);
+                max-height: calc(55vh - 56px);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .store-info-sheet {
+                max-width: clamp(400px, 40vw, 600px);
+                margin: 0 auto;
+                border-radius: var(--border-radius-xl);
+            }
+        }
+
+        @media (min-width: 1440px) {
+            .store-info-sheet {
+                max-width: clamp(500px, 35vw, 700px);
+            }
+        }
+
+        @media (min-width: 2560px) {
+            .store-info-sheet {
+                max-width: clamp(600px, 30vw, 800px);
+            }
+        }
+
+        /* Responsive Custom scrollbar */
+        .store-info-content {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(218, 220, 224, 0.8) transparent;
+        }
+
+        .store-info-content::-webkit-scrollbar {
+            width: clamp(4px, 1vw, 8px);
+        }
+
+        .store-info-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .store-info-content::-webkit-scrollbar-thumb {
+            background-color: rgba(218, 220, 224, 0.8);
+            border-radius: calc(clamp(4px, 1vw, 8px) / 2);
+        }
+
+        .store-info-content::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(189, 193, 198, 0.8);
+        }
+
+        /* Responsive spacing utilities */
+        .p-responsive { padding: var(--spacing-4); }
+        .px-responsive { padding-left: var(--spacing-4); padding-right: var(--spacing-4); }
+        .py-responsive { padding-top: var(--spacing-4); padding-bottom: var(--spacing-4); }
+        .m-responsive { margin: var(--spacing-4); }
+        .mx-responsive { margin-left: var(--spacing-4); margin-right: var(--spacing-4); }
+        .my-responsive { margin-top: var(--spacing-4); margin-bottom: var(--spacing-4); }
+
+        .gap-responsive { gap: var(--spacing-3); }
+        .space-y-responsive > * + * { margin-top: var(--spacing-3); }
+        .space-x-responsive > * + * { margin-left: var(--spacing-3); }
+
+        /* Responsive legend positioning */
+        .map-legend {
+            position: fixed;
+            bottom: clamp(16px, 3vw, 24px);
+            left: clamp(16px, 3vw, 24px);
+            z-index: 30;
+            max-width: clamp(120px, 25vw, 200px);
+        }
+
+        /* Responsive navigation panel */
+        .active-nav-panel {
+            padding: var(--spacing-2) var(--spacing-4);
+        }
+
+        .active-nav-panel .text-lg {
+            font-size: var(--font-lg);
+        }
+
+        .active-nav-panel .text-sm {
+            font-size: var(--font-sm);
+        }
+
+        /* Touch-friendly interactive elements */
+        @media (pointer: coarse) {
+            .google-fab {
+                width: clamp(44px, 8vw, 56px);
+                height: clamp(44px, 8vw, 56px);
+            }
+            
+            .google-button {
+                min-height: clamp(44px, 8vw, 52px);
+                padding: var(--spacing-3) var(--spacing-4);
+            }
+            
+            .google-tab {
+                min-height: clamp(44px, 8vw, 52px);
+            }
+            
+            .travel-mode-option {
+                min-height: clamp(70px, 14vw, 90px);
+                padding: var(--spacing-4);
+            }
+        }
+
+        /* Ultra-wide screen optimizations */
+        @media (min-width: 3440px) {
+            :root {
+                --base-unit: 10px;
+            }
+            
+            .store-info-sheet {
+                max-width: 900px;
+            }
+        }
+
+        /* High DPI screen optimizations */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .google-card,
+            .google-button,
+            .google-fab {
+                box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+            }
+            
+            .google-spinner {
+                border-width: 2px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4&amp;libraries=places&amp;callback=initMap"></script>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.3f7572448765332f3047.js"></script></head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300 font-google">
+    <!-- Dark mode detection -->
+    <script>
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            if (window.matchMedia) {
+                const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                if (darkModeQuery.addEventListener) {
+                    darkModeQuery.addEventListener('change', event => {
+                        if (event.matches) {
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                        }
+                    });
+                } else if (darkModeQuery.addListener) {
+                    // Fallback for older browsers
+                    darkModeQuery.addListener(event => {
+                        if (event.matches) {
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.log('Dark mode detection not available in this environment');
+            // Default to light mode
+        }
+    </script>
+
+    <!-- Full Screen Map -->
+    <div id="map" class="w-full h-screen"></div>
+    
+    <!-- Map Loading Overlay -->
+    <div id="mapLoadingOverlay" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+        <div class="google-loading">
+            <div class="google-spinner"></div>
+            <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-2">Finding nearby stores</h3>
+            <p class="text-gray-600 dark:text-gray-400">Discovering toy stores in your area</p>
+        </div>
+    </div>
+
+    <!-- Search Bar - Fixed to top left -->
+    <div class="fixed top-4 left-4 right-4 z-40">
+        <!-- User Controls (Top Right) -->
+        <div class="absolute top-0 right-0 flex items-center space-x-2 sm:space-x-3 z-10">
+            <!-- Collections Button -->
+            <button id="collectionsBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center transition-colors shadow-lg border border-gray-200 dark:border-gray-600" title="Collections">
+                <i class="fas fa-archive text-gray-600 dark:text-gray-400 text-sm sm:text-lg"></i>
+            </button>
+            
+            <!-- Profile Button -->
+            <button id="profileBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-primary transition-colors shadow-lg" title="Profile">
+                <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&amp;h=40&amp;fit=crop&amp;crop=face" alt="Profile" class="w-full h-full object-cover">
+            </button>
+        </div>
+        
+        <!-- Search Bar Container -->
+        <div class="bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-600 flex items-center px-4 py-3 mr-[120px] sm:mr-[136px] relative">
+            <!-- App Icon/Logo -->
+            <div class="flex items-center mr-3">
+                <div class="w-6 h-6 sm:w-7 sm:h-7 bg-primary from-amber-600 to-amber-800 rounded-full flex items-center justify-center">
+                    <i class="fas fa-search text-white text-xs sm:text-sm"></i>
+                </div>
+            </div>
+            
+            <!-- Search Input -->
+            <input type="text" id="searchInput" placeholder="Search for toys..." class="flex-1 text-base sm:text-lg text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 bg-transparent focus:outline-none">
+            
+            <!-- Photo Search Button - Fixed to right inside search bar -->
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                <!-- Photo Library Button -->
+                <button id="photoBtn" class="p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Choose Photo">
+                    <i class="fas fa-image text-sm"></i>
+                </button>
+                
+                <!-- Search Button -->
+                <button id="searchBtn" class="p-2 text-primary hover:text-primary-dark transition-colors rounded-full hover:bg-blue-50 dark:hover:bg-blue-900" title="Search">
+                    <i class="fas fa-search text-sm"></i>
+                </button>
+            </div>
+            
+            <!-- Hidden File Input -->
+            <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+            <input type="file" id="galleryInput" accept="image/*" class="hidden">
+        </div>
+    </div>
+
+    <!-- Map Controls - Compass anchored to bottom right -->
+    <div class="fixed bottom-6 right-6 z-30 flex flex-col space-y-3">
+        <!-- Compass -->
+        <div class="google-fab" id="compassBtn" title="Compass" style="display: flex;">
+            <div class="relative">
+                <div id="compassNeedle" class="absolute inset-0 flex items-center justify-center transition-transform duration-300">
+                    <i class="fa-solid fa-arrows-up-down-left-right text-gray-500 text-base"></i>
+                </div>
+
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="compassDirection" class="text-xs font-bold text-gray-700 dark:text-gray-300 mt-6">N</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store Info Panel -->
+    <div id="storeInfoSheet" class="fixed bottom-0 left-0 right-0 z-40 transform translate-y-full transition-transform duration-300 google-bottom-sheet">
+        <!-- Panel Handle -->
+        <div class="google-panel-handle"></div>
+        
+        <!-- Store Info Content -->
+        <div id="storeInfoContent" class="store-info-content">
+            <!-- Content will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Navigation Panel -->
+    <div id="navigationPanel" class="fixed bottom-0 left-0 right-0 z-40 transform translate-y-full transition-transform duration-300 google-bottom-sheet">
+        <!-- Panel Handle -->
+        <div class="google-panel-handle"></div>
+        
+        <!-- Navigation Content -->
+        <div class="store-info-content overflow-y-auto">
+            <!-- Navigation Header -->
+            <div class="px-6 pt-2 pb-4 border-b border-gray-200 dark:border-gray-600">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-medium text-gray-900 dark:text-white">Directions</h2>
+                    <div class="google-fab mb-6" onclick="closeNavigationPanel()">
+                        <i class="fas fa-times text-gray-600 dark:text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+                
+                <!-- Travel Mode Selection -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Travel mode</h3>
+                    <div class="grid grid-cols-4 gap-3">
+                        <div onclick="selectTravelMode('DRIVING')" id="drivingModeBtn" class="travel-mode-option active" data-mode="DRIVING">
+                            <i class="fas fa-car text-xl mb-2"></i>
+                            <div class="text-xs font-medium">Driving</div>
+                            <div class="text-xs text-gray-500" id="drivingTime">--</div>
+                        </div>
+                        <div onclick="selectTravelMode('WALKING')" id="walkingModeBtn" class="travel-mode-option" data-mode="WALKING">
+                            <i class="fas fa-walking text-xl mb-2"></i>
+                            <div class="text-xs font-medium">Walking</div>
+                            <div class="text-xs text-gray-500" id="walkingTime">--</div>
+                        </div>
+                        <div onclick="selectTravelMode('TRANSIT')" id="transitModeBtn" class="travel-mode-option" data-mode="TRANSIT">
+                            <i class="fas fa-bus text-xl mb-2"></i>
+                            <div class="text-xs font-medium">Transit</div>
+                            <div class="text-xs text-gray-500" id="transitTime">--</div>
+                        </div>
+                        <div onclick="selectTravelMode('BICYCLING')" id="bicyclingModeBtn" class="travel-mode-option" data-mode="BICYCLING">
+                            <i class="fas fa-bicycle text-xl mb-2"></i>
+                            <div class="text-xs font-medium">Bicycling</div>
+                            <div class="text-xs text-gray-500" id="bicyclingTime">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Route Options -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Route options</h3>
+                    <button onclick="toggleRouteOptions()" class="text-sm text-primary hover:underline flex items-center">
+                        <span id="optionsToggleText">Options</span>
+                        <i class="fas fa-chevron-down ml-1 text-xs" id="optionsToggleIcon"></i>
+                    </button>
+                </div>
+                
+                <div id="routeOptionsContainer" class="hidden space-y-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="avoidTolls" class="google-checkbox mr-3">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Avoid tolls</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="avoidHighways" class="google-checkbox mr-3">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Avoid highways</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="avoidFerries" class="google-checkbox mr-3">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Avoid ferries</span>
+                    </label>
+                </div>
+                
+                <!-- Departure Time -->
+                <div class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Depart at</h4>
+                    <div class="flex space-x-2">
+                        <button onclick="setDepartureTime('now')" id="departNowBtn" class="flex-1 google-button-primary rounded-full text-sm">
+                            Leave now
+                        </button>
+                        <button onclick="setDepartureTime('custom')" id="departCustomBtn" class="flex-1 google-button rounded-full text-sm">
+                            Choose time
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Route Results -->
+            <div class="px-6 py-4" id="routeResults">
+                <div id="routeLoading" class="text-center py-8">
+                    <i class="fas fa-route text-2xl text-gray-400 mb-3"></i>
+                    <p class="text-gray-600 dark:text-gray-400">Select a travel mode to see routes</p>
+                </div>
+                
+                <div id="routeList" class="space-y-3 hidden">
+                    <!-- Route options will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Navigation Controls -->
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-600" id="navigationControls" style="display: none;">
+                <div class="flex space-x-3">
+                    <button onclick="startNavigation()" id="startNavBtn" class="flex-1 google-button-primary rounded-xl py-3 px-4 text-center font-medium">
+                        <i class="fas fa-navigation mr-2"></i>
+                        Start
+                    </button>
+                    <button onclick="shareRoute()" class="google-button rounded-xl py-3 px-4">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Navigation Panel -->
+    <div id="activeNavigationPanel" class="fixed top-0 left-0 right-0 bg-primary text-white z-50 transform -translate-y-full transition-transform duration-300">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button onclick="stopNavigation()" class="p-2 rounded-xl bg-primary-dark hover:bg-opacity-80 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div>
+                        <div class="text-lg font-medium" id="nextTurnDistance">In 0.2 mi</div>
+                        <div class="text-sm opacity-90" id="nextTurnInstruction">Turn right onto Main Street</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-medium" id="remainingTime">15 min</div>
+                    <div class="text-sm opacity-90" id="remainingDistance">3.2 mi</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Legend - Anchored to bottom left -->
+    <div class="fixed bottom-5 left-5 google-card rounded-xl
+                p-1.5 xs:p-2 sm:p-2.5 md:p-3 lg:p-3.5 xl:p-4
+                z-30 
+                max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] xl:max-w-none
+                transform transition-all duration-300 ease-in-out hover:scale-105
+                mobile-landscape-legend-adaptive">
+        <div class="space-y-0.5 xs:space-y-1 sm:space-y-1.5 md:space-y-2 
+                    text-[10px] xs:text-xs sm:text-xs md:text-sm lg:text-sm xl:text-base">
+            <div class="flex items-center">
+                <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl 
+                           mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5 
+                           flex-shrink-0">📍</span>
+                <span class="text-gray-700 dark:text-gray-300 truncate font-medium">
+                    <span class="hidden sm:inline">Nearby Store</span>
+                    <span class="sm:hidden">Store</span>
+                </span>
+            </div>
+            <div class="flex items-center">
+                <span class="text-sm xs:text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl 
+                           mr-1 xs:mr-1.5 sm:mr-2 md:mr-2.5 lg:mr-3 xl:mr-3.5 
+                           flex-shrink-0">⭐</span>
+                <span class="text-gray-700 dark:text-gray-300 truncate font-medium">
+                    <span class="hidden sm:inline">Recommendation</span>
+                    <span class="sm:hidden">REC</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store List Panel Overlay -->
+    <div id="storeListOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity duration-300"></div>
+    
+    <!-- Store List Panel -->
+    <div id="storeListPanel" class="fixed bottom-0 left-0 right-0 z-40 transform translate-y-full transition-transform duration-300 google-bottom-sheet">
+        <!-- Panel Handle -->
+        <div class="google-panel-handle"></div>
+            
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-xl font-medium text-gray-900 dark:text-white">📍 Nearby Stores</h2>
+                    <div id="recommendationsBadge" class="hidden">
+                        <span class="google-badge recommended text-xs">
+                            <i class="fas fa-sparkles mr-1"></i>Smart Picks
+                        </span>
+                    </div>
+                </div>
+                <div class="google-fab" onclick="closeStorePanel()">
+                    <i class="fas fa-times text-gray-600 dark:text-gray-400 text-sm"></i>
+                </div>
+            </div>
+
+            <!-- User Preferences (Collapsible) -->
+            <div class="mb-4">
+                <button onclick="togglePreferences()" class="flex items-center justify-between w-full text-left google-button p-3">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-cog text-primary mr-2"></i>
+                        <span class="text-sm font-medium">Preferences</span>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs transition-transform" id="preferencesIcon"></i>
+                </button>
+                
+                <div id="preferencesPanel" class="hidden mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div class="space-y-3">
+                        <!-- Interests -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Interests</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="toggleInterest('educational')" data-interest="educational" class="interest-tag">Educational</button>
+                                <button onclick="toggleInterest('creative')" data-interest="creative" class="interest-tag">Creative/Arts</button>
+                                <button onclick="toggleInterest('sports')" data-interest="sports" class="interest-tag">Sports/Outdoor</button>
+                                <button onclick="toggleInterest('tech')" data-interest="tech" class="interest-tag">Tech/Electronic</button>
+                                <button onclick="toggleInterest('collectibles')" data-interest="collectibles" class="interest-tag">Collectibles</button>
+                                <button onclick="toggleInterest('building')" data-interest="building" class="interest-tag">Building/LEGO</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Store List -->
+            <div class="max-h-96 overflow-y-auto">
+                <div id="storeListContent" class="space-y-3">
+                    <!-- Stores will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nearby Store Button - Anchored to bottom center -->
+    <button id="showStoresBtn" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 google-button-primary px-4 py-2 rounded-full z-30 shadow-google-lg transition-all" style="display: none;">
+        <span class="font-medium">📍 View nearby stores</span>
+    </button>
+
+    <!-- Recommendations Loading Overlay -->
+    <div id="recommendationsLoadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="google-loading max-w-sm w-full mx-4">
+            <div class="google-spinner"></div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Getting recommendations</h3>
+            <p class="text-gray-600 dark:text-gray-400">Analyzing nearby stores for the best matches</p>
+        </div>
+    </div>
+
+    <!-- Manual Location Input Modal -->
+    <div id="locationInputModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="google-card max-w-md w-full mx-4 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-medium text-gray-900 dark:text-white">Enter Your Location</h3>
+                <button onclick="closeLocationModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+                </button>
+            </div>
+            
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                We couldn't detect your location automatically. Please enter your address to find nearby toy stores.
+            </p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="manualLocationInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Address, City, or Zip Code
+                    </label>
+                    <input type="text" id="manualLocationInput" placeholder="Enter your location..." class="w-full google-input text-base" autocomplete="address-line1">
+                    <div id="locationSuggestions" class="hidden mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="useManualLocation()" class="flex-1 google-button-primary">
+                        <i class="fas fa-search mr-2"></i>
+                        Find Stores
+                    </button>
+                    <button onclick="tryGeolocationAgain()" class="flex-1 google-button">
+                        <i class="fas fa-location-arrow mr-2"></i>
+                        Try GPS Again
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="useDefaultLocation()" class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">
+                        Or use San Francisco as default location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const CONSTANTS = {
+            LOCATION_UPDATE_THRESHOLD: 100, // meters
+            ORIENTATION_UPDATE_THRESHOLD: 50, // milliseconds
+            DEFAULT_LOCATION: { lat: 37.7749, lng: -122.4194 }, // San Francisco
+            SEARCH_RADIUS: 5000, // meters
+            MAX_IMAGE_SIZE: 10 * 1024 * 1024 // 10MB
+        };
+
+        // Base AI Service Class
+        class AIService {
+            constructor(name) {
+                this.name = name;
+                this.isAvailable = false;
+            }
+
+            async isServiceAvailable() {
+                throw new Error('isServiceAvailable must be implemented by subclass');
+            }
+
+            async search(query, image, stores) {
+                throw new Error('search must be implemented by subclass');
+            }
+
+            async getRecommendations(stores, preferences) {
+                throw new Error('getRecommendations must be implemented by subclass');
+            }
+        }
+
+        // Poe AI Service Implementation
+        class PoeAIService extends AIService {
+            constructor() {
+                super('Poe');
+                this.handlers = new Map();
+            }
+
+            async isServiceAvailable() {
+                const apiKey = this.getApiKey();
+                this.isAvailable = apiKey && apiKey !== 'YOUR_POE_API_KEY';
+                return this.isAvailable;
+            }
+
+            getApiKey() {
+                return window.POE_API_KEY || localStorage.getItem('poe_api_key') || 'YOUR_POE_API_KEY';
+            }
+
+            async search(query, image, stores) {
+                const apiKey = this.getApiKey();
+                if (apiKey === 'YOUR_POE_API_KEY') {
+                    throw new Error('API_KEY_REQUIRED');
+                }
+
+                const storeInfo = stores.map(store => `${store.id}: ${store.name} - ${store.specialties.join(', ')}`).join('\n');
+                
+                let searchPrompt;
+                if (image && query) {
+                    searchPrompt = `I'm searching for "${query}" and have an image. 
+					\n\nAnalyze the image and text, then provide detailed information based on the following requirements:
+					\n- Identify toy product or not, if not, please return product not found as result.
+					\n- Identify the appearance of the target.
+					\n- Identify the character and its version (e.g., style, media, or crossover).
+					\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.
+					\n- Tailor the analysis to the user's current region.
+					\n- find which nearby toy stores are most likely to have this product.
+					\n\nCRITICAL ACCURACY REQUIREMENTS:
+					\n-ONLY provide information you are HIGHLY CONFIDENT about
+					\n-If you are NOT CERTAIN about ANY detail, use "Unknown" or indicate uncertainty
+					\n-DO NOT guess or make up information
+					\n-DO NOT invent release dates, model numbers, or series names
+					\n-If you cannot clearly identify the exact product, say so in the description
+					\n-Be honest about limitations, it's better to say "Unknown" than to provide incorrect information
+					\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                } else if (image) {
+                    searchPrompt = `I've uploaded an image of a toy/product I'm looking for. 
+					\n\nAnalyze the image, then provide detailed information based on the following requirements:
+					\n- Identify toy product or not, if not, please return product not found as result.
+					\n- Identify the appearance of the target.
+					\n- Identify the character and its version (e.g., style, media, or crossover).
+					\n- Provide any related product information (e.g., brand, series/collections, product name, and release date) from official sources.
+					\n- Tailor the analysis to the user's current region.
+					\n- find which nearby toy stores are most likely to have this product.
+					\n\nCRITICAL ACCURACY REQUIREMENTS:
+					\n-ONLY provide information you are HIGHLY CONFIDENT about
+					\n-If you are NOT CERTAIN about ANY detail, use "Unknown" or indicate uncertainty
+					\n-DO NOT guess or make up information
+					\n-DO NOT invent release dates, model numbers, or series names
+					\n-If you cannot clearly identify the exact product, say so in the description
+					\n-Be honest about limitations, it's better to say "Unknown" than to provide incorrect information
+					\n\nAvailable stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_name": "detected product name", "product_category": "category", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                } else {
+                    searchPrompt = `I'm searching for "${query}". Based on this search query, find which nearby toy stores are most likely to have this product. Consider store specialties and typical inventory. Available stores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation", "product_matches": [{"store_id": "store1", "confidence": 0.9, "reasoning": "why this store", "product_availability": "likely available/maybe available/unlikely"}]}`;
+                }
+
+                const requestBody = {
+                    messages: [{ role: "user", content: searchPrompt }],
+                    model: "Gemini-2.0-Flash"
+                };
+
+                if (image) {
+                    const base64Image = await this.fileToBase64(image);
+                    requestBody.messages[0].content = [
+                        { type: "text", text: searchPrompt },
+                        { type: "image_url", image_url: { url: base64Image } }
+                    ];
+                }
+
+                const response = await fetch('https://api.poe.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`POE API error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    return data.choices[0].message.content;
+                } else {
+                    throw new Error('No response from POE API');
+                }
+            }
+
+            async getRecommendations(stores, preferences) {
+                const apiKey = this.getApiKey();
+                if (apiKey === 'YOUR_POE_API_KEY') {
+                    throw new Error('API_KEY_REQUIRED');
+                }
+
+                const storeInfo = stores.map(store => 
+                    `${store.id}: ${store.name} - Distance: ${store.distance}, Rating: ${store.rating}, Specialties: ${store.specialties.join(', ')}`
+                ).join('\n');
+
+                const userInterests = preferences.interests.length > 0 
+                    ? `User interests: ${preferences.interests.join(', ')}`
+                    : 'No specific user interests provided';
+
+                const prompt = `As a toy store recommendation AI, analyze these nearby stores and provide personalized recommendations based on user preferences. ${userInterests}\n\nStores:\n${storeInfo}\n\nProvide ONLY raw JSON: {"recommended": ["store_id1", "store_id2"], "reasoning": "explanation"}`;
+
+                const response = await fetch('https://api.poe.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        messages: [{ role: "user", content: prompt }],
+                        model: "Gemini-2.0-Flash"
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`POE API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    return data.choices[0].message.content;
+                } else {
+                    throw new Error('No response from POE API');
+                }
+            }
+
+            fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+            }
+        }
+
+        // Location Manager Class
+        class LocationManager {
+            constructor() {
+                this.userLocation = null;
+                this.userLocationMarker = null;
+                this.userDirectionMarker = null;
+                this.isLiveTrackingEnabled = false;
+                this.watchPositionId = null;
+                this.lastKnownLocation = null;
+                this.trackingAccuracy = null;
+                this.locationUpdateCount = 0;
+                this.currentHeading = 0;
+                this.lastOrientationUpdate = 0;
+                this.isCompassEnabled = false;
+                
+                this.onLocationUpdate = null; // Callback for location updates
+            }
+
+            async getCurrentLocation() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error('Geolocation not supported'));
+                        return;
+                    }
+
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('Geolocation timeout'));
+                    }, 10000);
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            clearTimeout(timeoutId);
+                            const location = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            this.userLocation = location;
+                            resolve(location);
+                        },
+                        (error) => {
+                            clearTimeout(timeoutId);
+                            reject(error);
+                        },
+                        {
+                            enableHighAccuracy: false,
+                            timeout: 8000,
+                            maximumAge: 300000
+                        }
+                    );
+                });
+            }
+
+            createUserLocationMarker(map, location, isLive = false) {
+                if (!map) return;
+
+                this.userLocationMarker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: isLive ? 'Your Location (Live)' : 'Your Location',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 4,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2
+                    },
+                    zIndex: 1000
+                });
+
+                this.createDirectionalIndicator(map, location);
+            }
+
+            createDirectionalIndicator(map, location) {
+                if (!map) return;
+
+                if (this.userDirectionMarker) {
+                    this.userDirectionMarker.setMap(null);
+                }
+
+                this.userDirectionMarker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 6,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 1,
+                        rotation: this.currentHeading
+                    },
+                    zIndex: 999
+                });
+            }
+
+            startLiveTracking() {
+                if (!navigator.geolocation || this.isLiveTrackingEnabled) {
+                    return;
+                }
+
+                this.watchPositionId = navigator.geolocation.watchPosition(
+                    (position) => this.handleLocationUpdate(position),
+                    (error) => this.handleLiveTrackingError(error),
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 10000,
+                        maximumAge: 10000
+                    }
+                );
+
+                this.isLiveTrackingEnabled = true;
+            }
+
+            stopLiveTracking() {
+                if (this.watchPositionId !== null) {
+                    navigator.geolocation.clearWatch(this.watchPositionId);
+                    this.watchPositionId = null;
+                }
+                this.isLiveTrackingEnabled = false;
+            }
+
+            handleLocationUpdate(position) {
+                const newLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                this.trackingAccuracy = position.coords.accuracy;
+                this.locationUpdateCount++;
+
+                if (this.userLocationMarker) {
+                    this.userLocationMarker.setPosition(newLocation);
+                    if (this.userDirectionMarker) {
+                        this.userDirectionMarker.setPosition(newLocation);
+                    }
+                }
+
+                if (this.shouldUpdateStores(newLocation)) {
+                    this.lastKnownLocation = this.userLocation;
+                    this.userLocation = newLocation;
+                    
+                    if (this.onLocationUpdate) {
+                        this.onLocationUpdate(newLocation);
+                    }
+                } else {
+                    this.userLocation = newLocation;
+                }
+            }
+
+            handleLiveTrackingError(error) {
+                console.log('Live tracking error:', error);
+                if (error.code === error.PERMISSION_DENIED) {
+                    this.stopLiveTracking();
+                }
+            }
+
+            shouldUpdateStores(newLocation) {
+                if (!this.lastKnownLocation) {
+                    return true;
+                }
+
+                const distance = this.calculateDistanceInMeters(this.lastKnownLocation, newLocation);
+                return distance > CONSTANTS.LOCATION_UPDATE_THRESHOLD;
+            }
+
+            calculateDistanceInMeters(pos1, pos2) {
+                const R = 6371000;
+                const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
+                const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            // Compass functionality
+            initializeCompass() {
+                if (!window.DeviceOrientationEvent || this.isCompassEnabled) {
+                    return;
+                }
+
+                if (typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+                    window.DeviceOrientationEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                this.startCompassListening();
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    this.startCompassListening();
+                }
+            }
+
+            startCompassListening() {
+                this.isCompassEnabled = true;
+                window.addEventListener('deviceorientationabsolute', (e) => this.handleCompassReading(e), true);
+                window.addEventListener('deviceorientation', (e) => this.handleCompassReading(e), true);
+            }
+
+            stopCompass() {
+                this.isCompassEnabled = false;
+                window.removeEventListener('deviceorientationabsolute', (e) => this.handleCompassReading(e), true);
+                window.removeEventListener('deviceorientation', (e) => this.handleCompassReading(e), true);
+            }
+
+            handleCompassReading(event) {
+                if (!this.isCompassEnabled) return;
+
+                const now = Date.now();
+                if (now - this.lastOrientationUpdate < CONSTANTS.ORIENTATION_UPDATE_THRESHOLD) {
+                    return;
+                }
+                this.lastOrientationUpdate = now;
+
+                let heading = null;
+                if (event.absolute && event.alpha !== null) {
+                    heading = event.alpha;
+                } else if (event.webkitCompassHeading !== undefined) {
+                    heading = event.webkitCompassHeading;
+                } else if (event.alpha !== null) {
+                    heading = 360 - event.alpha;
+                }
+
+                if (heading !== null) {
+                    heading = (heading + 360) % 360;
+                    this.updateCompass(heading);
+                }
+            }
+
+            updateCompass(heading) {
+                this.currentHeading = heading;
+                
+                const needle = document.getElementById('compassNeedle');
+                if (needle) {
+                    needle.style.transform = `rotate(${heading}deg)`;
+                }
+
+                const direction = this.getCompassDirection(heading);
+                const directionElement = document.getElementById('compassDirection');
+                if (directionElement) {
+                    directionElement.textContent = direction;
+                }
+
+                if (this.userDirectionMarker) {
+                    const icon = this.userDirectionMarker.getIcon();
+                    icon.rotation = heading;
+                    this.userDirectionMarker.setIcon(icon);
+                }
+            }
+
+            getCompassDirection(heading) {
+                const directions = [
+                    { name: 'N', min: 0, max: 11.25 },
+                    { name: 'NNE', min: 11.25, max: 33.75 },
+                    { name: 'NE', min: 33.75, max: 56.25 },
+                    { name: 'ENE', min: 56.25, max: 78.75 },
+                    { name: 'E', min: 78.75, max: 101.25 },
+                    { name: 'ESE', min: 101.25, max: 123.75 },
+                    { name: 'SE', min: 123.75, max: 146.25 },
+                    { name: 'SSE', min: 146.25, max: 168.75 },
+                    { name: 'S', min: 168.75, max: 191.25 },
+                    { name: 'SSW', min: 191.25, max: 213.75 },
+                    { name: 'SW', min: 213.75, max: 236.25 },
+                    { name: 'WSW', min: 236.25, max: 258.75 },
+                    { name: 'W', min: 258.75, max: 281.25 },
+                    { name: 'WNW', min: 281.25, max: 303.75 },
+                    { name: 'NW', min: 303.75, max: 326.25 },
+                    { name: 'NNW', min: 326.25, max: 348.75 },
+                    { name: 'N', min: 348.75, max: 360 }
+                ];
+
+                for (const dir of directions) {
+                    if (heading >= dir.min && heading < dir.max) {
+                        return dir.name;
+                    }
+                }
+                return 'N';
+            }
+        }
+
+        // Global variables for backwards compatibility
+        let map;
+        let service;
+        let infoWindow;
+        let userLocation;
+        let userLocationMarker = null;
+        let toyStores = [];
+        let storeMarkers = [];
+        let isMapInitialized = false;
+        let directionsService = null;
+        let directionsRenderer = null;
+        let currentRoute = null;
+        let selectedStore = null;
+        let navigationActive = false;
+        let isLiveTrackingEnabled = false;
+        let watchPositionId = null;
+        let lastKnownLocation = null;
+        let trackingAccuracy = null;
+        let locationUpdateCount = 0;
+        let isCompassEnabled = false;
+        let currentHeading = 0;
+        let lastOrientationUpdate = 0;
+        let recommendedStores = [];
+        let userPreferences = { interests: [] };
+        let currentSearchQuery = '';
+        let currentSearchImage = null;
+        let searchRecommendedStores = [];
+        let searchResultType = 'text';
+        let activeTab = 'nearby';
+        let currentTravelMode = 'DRIVING';
+        let routeOptions = {
+            avoidTolls: false,
+            avoidHighways: false,
+            avoidFerries: false
+        };
+        let allRoutes = {};
+
+        // Initialize AI services
+        const poeAI = new PoeAIService();
+		
+        const locationManager = new LocationManager();
+
+        // Google Maps Initialization
+        function initMap() {
+            try {
+                const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+                
+                if (typeof google === 'undefined' || !google.maps) {
+                    console.error('Google Maps API not loaded');
+                    showCustomAlert('Map service is currently unavailable. Please refresh the page.');
+                    return;
+                }
+                
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 15,
+                    center: defaultLocation,
+                    disableDefaultUI: true,
+                    styles: [
+                        {
+                            featureType: 'poi.business',
+                            stylers: [{ visibility: 'off' }]
+                        }
+                    ],
+                    gestureHandling: 'greedy'
+                });
+
+                infoWindow = new google.maps.InfoWindow();
+                service = new google.maps.places.PlacesService(map);
+                
+                directionsService = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer({
+                    suppressMarkers: false,
+                    polylineOptions: {
+                        strokeColor: '#1A73E8',
+                        strokeWeight: 5,
+                        strokeOpacity: 0.8
+                    }
+                });
+                directionsRenderer.setMap(map);
+                
+                isMapInitialized = true;
+
+                // Enhanced geolocation with permissions policy handling
+                tryGetUserLocation(defaultLocation);
+
+                const mapLoadingOverlay = document.getElementById('mapLoadingOverlay');
+                if (mapLoadingOverlay) {
+                    mapLoadingOverlay.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                showCustomAlert('Error loading map. Please refresh the page and try again.');
+            }
+        }
+
+        // Enhanced geolocation with permissions policy handling
+        function tryGetUserLocation(fallbackLocation) {
+            // Check if geolocation is available
+            if (!navigator.geolocation) {
+                console.log('Geolocation not supported, using fallback location');
+                userLocation = fallbackLocation;
+                initializeWithLocation(userLocation, false);
+                return;
+            }
+
+            // Check permissions first (if supported)
+            if ('permissions' in navigator) {
+                navigator.permissions.query({ name: 'geolocation' }).then((permissionStatus) => {
+                    console.log('Geolocation permission status:', permissionStatus.state);
+                    
+                    if (permissionStatus.state === 'denied') {
+                        console.log('Geolocation permission denied, using fallback');
+                        userLocation = fallbackLocation;
+                        initializeWithLocation(userLocation, false);
+                        return;
+                    }
+                    
+                    // Try to get location
+                    attemptGeolocation(fallbackLocation);
+                }).catch((error) => {
+                    console.log('Permissions query failed:', error);
+                    // Try geolocation anyway as fallback
+                    attemptGeolocation(fallbackLocation);
+                });
+            } else {
+                // Permissions API not supported, try geolocation directly
+                attemptGeolocation(fallbackLocation);
+            }
+        }
+
+        function attemptGeolocation(fallbackLocation) {
+            const timeoutId = setTimeout(() => {
+                console.log('Geolocation timeout, using fallback location');
+                userLocation = fallbackLocation;
+                initializeWithLocation(userLocation, false);
+            }, 10000); // 10 second timeout
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    clearTimeout(timeoutId);
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    console.log('Got user location:', userLocation);
+                    initializeWithLocation(userLocation, true);
+                },
+                (error) => {
+                    clearTimeout(timeoutId);
+                    handleGeolocationError(error, fallbackLocation);
+                },
+                {
+                    enableHighAccuracy: false, // Use less accurate but faster location
+                    timeout: 8000,
+                    maximumAge: 300000 // 5 minutes cache
+                }
+            );
+        }
+
+        function handleGeolocationError(error, fallbackLocation) {
+            let errorMessage = 'Using default location. ';
+            let showLocationModal = false;
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += 'Location access was denied.';
+                    console.log('Geolocation permission denied by user or policy');
+                    showLocationModal = true;
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += 'Location information is unavailable.';
+                    console.log('Geolocation position unavailable');
+                    showLocationModal = true;
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += 'Location request timed out.';
+                    console.log('Geolocation request timeout');
+                    showLocationModal = true;
+                    break;
+                default:
+                    errorMessage += 'An unknown error occurred.';
+                    console.log('Unknown geolocation error:', error);
+                    showLocationModal = true;
+                    break;
+            }
+            
+            // Check if this is a permissions policy violation
+            if (error.message && error.message.includes('permissions policy')) {
+                errorMessage = 'Location access is restricted in this environment.';
+                console.log('Permissions policy violation detected');
+                showLocationModal = true;
+            }
+            
+            if (showLocationModal) {
+                // Show manual location input modal instead of using fallback immediately
+                showLocationInputModal();
+            } else {
+                userLocation = fallbackLocation;
+                initializeWithLocation(userLocation, false);
+                
+                // Show a non-intrusive notification
+                showLocationFallbackNotification(errorMessage);
+            }
+        }
+
+        function initializeWithLocation(location, isUserLocation) {
+            map.setCenter(location);
+            
+            if (isUserLocation) {
+                createUserLocationMarker(location, false);
+                // Only try live tracking if we successfully got user location
+                setTimeout(() => {
+                    tryStartLiveTracking();
+                }, 1000);
+            }
+            
+            searchToyStores(location);
+        }
+
+        function showLocationFallbackNotification(message) {
+            // Create a subtle notification that auto-dismisses
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm max-w-sm mx-4';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translate(-50%, -100%)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // Search for toy stores using Google Places API
+        function searchToyStores(location) {
+            if (!service || !isMapInitialized) {
+                console.log('Service or map not ready, using fallback data');
+                loadMockData();
+                return;
+            }
+
+            const searchKeywords = [
+                'toys',
+                'hobbies',
+                'model kits',
+                'rc vehicles',
+                'action figures',
+				'retro toys',
+				'designer toys',
+				'vinyl toys'
+            ];
+
+            let allResults = [];
+            let completedSearches = 0;
+            const totalSearches = searchKeywords.length;
+
+            function handleSearchCompletion() {
+                if (completedSearches === totalSearches) {
+                    const uniqueResults = allResults.filter((result, index, self) => 
+                        index === self.findIndex(r => r.place_id === result.place_id)
+                    );
+                    
+                    if (uniqueResults.length > 0) {
+                        processToyStores(uniqueResults);
+                    } else {
+                        toyStores = [];
+                        storeMarkers = [];
+                        recommendedStores = [];
+                    }
+                    
+                    setTimeout(() => {
+                        renderStores();
+                        
+                        // Auto-generate recommendations when stores are updated
+                        if (toyStores.length > 0 && userPreferences.interests.length > 0) {
+                            autoGenerateRecommendations();
+                        }
+                        
+                        const showStoresBtn = document.getElementById('showStoresBtn');
+                        if (toyStores.length > 0 && showStoresBtn) {
+                            showStoresBtn.style.display = 'block';
+                            showStoresBtn.disabled = false;
+                        } else if (showStoresBtn) {
+                            showStoresBtn.style.display = 'none';
+                        }
+                    }, 200);
+                }
+            }
+
+            searchKeywords.forEach((keyword, index) => {
+                const request = {
+                    location: location,
+                    radius: 5000,
+                    keyword: keyword,
+                    type: 'store'
+                };
+
+                setTimeout(() => {
+                    service.nearbySearch(request, (results, status) => {
+                        completedSearches++;
+                        
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            allResults = allResults.concat(results);
+                        }
+                        
+                        handleSearchCompletion();
+                    });
+                }, index * 200);
+            });
+        }
+
+        // Process toy store results
+        function processToyStores(places) {
+            toyStores = [];
+            storeMarkers = [];
+
+            places.forEach((place, index) => {
+                if (place.geometry && place.geometry.location) {
+                    // Extract and validate location coordinates
+                    const lat = typeof place.geometry.location.lat === 'function' 
+                        ? place.geometry.location.lat() 
+                        : place.geometry.location.lat;
+                    const lng = typeof place.geometry.location.lng === 'function' 
+                        ? place.geometry.location.lng() 
+                        : place.geometry.location.lng;
+
+                    // Validate that coordinates are valid numbers
+                    if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+                        console.warn('Invalid coordinates for place:', place.name, { lat, lng });
+                        return; // Skip this place
+                    }
+
+                    const store = {
+                        id: `store_${index}`,
+                        name: place.name || 'Unknown Store',
+                        address: place.vicinity || place.formatted_address || 'Address not available',
+                        rating: place.rating || 'N/A',
+                        distance: calculateDistance(userLocation, place.geometry.location),
+                        specialties: getStoreSpecialties(place.name, place.types),
+                        hours: 'Hours not available',
+                        place_id: place.place_id,
+                        location: {
+                            lat: lat,
+                            lng: lng
+                        }
+                    };
+
+                    // Final validation before adding to stores
+                    if (store.location.lat && store.location.lng && 
+                        typeof store.location.lat === 'number' && 
+                        typeof store.location.lng === 'number') {
+                        toyStores.push(store);
+                    } else {
+                        console.warn('Store location validation failed:', store.name, store.location);
+                    }
+
+                    const marker = new google.maps.Marker({
+                        position: place.geometry.location,
+                        map: map,
+                        title: place.name,
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                                `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                                    <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">📍</text>
+                                </svg>`
+                            ),
+                            scaledSize: new google.maps.Size(32, 32),
+                            anchor: new google.maps.Point(16, 32)
+                        }
+                    });
+
+                    marker.addListener('click', () => {
+                        showStoreInfo(store, marker);
+                    });
+
+                    storeMarkers.push({ marker, store });
+                    getPlaceDetails(place.place_id, store);
+                }
+            });
+
+            toyStores.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+        }
+
+        // Get detailed place information
+        function getPlaceDetails(placeId, store) {
+            const request = {
+                placeId: placeId,
+                fields: ['opening_hours','utc_offset_minutes', 'formatted_phone_number', 'website', 'photos']
+            };
+
+            service.getDetails(request, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    if (place.opening_hours) {
+                        store.hours = place.opening_hours.isOpen() ? 'Open now' : 'Closed';
+                    }
+                    
+                    store.phone = place.formatted_phone_number;
+                    store.website = place.website;
+                    store.photos = place.photos;
+
+                    renderStores();
+                }
+            });
+        }
+
+        // Calculate distance between two points
+        function calculateDistance(pos1, pos2) {
+            const lat1 = pos1.lat;
+            const lng1 = pos1.lng;
+            const lat2 = typeof pos2.lat === 'function' ? pos2.lat() : pos2.lat;
+            const lng2 = typeof pos2.lng === 'function' ? pos2.lng() : pos2.lng;
+
+            const R = 3959; // Earth's radius in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            
+            return distance.toFixed(1) + ' miles';
+        }
+
+        // Determine store specialties
+        function getStoreSpecialties(name, types) {
+            const nameUpper = name.toUpperCase();
+            const specialties = [];
+
+            if (nameUpper.includes('TOYS R US') || nameUpper.includes('TOYSRUS')) {
+                specialties.push('Action Figures', 'LEGO', 'Board Games');
+            } else if (nameUpper.includes('TARGET')) {
+                specialties.push('Dolls', 'Educational Toys', 'Outdoor Toys');
+            } else if (nameUpper.includes('WALMART')) {
+                specialties.push('Budget Toys', 'Electronic Toys', 'Craft Supplies');
+            } else if (nameUpper.includes('HOBBY') || nameUpper.includes('HOBBIES')) {
+                specialties.push('Model Kits', 'RC Vehicles', 'Crafts', 'Train Sets');
+            } else {
+                specialties.push('Toys', 'Games', 'Collectibles');
+            }
+
+            return specialties;
+        }
+
+        // Load mock data as fallback
+        function loadMockData() {
+            toyStores = [
+                {
+                    id: 'toysrus',
+                    name: 'Toys R Us',
+                    address: '123 Fun Street',
+                    distance: '0.3 miles',
+                    rating: 4.5,
+                    specialties: ['Action Figures', 'LEGO', 'Board Games'],
+                    hours: 'Open until 9 PM',
+                    location: { lat: 37.7849, lng: -122.4094 }
+                },
+                {
+                    id: 'target',
+                    name: 'Target',
+                    address: '456 Shopping Ave',
+                    distance: '0.7 miles',
+                    rating: 4.2,
+                    specialties: ['Dolls', 'Educational Toys', 'Outdoor Toys'],
+                    hours: 'Open until 10 PM',
+                    location: { lat: 37.7649, lng: -122.4294 }
+                }
+            ];
+            renderStores();
+            
+            setTimeout(() => {
+                const showStoresBtn = document.getElementById('showStoresBtn');
+                if (showStoresBtn && toyStores.length > 0) {
+                    showStoresBtn.style.display = 'block';
+                }
+            }, 100);
+        }
+
+        // Render store lists
+        function renderStores() {
+            renderNearbyStores();
+        }
+
+        function renderNearbyStores() {
+            const storeListContent = document.getElementById('storeListContent');
+            if (!storeListContent) return;
+            
+            // Update recommendations badge
+            const recommendationsBadge = document.getElementById('recommendationsBadge');
+            if (recommendationsBadge) {
+                if (recommendedStores.length > 0) {
+                    recommendationsBadge.classList.remove('hidden');
+                } else {
+                    recommendationsBadge.classList.add('hidden');
+                }
+            }
+            
+            // Sort stores: recommended first, then by distance within each group
+            const sortedStores = [...toyStores].sort((a, b) => {
+                const aIsRecommended = recommendedStores.includes(a.id);
+                const bIsRecommended = recommendedStores.includes(b.id);
+                
+                // If one is recommended and the other isn't, recommended comes first
+                if (aIsRecommended && !bIsRecommended) return -1;
+                if (!aIsRecommended && bIsRecommended) return 1;
+                
+                // If both have same recommendation status, sort by distance
+                const aDistance = parseFloat(a.distance.replace(' miles', ''));
+                const bDistance = parseFloat(b.distance.replace(' miles', ''));
+                return aDistance - bDistance;
+            });
+            
+            storeListContent.innerHTML = sortedStores.map(store => {
+                const isRecommended = recommendedStores.includes(store.id);
+                
+                let badgeHtml = '';
+                if (isRecommended) {
+                    badgeHtml = '<div class="mb-3"><span class="google-badge recommended"><i class="fas fa-sparkles mr-1"></i>Smart Pick</span></div>';
+                }
+                
+                const isOpen = store.hours && store.hours.toLowerCase().includes('open');
+                const statusColor = isOpen ? 'text-google-green' : 'text-google-red';
+                
+                return `
+                    <div onclick="focusStoreOnMap('${store.id}')" class="google-store-card ${isRecommended ? 'border-2 border-green-200 dark:border-green-700' : ''}">
+                        ${badgeHtml}
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-medium text-gray-900 dark:text-white text-lg">${store.name}</h4>
+                            <div class="flex items-center text-google-yellow">
+                                <i class="fas fa-star mr-1 text-sm"></i>
+                                <span class="text-sm font-medium">${store.rating}</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                        <p class="text-sm text-primary font-medium mb-3">${store.distance} away</p>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            ${store.specialties.map(spec => `
+                                <span class="google-specialty-tag">${spec}</span>
+                            `).join('')}
+                        </div>
+                        ${isRecommended ? getRecommendationReason(store) : ''}
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600 ${statusColor}">${store.hours}</span>
+                            <span class="text-primary font-medium">Tap to view</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getRecommendationReason(store) {
+            const reasons = generateRecommendationReason(store, userPreferences);
+            if (!reasons) return '';
+            
+            return `
+                <div class="bg-green-50 dark:bg-green-900 rounded-lg p-3 mb-3">
+                    <div class="text-xs font-medium text-green-800 dark:text-green-200 mb-1 flex items-center">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Perfect for you
+                    </div>
+                    <p class="text-xs text-green-700 dark:text-green-300">${reasons}</p>
+                </div>
+            `;
+        }
+
+        function generateRecommendationReason(store, preferences) {
+            const reasons = [];
+
+            // Interest-based recommendations
+            preferences.interests.forEach(interest => {
+                switch (interest) {
+                    case 'educational':
+                        if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
+                            reasons.push('Specializes in educational toys');
+                        }
+                        break;
+                    case 'building':
+                        if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('building'))) {
+                            reasons.push('Top choice for building sets');
+                        }
+                        break;
+                    case 'tech':
+                        if (store.specialties.some(s => s.toLowerCase().includes('electronic'))) {
+                            reasons.push('Great tech toy selection');
+                        }
+                        break;
+                }
+            });
+            
+            // Default reasoning
+            if (reasons.length === 0) {
+                reasons.push('Highly rated with great variety');
+            }
+            
+            return reasons.slice(0, 2).join(' • ');
+        }
+
+        // Show store information
+        function showStoreInfo(store, marker) {
+            selectedStore = store;
+            
+            const isOpen = store.hours && store.hours.toLowerCase().includes('open');
+            const statusText = isOpen ? 'Open Now' : 'Closed';
+            const statusColor = isOpen ? 'text-google-green' : 'text-google-red';
+            
+            const content = `
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-medium text-gray-900 dark:text-white">${store.name}</h2>
+                        <div class="google-fab mb-6" onclick="closeStoreInfoSheet()">
+                            <i class="fas fa-times text-gray-600 dark:text-gray-400 text-sm"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center mb-4">
+                        <div class="flex items-center mr-6">
+                            <span class="text-xl font-medium text-gray-900 dark:text-white mr-2">${store.rating}</span>
+                            <i class="fas fa-star text-google-yellow mr-2"></i>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">(${Math.floor(Math.random() * 50) + 10})</span>
+                        </div>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-4">Toy store</span>
+                    </div>
+                    
+                    <div class="flex items-center mb-6">
+                        <span class="text-sm font-medium ${statusColor}">${store.hours}</span>
+                        <span class="text-gray-300 mx-3">•</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">${store.hours}</span>
+                        <span class="text-gray-300 mx-3">•</span>
+                        <span class="text-sm text-primary font-medium">${store.distance}</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <button onclick="calculateRoute('DRIVING')" class="flex flex-col items-center justify-center p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-directions text-lg mb-1 block"></i>
+                            <span class="text-sm font-medium">Directions</span>
+                        </button>
+                        <button class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-phone text-lg mb-1 block"></i>
+                            <span class="text-sm font-medium">Call</span>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">Address</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${store.address}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">Specialties</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${store.specialties.map(spec => 
+                                `<span class="google-specialty-tag">${spec}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            showStoreInfoSheet(content);
+        }
+
+        function showStoreInfoSheet(content) {
+            const sheet = document.getElementById('storeInfoSheet');
+            const contentDiv = document.getElementById('storeInfoContent');
+            
+            contentDiv.innerHTML = content;
+            sheet.classList.remove('translate-y-full');
+        }
+
+        function closeStoreInfoSheet() {
+            const sheet = document.getElementById('storeInfoSheet');
+            sheet.classList.add('translate-y-full');
+            selectedStore = null;
+        }
+
+        // Enhanced search functionality
+        function initializeSearchFunctionality() {
+            // Search input event
+            document.getElementById('searchInput').addEventListener('input', handleTextSearch);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Search buttons
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('photoBtn').addEventListener('click', openPhotoLibrary);
+
+            // File input handlers
+            document.getElementById('photoInput').addEventListener('change', handleImageUpload);
+            document.getElementById('galleryInput').addEventListener('change', handleImageUpload);
+        }
+
+        function handleTextSearch(e) {
+            currentSearchQuery = e.target.value.trim();
+            if (currentSearchQuery.length === 0) {
+                clearSearchResults();
+            }
+        }
+
+        function openPhotoLibrary() {
+            const galleryInput = document.getElementById('galleryInput');
+            galleryInput.click();
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showCustomAlert('Please select a valid image file.');
+                return;
+            }
+
+            // Validate file size (max 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                showCustomAlert('Image file is too large. Please select an image under 10MB.');
+                return;
+            }
+
+            if (currentSearchQuery) {
+                currentSearchQuery = '';
+            }
+            
+            currentSearchImage = file;
+            searchResultType = 'image';
+            
+            // Show preview of selected image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                showImagePreview(e.target.result, file.name);
+            };
+            reader.readAsDataURL(file);
+
+            // Perform search with image
+            performSearch();
+        }
+
+        function showImagePreview(imageSrc, fileName) {
+            // Update search input to show image is selected
+            const searchInput = document.getElementById('searchInput');
+            const originalPlaceholder = searchInput.placeholder;
+            searchInput.placeholder = `📷 Image selected: ${fileName}`;
+            
+            // Optionally show a small preview
+            let existingPreview = document.getElementById('imagePreview');
+            if (existingPreview) {
+                existingPreview.remove();
+            }
+
+            const preview = document.createElement('div');
+            preview.id = 'imagePreview';
+            preview.className = 'absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 z-50 max-w-xs';
+            preview.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <img src="${imageSrc}" alt="Search image" class="w-16 h-16 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Image Search</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${fileName}</p>
+                        <button onclick="clearImageSearch()" class="text-xs text-red-500 hover:text-red-700 mt-1">Remove</button>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.relative').appendChild(preview);
+            
+            // Auto-hide preview after 5 seconds
+            setTimeout(() => {
+                if (preview.parentNode) {
+                    preview.remove();
+                    searchInput.placeholder = originalPlaceholder;
+                }
+            }, 5000);
+        }
+
+        function clearImageSearch() {
+            currentSearchImage = null;
+            const preview = document.getElementById('imagePreview');
+            if (preview) {
+                preview.remove();
+            }
+            
+            const searchInput = document.getElementById('searchInput');
+            searchInput.placeholder = 'Search for toys...';
+            
+            // Clear file inputs
+            document.getElementById('photoInput').value = '';
+            document.getElementById('galleryInput').value = '';
+            
+            if (currentSearchQuery) {
+                searchResultType = 'text';
+                performSearch();
+            } else {
+                clearSearchResults();
+            }
+        }
+
+        async function performSearch() {
+            if (!currentSearchQuery && !currentSearchImage) {
+                clearSearchResults();
+                return;
+            }
+
+            // Show loading state
+            showSearchLoadingState();
+
+            try {
+                // Use AI to find matching stores
+                await searchWithAI();
+            } catch (error) {
+                console.error('Search error:', error);
+                showCustomAlert('Search failed. Please try again.');
+                hideSearchLoadingState();
+            }
+        }
+
+        async function searchWithAI() {
+            try {
+                const result = await poeAI.search(currentSearchQuery, currentSearchImage, toyStores);
+                processSearchResults(result);
+                hideSearchLoadingState();
+            } catch (error) {
+                console.log('Poe AI not available: ', error);
+                performFallbackSearch();
+            }
+        }
+
+        function performFallbackSearch() {
+            if (!currentSearchQuery) {
+                hideSearchLoadingState();
+                return;
+            }
+
+            const query = currentSearchQuery.toLowerCase();
+            const matchingStores = toyStores.filter(store => {
+                return store.name.toLowerCase().includes(query) ||
+                       store.specialties.some(spec => spec.toLowerCase().includes(query)) ||
+                       (query.includes('lego') && store.specialties.some(s => s.toLowerCase().includes('lego'))) ||
+                       (query.includes('doll') && store.specialties.some(s => s.toLowerCase().includes('doll'))) ||
+                       (query.includes('action figure') && store.specialties.some(s => s.toLowerCase().includes('action'))) ||
+                       (query.includes('board game') && store.specialties.some(s => s.toLowerCase().includes('board'))) ||
+                       (query.includes('electronic') && store.specialties.some(s => s.toLowerCase().includes('electronic')));
+            });
+
+            const searchResults = {
+                recommended: matchingStores.slice(0, 3).map(s => s.id),
+                reasoning: `Found stores that match "${currentSearchQuery}"`,
+                product_matches: matchingStores.map(store => ({
+                    store_id: store.id,
+                    confidence: 0.7,
+                    reasoning: `Store specializes in relevant categories`,
+                    product_availability: 'maybe available'
+                }))
+            };
+
+            processSearchResults(JSON.stringify(searchResults));
+            hideSearchLoadingState();
+        }
+
+        function processSearchResults(content) {
+            try {
+                // Clean the content to extract JSON from potential markdown code blocks
+                let cleanContent = content.trim();
+                
+                // Remove markdown code blocks if present
+                if (cleanContent.startsWith('```json')) {
+                    cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                } else if (cleanContent.startsWith('```')) {
+                    cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                }
+                
+                // Remove any remaining backticks at the start or end
+                cleanContent = cleanContent.replace(/^`+/, '').replace(/`+$/, '');
+                
+                console.log('Cleaned content for JSON parsing:', cleanContent);
+                
+                const results = JSON.parse(cleanContent);
+                
+                // Validate the results structure
+                if (!results || typeof results !== 'object') {
+                    throw new Error('Invalid results structure');
+                }
+                
+                // Update search recommended stores
+                searchRecommendedStores = results.recommended || [];
+                
+                // Combine with existing preference-based recommendations
+                const combinedRecommendations = [...new Set([...searchRecommendedStores, ...recommendedStores])];
+                recommendedStores = combinedRecommendations;
+                
+                // Update markers
+                updateMarkersForRecommendations();
+                
+                // Re-render stores with search results
+                renderStoresWithSearchResults(results);
+                
+                // Show search results notification
+                const searchTerm = currentSearchQuery || 'uploaded image';
+                showCustomAlert(`Found ${searchRecommendedStores.length} stores that may have "${searchTerm}"`);
+                
+                // Automatically show stores panel with results
+                showStoreListWithSearchResults();
+                
+            } catch (error) {
+                console.error('Error processing search results:', error);
+                console.error('Raw content that failed to parse:', content);
+                performFallbackSearch();
+            }
+        }
+
+        function renderStoresWithSearchResults(searchResults) {
+            renderNearbyStoresWithSearch(searchResults);
+        }
+
+        function renderNearbyStoresWithSearch(searchResults = null) {
+            const storeListContent = document.getElementById('storeListContent');
+            if (!storeListContent) return;
+            
+            // Update header to show search results or reset to default
+            const headerTitle = document.querySelector('#storeListPanel h2');
+            if (headerTitle) {
+                if ((currentSearchQuery || currentSearchImage) && searchResults) {
+                    const searchTerm = currentSearchQuery || searchResults.product_name;
+                    headerTitle.innerHTML = `🔍 Search Results: "<span class="text-primary">${searchTerm}</span>"`;
+                } else {
+                    headerTitle.textContent = '📍 Nearby Stores';
+                }
+            }
+            
+            // Update recommendations badge
+            const recommendationsBadge = document.getElementById('recommendationsBadge');
+            if (recommendationsBadge) {
+                const totalRecommendations = recommendedStores.length;
+                const searchMatches = searchRecommendedStores.length;
+                
+                if (totalRecommendations > 0 || searchMatches > 0) {
+                    recommendationsBadge.classList.remove('hidden');
+                    const badgeText = searchMatches > 0 ? 
+                        `${searchMatches} Search Match${searchMatches > 1 ? 'es' : ''}` :
+                        `${totalRecommendations} Smart Pick${totalRecommendations > 1 ? 's' : ''}`;
+                    recommendationsBadge.innerHTML = `<span class="google-badge ${searchMatches > 0 ? 'text-xs' : 'recommended text-xs'}">
+                        <i class="fas fa-${searchMatches > 0 ? 'search' : 'sparkles'} mr-1"></i>${badgeText}
+                    </span>`;
+                } else {
+                    recommendationsBadge.classList.add('hidden');
+                }
+            }
+            
+            // Sort stores: search results first, then other recommendations, then by distance
+            const sortedStores = [...toyStores].sort((a, b) => {
+                const aIsSearchResult = searchRecommendedStores.includes(a.id);
+                const bIsSearchResult = searchRecommendedStores.includes(b.id);
+                const aIsRecommended = recommendedStores.includes(a.id);
+                const bIsRecommended = recommendedStores.includes(b.id);
+                
+                // Search results come first
+                if (aIsSearchResult && !bIsSearchResult) return -1;
+                if (!aIsSearchResult && bIsSearchResult) return 1;
+                
+                // Then other recommendations
+                if (aIsRecommended && !bIsRecommended) return -1;
+                if (!aIsRecommended && bIsRecommended) return 1;
+                
+                // Finally by distance
+                const aDistance = parseFloat(a.distance.replace(' miles', ''));
+                const bDistance = parseFloat(b.distance.replace(' miles', ''));
+                return aDistance - bDistance;
+            });
+            
+            storeListContent.innerHTML = sortedStores.map(store => {
+                const isSearchResult = searchRecommendedStores.includes(store.id);
+                const isRecommended = recommendedStores.includes(store.id);
+                
+                let badgeHtml = '';
+                if (isSearchResult) {
+                    badgeHtml = '<div class="mb-3"><span class="google-badge" style="background: #E3F2FD; color: #1565C0; border-color: #BBDEFB;"><i class="fas fa-search mr-1"></i>Search Match</span></div>';
+                } else if (isRecommended) {
+                    badgeHtml = '<div class="mb-3"><span class="google-badge recommended"><i class="fas fa-sparkles mr-1"></i>Smart Pick</span></div>';
+                }
+                
+                const isOpen = store.hours && store.hours.toLowerCase().includes('open');
+                const statusColor = isOpen ? 'text-google-green' : 'text-google-red';
+                
+                // Get search-specific information with enhanced details
+                let searchInfo = '';
+                if (isSearchResult && searchResults && searchResults.product_matches) {
+                    const match = searchResults.product_matches.find(m => m.store_id === store.id);
+                    if (match) {
+                        searchInfo = getEnhancedSearchMatchInfo(match, searchResults);
+                    }
+                }
+                
+                return `
+                    <div onclick="focusStoreOnMap('${store.id}')" class="google-store-card ${isSearchResult ? 'border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-950' : isRecommended ? 'border-2 border-green-200 dark:border-green-700' : ''}">
+                        ${badgeHtml}
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-medium text-gray-900 dark:text-white text-lg">${store.name}</h4>
+                            <div class="flex items-center text-google-yellow">
+                                <i class="fas fa-star mr-1 text-sm"></i>
+                                <span class="text-sm font-medium">${store.rating}</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${store.address}</p>
+                        <p class="text-sm text-primary font-medium mb-3">${store.distance} away</p>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            ${store.specialties.map(spec => `
+                                <span class="google-specialty-tag">${spec}</span>
+                            `).join('')}
+                        </div>
+                        ${searchInfo}
+                        ${isRecommended && !isSearchResult ? getRecommendationReason(store) : ''}
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600 ${statusColor}">${store.hours}</span>
+                            <span class="text-primary font-medium">Tap to view</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getEnhancedSearchMatchInfo(match, searchResults) {
+            const confidenceText = match.confidence > 0.8 ? 'High' : match.confidence > 0.6 ? 'Medium' : 'Low';
+            const availabilityColor = match.product_availability === 'likely available' ? 'text-green-600' : 
+                                     match.product_availability === 'maybe available' ? 'text-yellow-600' : 'text-gray-600';
+            
+            // Get product name if available from search results
+            const productName = searchResults.product_name || currentSearchQuery || 'searched item';
+            const productCategory = searchResults.product_category || '';
+            
+            return `
+                <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-3 mb-3">
+                    <div class="text-xs font-medium text-blue-800 dark:text-blue-200 mb-2 flex items-center">
+                        <i class="fas fa-search mr-1"></i>
+                        Search Match (${confidenceText} confidence)
+                    </div>
+                    
+                    ${productName !== (currentSearchQuery || 'searched item') ? `
+                        <div class="text-xs text-blue-700 dark:text-blue-300 mb-1">
+                            <span class="font-medium">Product:</span> ${productName}
+                            ${productCategory ? ` (${productCategory})` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                        <span class="font-medium">Why this store:</span> ${match.reasoning}
+                    </div>
+                    
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs ${availabilityColor} font-medium flex items-center">
+                            <i class="fas fa-box mr-1"></i>
+                            ${match.product_availability}
+                        </div>
+                        <div class="text-xs text-blue-600 dark:text-blue-400">
+                            Match: ${Math.round(match.confidence * 100)}%
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showStoreListWithSearchResults() {
+            const panel = document.getElementById('storeListPanel');
+            const overlay = document.getElementById('storeListOverlay');
+            const btn = document.getElementById('showStoresBtn');
+            
+            overlay.classList.remove('hidden');
+            panel.classList.remove('translate-y-full');
+            btn.style.display = 'none';
+        }
+
+        function showSearchLoadingState() {
+            document.getElementById('recommendationsLoadingOverlay').classList.remove('hidden');
+            
+            // Update loading text for search
+            const loadingTitle = document.querySelector('#recommendationsLoadingOverlay h3');
+            const loadingText = document.querySelector('#recommendationsLoadingOverlay p');
+            
+            if (currentSearchImage && currentSearchQuery) {
+                loadingTitle.textContent = 'Searching with AI';
+                loadingText.textContent = 'Analyzing image and text to find matching stores';
+            } else if (currentSearchImage) {
+                loadingTitle.textContent = 'Analyzing image';
+                loadingText.textContent = 'Using AI to identify the product and find stores';
+            } else {
+                loadingTitle.textContent = 'Searching stores';
+                loadingText.textContent = 'Finding stores that carry your requested product';
+            }
+        }
+
+        function hideSearchLoadingState() {
+            document.getElementById('recommendationsLoadingOverlay').classList.add('hidden');
+            
+            // Reset loading text
+            const loadingTitle = document.querySelector('#recommendationsLoadingOverlay h3');
+            const loadingText = document.querySelector('#recommendationsLoadingOverlay p');
+            loadingTitle.textContent = 'Getting recommendations';
+            loadingText.textContent = 'Analyzing nearby stores for the best matches';
+        }
+
+        function clearSearchResults() {
+            currentSearchQuery = '';
+            currentSearchImage = null;
+            searchRecommendedStores = [];
+            searchResultType = 'text';
+            
+            // Clear image preview
+            const preview = document.getElementById('imagePreview');
+            if (preview) {
+                preview.remove();
+            }
+            
+            // Reset search input
+            const searchInput = document.getElementById('searchInput');
+            searchInput.placeholder = 'Search for toys...';
+            
+            // Reset header title
+            const headerTitle = document.querySelector('#storeListPanel h2');
+            if (headerTitle) {
+                headerTitle.textContent = '📍 Nearby Stores';
+            }
+            
+            // Clear file inputs
+            document.getElementById('photoInput').value = '';
+            document.getElementById('galleryInput').value = '';
+            
+            // Restore original recommendations
+            recommendedStores = recommendedStores.filter(id => !searchRecommendedStores.includes(id));
+            updateMarkersForRecommendations();
+            renderStores();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize search functionality
+            initializeSearchFunctionality();
+            
+            // Collections functionality
+            document.getElementById('collectionsBtn').addEventListener('click', () => {
+                // Future collections functionality
+            });
+
+            // Show stores button
+            document.getElementById('showStoresBtn').addEventListener('click', () => {
+                const panel = document.getElementById('storeListPanel');
+                const overlay = document.getElementById('storeListOverlay');
+                const btn = document.getElementById('showStoresBtn');
+                
+                overlay.classList.remove('hidden');
+                panel.classList.remove('translate-y-full');
+                btn.style.display = 'none';
+            });
+
+            // Close store panel when clicking overlay
+            document.getElementById('storeListOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'storeListOverlay') {
+                    closeStorePanel();
+                }
+            });
+
+            // Compass button
+            document.getElementById('compassBtn').addEventListener('click', () => {
+                if (locationManager.isCompassEnabled) {
+                    locationManager.stopCompass();
+                } else {
+                    locationManager.initializeCompass();
+                }
+                
+                if (userLocation && map) {
+                    map.panTo(userLocation);
+                    map.setZoom(15);
+                }
+            });
+
+            // Route options checkboxes
+            ['avoidTolls', 'avoidHighways', 'avoidFerries'].forEach(option => {
+                const checkbox = document.getElementById(option);
+                if (checkbox) {
+                    checkbox.addEventListener('change', (e) => {
+                        routeOptions[option] = e.target.checked;
+                        // Recalculate routes if we have a destination
+                        if (selectedStore && userLocation) {
+                            calculateAllRoutes();
+                        }
+                    });
+                }
+            });
+        });
+
+        function closeStorePanel() {
+            const panel = document.getElementById('storeListPanel');
+            const overlay = document.getElementById('storeListOverlay');
+            const btn = document.getElementById('showStoresBtn');
+            
+            panel.classList.add('translate-y-full');
+            overlay.classList.add('hidden');
+            btn.style.display = 'block';
+        }
+
+        function focusStoreOnMap(storeId) {
+            const store = toyStores.find(s => s.id === storeId);
+            if (!store) {
+                console.error('Store not found with ID:', storeId);
+                showCustomAlert('Store not found. Please try again.');
+                return;
+            }
+
+            // Validate store location data
+            if (!store.location || typeof store.location.lat !== 'number' || typeof store.location.lng !== 'number') {
+                console.error('Invalid store location data:', store.location);
+                showCustomAlert('Store location data is invalid. Please try again.');
+                return;
+            }
+
+            if (!map) {
+                console.error('Map not initialized');
+                showCustomAlert('Map is not ready. Please wait and try again.');
+                return;
+            }
+
+            selectedStore = {
+                ...store,
+                location: {
+                    lat: store.location.lat,
+                    lng: store.location.lng
+                }
+            };
+
+            const storeMarker = storeMarkers.find(sm => sm.store && sm.store.id === storeId);
+
+            // Close store panel first
+            closeStorePanel();
+
+            // Center the map on the selected store
+            try {
+                const targetLocation = selectedStore.location;
+                map.panTo(targetLocation);
+                
+                if (map.getZoom() < 17) {
+                    map.setZoom(17);
+                }
+            } catch (error) {
+                console.error('Error focusing on store:', error);
+                showCustomAlert('Error focusing on store location. Please try again.');
+                return;
+            }
+
+            if (storeMarker) {
+                // Highlight the marker with bounce animation
+                storeMarker.marker.setAnimation(google.maps.Animation.BOUNCE);
+                
+                // Show store info after a brief animation
+                setTimeout(() => {
+                    showStoreInfo(store, storeMarker.marker);
+                    storeMarker.marker.setAnimation(null);
+                }, 800);
+            } else {
+                // Show store info immediately if no marker
+                setTimeout(() => {
+                    showStoreInfo(store, null);
+                }, 300);
+            }
+
+            // Provide haptic feedback on mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(50);
+            }
+        }
+
+        // Navigation Functions
+        function calculateRoute(travelMode = 'DRIVING') {
+            if (!selectedStore || !userLocation) {
+                showNavigationPanel();
+                return;
+            }
+
+            // Show navigation panel
+            showNavigationPanel();
+            
+            // Set the travel mode and calculate all routes
+            currentTravelMode = travelMode;
+            calculateAllRoutes();
+        }
+
+        function showNavigationPanel() {
+            const navPanel = document.getElementById('navigationPanel');
+            navPanel.classList.remove('translate-y-full');
+            
+            // Reset to default state
+            document.getElementById('routeLoading').classList.remove('hidden');
+            document.getElementById('routeList').classList.add('hidden');
+            document.getElementById('navigationControls').style.display = 'none';
+        }
+
+        function closeNavigationPanel() {
+            const navPanel = document.getElementById('navigationPanel');
+            navPanel.classList.add('translate-y-full');
+            
+            // Clear any route on map
+            if (directionsRenderer) {
+                directionsRenderer.setDirections({routes: []});
+            }
+        }
+
+        function calculateAllRoutes() {
+            if (!userLocation || !selectedStore || !selectedStore.location || !directionsService) {
+                console.error('Missing required data for route calculation');
+                document.getElementById('routeLoading').innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-2xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 dark:text-gray-400">Unable to calculate routes. Missing location data.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const modes = ['DRIVING', 'WALKING', 'TRANSIT', 'BICYCLING'];
+            let completedRequests = 0;
+            
+            // Show loading state
+            document.getElementById('routeLoading').innerHTML = `
+                <div class="text-center py-8">
+                    <div class="google-spinner mb-4"></div>
+                    <p class="text-gray-600 dark:text-gray-400">Calculating routes...</p>
+                </div>
+            `;
+
+            modes.forEach(mode => {
+                const request = {
+                    origin: userLocation,
+                    destination: selectedStore.location,
+                    travelMode: google.maps.TravelMode[mode],
+                    unitSystem: google.maps.UnitSystem.IMPERIAL,
+                    avoidTolls: routeOptions.avoidTolls,
+                    avoidHighways: routeOptions.avoidHighways,
+                    avoidFerries: routeOptions.avoidFerries,
+                    provideRouteAlternatives: true
+                };
+
+                directionsService.route(request, (result, status) => {
+                    completedRequests++;
+                    
+                    if (status === 'OK' && result && result.routes && result.routes.length > 0) {
+                        allRoutes[mode] = result;
+                        if (result.routes[0].legs && result.routes[0].legs.length > 0) {
+                            updateTravelModeTime(mode, result.routes[0].legs[0].duration.text);
+                        } else {
+                            updateTravelModeTime(mode, 'N/A');
+                        }
+                    } else {
+                        allRoutes[mode] = null;
+                        updateTravelModeTime(mode, 'N/A');
+                        console.warn(`Route calculation failed for ${mode}:`, status);
+                    }
+
+                    // When all requests complete, show results
+                    if (completedRequests === modes.length) {
+                        displayRouteResults();
+                    }
+                });
+            });
+        }
+
+        function updateTravelModeTime(mode, time) {
+            const timeElement = document.getElementById(`${mode.toLowerCase()}Time`);
+            if (timeElement) {
+                timeElement.textContent = time;
+            }
+        }
+
+        function selectTravelMode(mode) {
+            currentTravelMode = mode;
+            
+            // Update UI to show selected mode
+            document.querySelectorAll('.travel-mode-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`${mode.toLowerCase()}ModeBtn`).classList.add('active');
+            
+            // Show route for selected mode
+            if (allRoutes[mode]) {
+                directionsRenderer.setDirections(allRoutes[mode]);
+                currentRoute = allRoutes[mode];
+                displayRouteResults();
+            }
+        }
+
+        function displayRouteResults() {
+            const routeData = allRoutes[currentTravelMode];
+            
+            if (!routeData || !routeData.routes || routeData.routes.length === 0) {
+                document.getElementById('routeLoading').innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-2xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 dark:text-gray-400">No route available for ${currentTravelMode.toLowerCase()}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show main route on map
+            directionsRenderer.setDirections(routeData);
+            currentRoute = routeData;
+
+            // Hide loading and show results
+            document.getElementById('routeLoading').classList.add('hidden');
+            document.getElementById('routeList').classList.remove('hidden');
+            document.getElementById('navigationControls').style.display = 'block';
+
+            // Populate route list with alternatives
+            const routeList = document.getElementById('routeList');
+            routeList.innerHTML = routeData.routes.map((route, index) => {
+                if (!route || !route.legs || !route.legs[0]) {
+                    return '';
+                }
+                
+                const leg = route.legs[0];
+                const isSelected = index === 0;
+                
+                return `
+                    <div onclick="selectRoute(${index})" class="route-option ${isSelected ? 'selected' : ''}">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    ${index + 1}
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">${leg.duration ? leg.duration.text : 'N/A'}</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">${leg.distance ? leg.distance.text : 'N/A'}</div>
+                                </div>
+                            </div>
+                            ${isSelected ? '<i class="fas fa-check text-primary"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).filter(html => html !== '').join('');
+        }
+
+        function selectRoute(routeIndex) {
+            if (currentRoute && currentRoute.routes[routeIndex]) {
+                const newDirections = {
+                    ...currentRoute,
+                    routes: [currentRoute.routes[routeIndex]]
+                };
+                directionsRenderer.setDirections(newDirections);
+                
+                displayRouteResults();
+            }
+        }
+
+        function toggleRouteOptions() {
+            const container = document.getElementById('routeOptionsContainer');
+            const toggleText = document.getElementById('optionsToggleText');
+            const toggleIcon = document.getElementById('optionsToggleIcon');
+            
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                toggleText.textContent = 'Hide options';
+                toggleIcon.classList.remove('fa-chevron-down');
+                toggleIcon.classList.add('fa-chevron-up');
+            } else {
+                container.classList.add('hidden');
+                toggleText.textContent = 'Options';
+                toggleIcon.classList.remove('fa-chevron-up');
+                toggleIcon.classList.add('fa-chevron-down');
+            }
+        }
+
+        function setDepartureTime(type) {
+            const nowBtn = document.getElementById('departNowBtn');
+            const customBtn = document.getElementById('departCustomBtn');
+            
+            nowBtn.className = 'flex-1 google-button rounded-full text-sm';
+            customBtn.className = 'flex-1 google-button rounded-full text-sm';
+            
+            if (type === 'now') {
+                nowBtn.className = 'flex-1 google-button-primary rounded-full text-sm';
+            } else {
+                customBtn.className = 'flex-1 google-button-primary rounded-full text-sm';
+                showCustomAlert('Time picker would open here in a real app');
+            }
+        }
+
+        function startNavigation() {
+            if (!currentRoute) {
+                showCustomAlert('Please select a route first');
+                return;
+            }
+
+            closeNavigationPanel();
+            
+            const activeNavPanel = document.getElementById('activeNavigationPanel');
+            activeNavPanel.classList.remove('-translate-y-full');
+            
+            const leg = currentRoute.routes[0].legs[0];
+            document.getElementById('remainingTime').textContent = leg.duration.text;
+            document.getElementById('remainingDistance').textContent = leg.distance.text;
+            
+            navigationActive = true;
+            showCustomAlert('Navigation started! Turn-by-turn directions will appear at the top.');
+        }
+
+        function stopNavigation() {
+            const activeNavPanel = document.getElementById('activeNavigationPanel');
+            activeNavPanel.classList.add('-translate-y-full');
+            
+            if (directionsRenderer) {
+                directionsRenderer.setDirections({routes: []});
+            }
+            
+            navigationActive = false;
+            currentRoute = null;
+        }
+
+        function shareRoute() {
+            if (!currentRoute) {
+                showCustomAlert('No route to share');
+                return;
+            }
+            
+            const leg = currentRoute.routes[0].legs[0];
+            const shareText = `Check out this route to ${selectedStore.name}: ${leg.duration.text} (${leg.distance.text})`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Route to ' + selectedStore.name,
+                    text: shareText,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showCustomAlert('Route details copied to clipboard!');
+                }).catch(() => {
+                    showCustomAlert('Unable to share route');
+                });
+            }
+        }
+
+        // Location functions using LocationManager
+        function createUserLocationMarker(location, isLive = false) {
+            locationManager.createUserLocationMarker(map, location, isLive);
+            userLocationMarker = locationManager.userLocationMarker;
+        }
+
+        function tryStartLiveTracking() {
+            if (!userLocation) {
+                console.log('No user location available, skipping live tracking');
+                return;
+            }
+            
+            locationManager.userLocation = userLocation;
+            locationManager.onLocationUpdate = (newLocation) => {
+                userLocation = newLocation;
+                
+                // Clear old stores and search for new ones
+                storeMarkers.forEach(({ marker }) => {
+                    marker.setMap(null);
+                });
+                toyStores = [];
+                storeMarkers = [];
+                recommendedStores = [];
+
+                searchToyStores(newLocation);
+            };
+            
+            locationManager.startLiveTracking();
+        }
+
+        // Preferences functionality
+        function togglePreferences() {
+            const panel = document.getElementById('preferencesPanel');
+            const icon = document.getElementById('preferencesIcon');
+            
+            if (panel && icon) {
+                if (panel.classList.contains('hidden')) {
+                    panel.classList.remove('hidden');
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    panel.classList.add('hidden');
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+
+        function toggleInterest(interest) {
+            const button = document.querySelector(`[data-interest="${interest}"]`);
+            const isActive = button.classList.contains('active');
+            
+            if (isActive) {
+                button.classList.remove('active');
+                userPreferences.interests = userPreferences.interests.filter(i => i !== interest);
+            } else {
+                button.classList.add('active');
+                userPreferences.interests.push(interest);
+            }
+            
+            updatePreferences();
+        }
+
+        function updatePreferences() {
+            console.log('Updated preferences:', userPreferences);
+            
+            if (toyStores.length > 0) {
+                autoGenerateRecommendations();
+            }
+        }
+
+        function autoGenerateRecommendations() {
+            console.log('Auto-generating recommendations based on preferences:', userPreferences);
+            
+            recommendedStores = [];
+            
+            const scoredStores = toyStores.map(store => {
+                let score = 0;
+                const reasons = [];
+
+                userPreferences.interests.forEach(interest => {
+                    switch (interest) {
+                        case 'educational':
+                            if (store.specialties.some(s => s.toLowerCase().includes('educational'))) {
+                                score += 8;
+                                reasons.push('educational');
+                            }
+                            break;
+                        case 'creative':
+                            if (store.specialties.some(s => s.toLowerCase().includes('craft') || s.toLowerCase().includes('art'))) {
+                                score += 7;
+                                reasons.push('creative');
+                            }
+                            break;
+                        case 'building':
+                            if (store.specialties.some(s => s.toLowerCase().includes('lego') || s.toLowerCase().includes('building'))) {
+                                score += 10;
+                                reasons.push('building');
+                            }
+                            break;
+                        case 'tech':
+                            if (store.specialties.some(s => s.toLowerCase().includes('electronic'))) {
+                                score += 9;
+                                reasons.push('tech');
+                            }
+                            break;
+                        case 'collectibles':
+                            if (store.specialties.some(s => s.toLowerCase().includes('collectibles'))) {
+                                score += 10;
+                                reasons.push('collectibles');
+                            }
+                            break;
+                        case 'sports':
+                            if (store.specialties.some(s => s.toLowerCase().includes('outdoor'))) {
+                                score += 7;
+                                reasons.push('outdoor');
+                            }
+                            break;
+                    }
+                });
+                            
+                const distance = parseFloat(store.distance);
+                if (distance < 1) score += 3;
+                else if (distance < 2) score += 2;
+                else if (distance < 5) score += 1;
+                
+                if (store.rating > 4.5) score += 2;
+                else if (store.rating > 4.0) score += 1;
+                
+                return { store, score, reasons };
+            });
+            
+            scoredStores.sort((a, b) => b.score - a.score);
+            
+            const topStores = scoredStores.filter(item => item.score > 5).slice(0, 3);
+            recommendedStores = topStores.map(item => item.store.id);
+            
+            updateMarkersForRecommendations();
+            renderStores();
+            
+            if (recommendedStores.length > 0) {
+                showCustomAlert(`Found ${recommendedStores.length} personalized recommendation${recommendedStores.length > 1 ? 's' : ''} based on your preferences!`);
+            }
+        }
+
+        function updateMarkersForRecommendations() {
+            storeMarkers.forEach(({ marker, store }) => {
+                const isRecommended = recommendedStores.includes(store.id);
+                
+                if (isRecommended) {
+                    marker.setIcon({
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                                <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">⭐</text>
+                            </svg>`
+                        ),
+                        scaledSize: new google.maps.Size(32, 32),
+                        anchor: new google.maps.Point(16, 32)
+                    });
+                } else {
+                    marker.setIcon({
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                                <text x="16" y="24" font-size="20" text-anchor="middle" font-family="Arial, sans-serif">📍</text>
+                            </svg>`
+                        ),
+                        scaledSize: new google.maps.Size(32, 32),
+                        anchor: new google.maps.Point(16, 32)
+                    });
+                }
+            });
+        }
+
+        // Custom alert function
+        function showCustomAlert(message) {
+            const alertModal = document.createElement('div');
+            alertModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            alertModal.innerHTML = `
+                <div class="google-card p-6 max-w-sm w-full mx-4">
+                    <p class="text-gray-900 dark:text-white mb-4">${message}</p>
+                    <div class="flex justify-end">
+                        <button class="google-button-primary px-4 py-2" onclick="this.closest('.fixed').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alertModal);
+        }
+        
+        // Manual Location Input Functions
+        function showLocationInputModal() {
+            const modal = document.getElementById('locationInputModal');
+            modal.classList.remove('hidden');
+            
+            initializeLocationAutocomplete();
+            
+            setTimeout(() => {
+                document.getElementById('manualLocationInput').focus();
+            }, 100);
+        }
+
+        function closeLocationModal() {
+            const modal = document.getElementById('locationInputModal');
+            modal.classList.add('hidden');
+            
+            document.getElementById('manualLocationInput').value = '';
+            hideSuggestions();
+        }
+
+        function initializeLocationAutocomplete() {
+            const input = document.getElementById('manualLocationInput');
+            const suggestionsDiv = document.getElementById('locationSuggestions');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (query.length >= 3) {
+                    getLocationSuggestions(query);
+                } else {
+                    hideSuggestions();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    useManualLocation();
+                }
+            });
+        }
+
+        function getLocationSuggestions(query) {
+            if (service && google.maps.places && google.maps.places.AutocompleteService) {
+                const autocompleteService = new google.maps.places.AutocompleteService();
+                
+                autocompleteService.getPlacePredictions({
+                    input: query,
+                    types: ['(regions)'],
+                    componentRestrictions: { country: 'us' }
+                }, (predictions, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                        showSuggestions(predictions);
+                    } else {
+                        hideSuggestions();
+                    }
+                });
+            } else {
+                const suggestionsDiv = document.getElementById('locationSuggestions');
+                suggestionsDiv.innerHTML = `
+                    <div class="p-3 text-sm text-gray-500 dark:text-gray-400">
+                        Type a city, state, or zip code and press Enter
+                    </div>
+                `;
+                suggestionsDiv.classList.remove('hidden');
+            }
+        }
+
+        function showSuggestions(predictions) {
+            const suggestionsDiv = document.getElementById('locationSuggestions');
+            
+            if (!predictions || predictions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestionsDiv.innerHTML = predictions.slice(0, 5).map((prediction, index) => `
+                <div onclick="selectLocationSuggestion('${prediction.place_id}', '${prediction.description.replace(/'/g, "\\'")}', ${index})" 
+                     class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors">
+                    <div class="flex items-center">
+                        <i class="fas fa-map-marker-alt text-gray-400 mr-3 text-sm"></i>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">${prediction.structured_formatting.main_text}</div>
+                            ${prediction.structured_formatting.secondary_text ? `
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${prediction.structured_formatting.secondary_text}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            suggestionsDiv.classList.remove('hidden');
+        }
+
+        function hideSuggestions() {
+            const suggestionsDiv = document.getElementById('locationSuggestions');
+            suggestionsDiv.classList.add('hidden');
+        }
+
+        function selectLocationSuggestion(placeId, description, index) {
+            const input = document.getElementById('manualLocationInput');
+            input.value = description;
+            hideSuggestions();
+            input.dataset.placeId = placeId;
+        }
+
+        async function useManualLocation() {
+            const input = document.getElementById('manualLocationInput');
+            const locationText = input.value.trim();
+            
+            if (!locationText) {
+                showCustomAlert('Please enter a location.');
+                return;
+            }
+
+            const modal = document.getElementById('locationInputModal');
+            const originalContent = modal.innerHTML;
+            
+            modal.innerHTML = `
+                <div class="google-card max-w-md w-full mx-4 p-6">
+                    <div class="text-center">
+                        <div class="google-spinner mb-4"></div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Finding location</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Searching for "${locationText}"...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                let location = null;
+                
+                if (input.dataset.placeId && service) {
+                    location = await geocodePlaceId(input.dataset.placeId);
+                }
+                
+                if (!location) {
+                    location = await geocodeAddress(locationText);
+                }
+
+                if (location) {
+                    userLocation = location;
+                    closeLocationModal();
+                    
+                    initializeWithLocation(userLocation, false);
+                    showCustomAlert(`Location set to: ${locationText}`);
+                } else {
+                    throw new Error('Location not found');
+                }
+            } catch (error) {
+                console.error('Manual location error:', error);
+                
+                modal.innerHTML = originalContent;
+                initializeLocationAutocomplete();
+                
+                showCustomAlert('Could not find that location. Please try a different address, city, or zip code.');
+            }
+        }
+
+        function geocodePlaceId(placeId) {
+            return new Promise((resolve) => {
+                if (!service) {
+                    resolve(null);
+                    return;
+                }
+
+                const request = {
+                    placeId: placeId,
+                    fields: ['geometry']
+                };
+
+                service.getDetails(request, (place, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && place.geometry) {
+                        const location = {
+                            lat: place.geometry.location.lat(),
+                            lng: place.geometry.location.lng()
+                        };
+                        resolve(location);
+                    } else {
+                        console.warn('Place details geocoding failed:', status);
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        function geocodeAddress(address) {
+            return new Promise((resolve) => {
+                if (!google.maps.Geocoder) {
+                    resolve(null);
+                    return;
+                }
+
+                const geocoder = new google.maps.Geocoder();
+                
+                geocoder.geocode({ address: address }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const location = {
+                            lat: results[0].geometry.location.lat(),
+                            lng: results[0].geometry.location.lng()
+                        };
+                        resolve(location);
+                    } else {
+                        console.warn('Address geocoding failed:', status);
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        function tryGeolocationAgain() {
+            closeLocationModal();
+            
+            const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+            attemptGeolocation(defaultLocation);
+        }
+
+        function useDefaultLocation() {
+            const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+            
+            userLocation = defaultLocation;
+            closeLocationModal();
+            
+            initializeWithLocation(userLocation, false);
+            
+            showCustomAlert('Using San Francisco, CA as your default location.');
+        }
+
+        // Make functions globally available
+        window.initMap = initMap;
+        window.focusStoreOnMap = focusStoreOnMap;
+        window.calculateRoute = calculateRoute;
+        window.closeStoreInfoSheet = closeStoreInfoSheet;
+        window.clearImageSearch = clearImageSearch;
+        window.showLocationInputModal = showLocationInputModal;
+        window.closeLocationModal = closeLocationModal;
+        window.useManualLocation = useManualLocation;
+        window.tryGeolocationAgain = tryGeolocationAgain;
+        window.useDefaultLocation = useDefaultLocation;
+        window.closeNavigationPanel = closeNavigationPanel;
+        window.selectTravelMode = selectTravelMode;
+        window.selectRoute = selectRoute;
+        window.toggleRouteOptions = toggleRouteOptions;
+        window.setDepartureTime = setDepartureTime;
+        window.startNavigation = startNavigation;
+        window.stopNavigation = stopNavigation;
+        window.shareRoute = shareRoute;
+        window.closeStorePanel = closeStorePanel;
+        window.togglePreferences = togglePreferences;
+        window.toggleInterest = toggleInterest;
+		window.POE_API_KEY = 'AipTej0ZhWQKFC0Ufh3jUdkISme9jAsMSDxmsSdOKZ4';
+    </script>
+
+
+</body></html>
