@@ -163,14 +163,7 @@ const POSITIVE_TYPES = new Set([
   'hobby_shop',
 ]);
 
-//const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具|軟膠|搪膠|sofubi|sofvi|ソフビ/i;
-const TOY_KEYWORDS = /玩具|toys|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney|sanrio|三麗鷗|hobby|ホビー|模型屋|玩具屋|pokemon|寶可夢|rc|遙控車|遙控模型|動漫|anime|動漫周邊|collectibles|二手玩具|中古玩具|軟膠|搪膠|sofubi|sofvi|ソフビ/i;
-
-const transformToyKeywords = (toyKeywords) => {
-  return toyKeywords.source            // 取得正則表達式的內容 (不含 // 和 i)
-    .split('|')               // 以 | 分割成陣列
-    .join(' OR ');            // 用 " OR " 重新組合
-};
+const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具|軟膠|搪膠|sofubi|sofvi|ソフビ/i;
 
 function extractName(place) {
   return typeof place.displayName === 'string'
@@ -474,10 +467,9 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
   const request = {
     location: new google.maps.LatLng(center.lat, center.lng),
     radius: Math.floor(radius),
-    //keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR action figures',
-	keyword: transformToyKeywords(TOY_KEYWORDS),
-    type: 'store',
-    language: 'zh-TW',
+    keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
+    type: 'toy_store',
+    //language: 'zh-TW',
   };
 
   do {
@@ -525,12 +517,12 @@ async function searchSingleAreaNewAPI(google, Place, RankPreference, center, rad
         center: center,
         radius: radius
       },
-      includedTypes: ['toy_store', 'hobby_shop'],
-	  textQuery: transformToyKeywords(TOY_KEYWORDS),
+      includedTypes: ['toy_store'],
+	  textQuery : 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
       maxResultCount: 20,
       rankPreference: RankPreference.DISTANCE,   // 使用 DISTANCE 較不易重複
-      language: 'zh-TW',
-      region: 'TW',
+      //language: 'zh-TW',
+      //region: 'TW',
     };
 
     if (pageToken) {
