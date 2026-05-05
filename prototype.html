@@ -9,9 +9,31 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
 
 const DEFAULT_USER_POS = { lat: 25.0421, lng: 121.5082 };
 const DEFAULT_USER_LABEL = '台北';
-const SEARCH_RADIUS_M = 1000;
-const GRID_SIZE_M = 500;
+const DEFAULT_SEARCH_RADIUS_M = 1000;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
+
+// ⭐ 使用者可選的搜尋範圍
+const RADIUS_OPTIONS = [100, 300, 500, 800, 1000, 2000, 3000, 5000, 10000, 15000, 20000];
+function formatRadius(m) {
+  if (m >= 1000) {
+    const km = m / 1000;
+    return Number.isInteger(km) ? `${km}km` : `${km.toFixed(1)}km`;
+  }
+  return `${m}m`;
+}
+
+// ⭐ 根據搜尋半徑動態決定 grid size
+// 大半徑時 grid 也要放大,避免切出過多網格
+function gridSizeForRadius(radius) {
+  if (radius <= 200) return Math.max(80, radius);
+  if (radius <= 500) return 250;
+  if (radius <= 1000) return 500;
+  if (radius <= 2000) return 600;
+  if (radius <= 3000) return 800;
+  if (radius <= 5000) return 1200;
+  if (radius <= 10000) return 1800;
+  return 2500;
+}
 
 const MAP_MIN_ZOOM = 11;
 const MAP_MAX_ZOOM = 18;
@@ -49,10 +71,6 @@ function buildPhotoUrl(photoRef, placeId, size = 'medium') {
     _photoUrlGenCount++;
   }
   return url;
-}
-
-function getPhotoCacheStats() {
-  return { cachedUrls: photoUrlCache.size, totalGenerated: _photoUrlGenCount };
 }
 
 function haversine(a, b) {
@@ -297,7 +315,7 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
     .map(c => ({ lat: c.lat, lng: c.lng, _dist: haversine(center, c) }))
     .sort((a, b) => a._dist - b._dist);
 
-  console.log(`[Search Session] 共產生 ${centers.length} 個網格,將漸進式搜尋 (由近至遠)`);
+  console.log(`[Search Session] 半徑 ${bigRadius}m / grid ${gridSize}m → 共 ${centers.length} 個網格 (由近至遠)`);
 
   return { apiType, apiCtx, centers, gridSize, center, bigRadius };
 }
@@ -315,7 +333,7 @@ async function searchOneGridAndEnrich(google, session, idx) {
     raw = await searchSingleAreaLegacy(google, session.apiCtx.service, session.apiCtx.S, gridCenter, radius);
   }
 
-  console.log(`[Search Session] 網格 #${idx + 1}/${session.centers.length} 取得 ${raw.length} 筆原始資料 (距離 ${gridCenter._dist ? gridCenter._dist.toFixed(2) : '?'} km)`);
+  console.log(`[Search Session] 網格 #${idx + 1}/${session.centers.length} 取得 ${raw.length} 筆 (距離 ${gridCenter._dist ? gridCenter._dist.toFixed(2) : '?'} km)`);
 
   const enriched = await Promise.all(raw.map(async (place) => {
     try {
@@ -549,13 +567,13 @@ const LIGHT_STYLE = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#aad3df' }] },
 ];
 
-function computeBoundsForShops(google, userPos, shops) {
+function computeBoundsForShops(google, userPos, shops, radius) {
   const bounds = new google.maps.LatLngBounds();
   bounds.extend(userPos);
   if (shops && shops.length > 0) {
     shops.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
   } else {
-    const circle = new google.maps.Circle({ center: userPos, radius: SEARCH_RADIUS_M });
+    const circle = new google.maps.Circle({ center: userPos, radius: radius || DEFAULT_SEARCH_RADIUS_M });
     bounds.union(circle.getBounds());
   }
   return bounds;
@@ -654,7 +672,7 @@ function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = fal
 
 let map, marker, watchId;
 
-function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocation, allShops, visibleShops, mapPinShop, setMapPinShop, favorites, toggleFav, openDetail, getCategoryColor, searchQuery, setSearchQuery, categories, activeCategory, setActiveCategory, setView, StarRating, BadgeIcon, placesStatus, apiUsed, filterStats, listScrollRef, onLoadMore, loadingMore, allGridsDone, gridProgress }) {
+function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocation, allShops, visibleShops, mapPinShop, setMapPinShop, favorites, toggleFav, openDetail, getCategoryColor, searchQuery, setSearchQuery, categories, activeCategory, setActiveCategory, setView, StarRating, BadgeIcon, placesStatus, apiUsed, filterStats, listScrollRef, onLoadMore, loadingMore, allGridsDone, gridProgress, searchRadius }) {
   const mapRef = _react.useRef.call(void 0, null);
   const mapInstanceRef = _react.useRef.call(void 0, null);
   const markersRef = _react.useRef.call(void 0, new Map());
@@ -663,6 +681,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const [zoom, setZoom] = _react.useState.call(void 0, MAP_DEFAULT_ZOOM);
   const didInitialFitRef = _react.useRef.call(void 0, false);
   const lastUserInteractRef = _react.useRef.call(void 0, 0);
+  const lastFitRadiusRef = _react.useRef.call(void 0, searchRadius);
 
   _react.useEffect.call(void 0, () => {
     if (mapStatus !== 'ready' || !mapRef.current || mapInstanceRef.current) return;
@@ -721,6 +740,14 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     });
   }, [allShops, visibleShops, mapPinShop, mapStatus, getCategoryColor, setMapPinShop]);
 
+  // ⭐ 搜尋半徑改變時,重新 fit 一次
+  _react.useEffect.call(void 0, () => {
+    if (lastFitRadiusRef.current !== searchRadius) {
+      didInitialFitRef.current = false;
+      lastFitRadiusRef.current = searchRadius;
+    }
+  }, [searchRadius]);
+
   _react.useEffect.call(void 0, () => {
     if (mapStatus !== 'ready' || !mapInstanceRef.current) return;
     if (didInitialFitRef.current) return;
@@ -728,7 +755,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
     if (allShops.length === 0 && placesStatus !== 'empty' && placesStatus !== 'error') return;
     const google = window.google;
     const map = mapInstanceRef.current;
-    const bounds = computeBoundsForShops(google, userPos, allShops);
+    const bounds = computeBoundsForShops(google, userPos, allShops, searchRadius);
     map.fitBounds(bounds, FIT_PADDING);
     google.maps.event.addListenerOnce(map, 'idle', () => {
       const z = map.getZoom();
@@ -736,7 +763,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
       if (z < MAP_MIN_ZOOM) map.setZoom(MAP_MIN_ZOOM);
     });
     didInitialFitRef.current = true;
-  }, [mapStatus, placesStatus, allShops, userPos]);
+  }, [mapStatus, placesStatus, allShops, userPos, searchRadius]);
 
   _react.useEffect.call(void 0, () => {
     if (!mapPinShop || !mapInstanceRef.current) return;
@@ -763,7 +790,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const fitAll = () => {
     const m = mapInstanceRef.current; if (!m) return;
     const google = window.google;
-    const bounds = computeBoundsForShops(google, userPos, visibleShops.length ? visibleShops : allShops);
+    const bounds = computeBoundsForShops(google, userPos, visibleShops.length ? visibleShops : allShops, searchRadius);
     m.fitBounds(bounds, FIT_PADDING);
     google.maps.event.addListenerOnce(m, 'idle', () => {
       const z = m.getZoom();
@@ -817,6 +844,10 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
             , _react2.default.createElement(_lucidereact.Search, { className: "w-4 h-4 text-gray-400",} )
             , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋附近玩具店...", className: "flex-1 ml-2 text-sm outline-none bg-transparent",} )
             , searchQuery && _react2.default.createElement('button', { onClick: () => setSearchQuery(''),}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4 text-gray-400",} ))
+          )
+          , _react2.default.createElement('div', { className: "bg-white rounded-full shadow-lg px-3 py-2 text-xs font-bold text-gray-700 flex items-center gap-1",}
+            , _react2.default.createElement(_lucidereact.Target, { className: "w-3 h-3 text-red-500",} )
+            , formatRadius(searchRadius)
           )
         )
         , _react2.default.createElement('div', { className: "flex gap-2 overflow-x-auto mt-3 pb-1 scrollbar-hide pointer-events-auto",}
@@ -945,8 +976,48 @@ function startTracking() {
   }
 }
 
-function stopTracking() {
-  if (watchId) navigator.geolocation.clearWatch(watchId);
+// ⭐ 範圍選擇下拉(獨立元件方便重用)
+function RadiusPicker({ value, onChange }) {
+  const [open, setOpen] = _react.useState.call(void 0, false);
+  const wrapRef = _react.useRef.call(void 0, null);
+
+  _react.useEffect.call(void 0, () => {
+    if (!open) return;
+    const onDocDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDocDown);
+    return () => document.removeEventListener('pointerdown', onDocDown);
+  }, [open]);
+
+  return (
+    _react2.default.createElement('div', { ref: wrapRef, className: "relative",}
+      , _react2.default.createElement('button', {
+          onClick: () => setOpen(o => !o),
+          className: "inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/25 hover:bg-white/35 active:bg-white/40 transition",
+          title: "選擇搜尋範圍",
+        }
+        , _react2.default.createElement(_lucidereact.Target, { className: "w-3 h-3",} )
+        , _react2.default.createElement('span', null, "範圍 ", formatRadius(value))
+        , _react2.default.createElement(_lucidereact.ChevronDown, { className: `w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`,} )
+      )
+      , open && (
+        _react2.default.createElement('div', { className: "absolute z-50 mt-2 left-0 bg-white rounded-xl shadow-2xl border border-gray-100 p-2 w-56",}
+          , _react2.default.createElement('div', { className: "px-1.5 py-1 text-xs font-bold text-gray-500",}, "搜尋範圍")
+          , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-1.5",}
+            , RADIUS_OPTIONS.map(r => {
+                const active = r === value;
+                return _react2.default.createElement('button', {
+                    key: r,
+                    onClick: () => { onChange(r); setOpen(false); },
+                    className: `text-xs font-bold py-2 rounded-lg transition ${active ? 'bg-red-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`,
+                  }, formatRadius(r));
+              })
+          )
+        )
+      )
+    )
+  );
 }
 
 function ToyFinder() {
@@ -965,6 +1036,9 @@ function ToyFinder() {
   const [locationStatus, setLocationStatus] = _react.useState.call(void 0, 'requesting');
   const [locationError, setLocationError] = _react.useState.call(void 0, '');
 
+  // ⭐ 搜尋範圍 state
+  const [searchRadius, setSearchRadius] = _react.useState.call(void 0, DEFAULT_SEARCH_RADIUS_M);
+
   const hasValidKey = !!GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== 'YOUR_API_KEY_HERE';
   const [mapsStatus, setMapsStatus] = _react.useState.call(void 0, hasValidKey ? 'idle' : 'missing-key');
   const [mapsError, setMapsError] = _react.useState.call(void 0, '');
@@ -974,7 +1048,6 @@ function ToyFinder() {
   const [apiUsed, setApiUsed] = _react.useState.call(void 0, null);
   const [filterStats, setFilterStats] = _react.useState.call(void 0, { total: 0, kept: 0, removed: 0, rejected: [] });
   const [refreshTick, setRefreshTick] = _react.useState.call(void 0, 0);
-  const [showRejected, setShowRejected] = _react.useState.call(void 0, false);
 
   const [loadingMore, setLoadingMore] = _react.useState.call(void 0, false);
   const [gridProgress, setGridProgress] = _react.useState.call(void 0, { done: 0, total: 0 });
@@ -1042,10 +1115,8 @@ function ToyFinder() {
     return () => { cancelled = true; };
   }, [hasValidKey]);
 
-  // ⭐ 給子元件用的穩定 ref(在 loadNextGrid 之前先宣告,讓 loadNextGrid 內可以遞迴呼叫)
   const loadNextGridRef = _react.useRef.call(void 0, () => {});
 
-  // ⭐ 核心: loadNextGrid (跑下一個網格 + 自動續查直到撈到第一筆 OR 全部跑完)
   const loadNextGrid = _react.useCallback.call(void 0, async () => {
     const state = sessionStateRef.current;
     if (!state.session) return;
@@ -1114,14 +1185,11 @@ function ToyFinder() {
       setLoadingMore(false);
     }
 
-    // ⭐ 自動續查: 如果這格沒撈到任何新店,且還有未搜尋的網格,自動跳下一格
-    // 這樣使用者就不用手動再滑就能拿到至少一筆新資料(或一直跑到全部跑完)
     if (sessionStateRef.current.gen !== gen) return;
     const sess = sessionStateRef.current.session;
     if (!sess) return;
     const stillHasGrids = sessionStateRef.current.nextIdx < sess.centers.length;
     if (addedCount === 0 && stillHasGrids) {
-      // 用 setTimeout 切到下個 task,讓 React 有機會更新 UI,並避免 stack 過深
       setTimeout(() => {
         if (sessionStateRef.current.gen === gen) loadNextGridRef.current();
       }, 0);
@@ -1130,7 +1198,7 @@ function ToyFinder() {
 
   loadNextGridRef.current = loadNextGrid;
 
-  // ⭐ session 啟動 effect (位置/Maps ready 時建立 session + 跑第一格)
+  // ⭐ 啟動 session: 加入 searchRadius 依賴,切換範圍會立即重新搜尋
   _react.useEffect.call(void 0, () => {
     if (mapsStatus !== 'ready') return;
     if (locationStatus === 'requesting') return;
@@ -1154,7 +1222,8 @@ function ToyFinder() {
     (async () => {
       try {
         const google = window.google;
-        const session = await prepareSearchSession(google, userPos, SEARCH_RADIUS_M, GRID_SIZE_M);
+        const gridSize = gridSizeForRadius(searchRadius);
+        const session = await prepareSearchSession(google, userPos, searchRadius, gridSize);
         if (sessionStateRef.current.gen !== gen) return;
 
         sessionStateRef.current.session = session;
@@ -1162,7 +1231,6 @@ function ToyFinder() {
         setGridProgress({ done: 0, total: session.centers.length });
         setPlacesStatus('ready');
 
-        // 跑第一格 — loadNextGrid 內建自動續查,所以如果第一格 0 筆會自動跳第二格...
         loadNextGridRef.current();
       } catch (err) {
         if (sessionStateRef.current.gen !== gen) return;
@@ -1176,9 +1244,8 @@ function ToyFinder() {
       sessionStateRef.current.gen += 1;
       isLoadingGridRef.current = false;
     };
-  }, [mapsStatus, locationStatus, userPos, refreshTick]);
+  }, [mapsStatus, locationStatus, userPos, refreshTick, searchRadius]);
 
-  // ⭐ 首頁列表底部 sentinel observer (滑到底自動續查下一格)
   _react.useEffect.call(void 0, () => {
     if (view !== 'home') return;
     if (allGridsDone) return;
@@ -1258,6 +1325,7 @@ function ToyFinder() {
       setView: setView, StarRating: StarRating, BadgeIcon: BadgeIcon, placesStatus: effectivePlacesStatus,
       apiUsed: apiUsed, filterStats: filterStats, listScrollRef: mapListScrollRef,
       onLoadMore: () => loadNextGridRef.current(), loadingMore: loadingMore, allGridsDone: allGridsDone, gridProgress: gridProgress,
+      searchRadius: searchRadius,
     });
   }
 
@@ -1365,21 +1433,25 @@ function ToyFinder() {
           , _react2.default.createElement('div', { className: "text-5xl",}, "🧸")
         )
 
-        , _react2.default.createElement('div', { className: "mt-3",}
+        // ⭐ 現在地塊 + 範圍選擇器 (現在地塊右方)
+        , _react2.default.createElement('div', { className: "mt-3 flex items-center gap-2 flex-wrap",}
           , locationStatus === 'requesting' ? (
             _react2.default.createElement('div', { className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20",}
               , _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin",}), "正在取得位置..."
             )
           ) : locationStatus === 'granted' ? (
-            _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30",}
-              , _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-3 h-3",} ), "現在地 · ", userPosLabel
+            _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 max-w-full",}
+              , _react2.default.createElement(_lucidereact.LocateFixed, { className: "w-3 h-3 flex-shrink-0",} )
+              , _react2.default.createElement('span', { className: "truncate",}, "現在地 · ", userPosLabel)
             )
           ) : (
-            _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-400/90 text-amber-900",}
-              , _react2.default.createElement(_lucidereact.LocateOff, { className: "w-3 h-3",} ), locationError || '已使用預設位置 ·  ', _react2.default.createElement('strong', null, DEFAULT_USER_LABEL)
-              , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3",} ), "重試定位"
+            _react2.default.createElement('button', { onClick: requestLocation, className: "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-400/90 text-amber-900 max-w-full",}
+              , _react2.default.createElement(_lucidereact.LocateOff, { className: "w-3 h-3 flex-shrink-0",} )
+              , _react2.default.createElement('span', { className: "truncate",}, locationError || '已使用預設位置 · ', _react2.default.createElement('strong', null, DEFAULT_USER_LABEL))
+              , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3 flex-shrink-0",} )
             )
           )
+          , _react2.default.createElement(RadiusPicker, { value: searchRadius, onChange: setSearchRadius,} )
         )
 
         , _react2.default.createElement('div', { className: "mt-3 bg-white rounded-xl flex items-center px-3 py-2.5 shadow-lg",}
@@ -1393,7 +1465,7 @@ function ToyFinder() {
             , _react2.default.createElement('div', { className: "bg-white rounded-lg p-2",}, _react2.default.createElement(_lucidereact.Map, { className: "w-4 h-4 text-red-500",} ))
             , _react2.default.createElement('div', { className: "text-left",}
               , _react2.default.createElement('p', { className: "text-sm font-bold",}, "地圖模式")
-              , _react2.default.createElement('p', { className: "text-xs text-white/80",})
+              , _react2.default.createElement('p', { className: "text-xs text-white/80",}, "搜尋範圍 ", formatRadius(searchRadius))
             )
           )
           , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-4 h-4 rotate-180",} )
@@ -1420,7 +1492,7 @@ function ToyFinder() {
               , _react2.default.createElement('div', { className: "flex items-center justify-between bg-emerald-500/25 border border-emerald-300/40 rounded-lg px-3 py-1.5",}
                 , _react2.default.createElement('div', { className: "flex items-center gap-1.5 text-xs font-semibold",}
                   , _react2.default.createElement('div', { className: "w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse",})
-                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3",} ), "Places API (New)") : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3",} ), "搜尋附近店舗結果")
+                  , apiUsed === 'new' ? _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Zap, { className: "w-3 h-3",} ), "Places API (New)") : _react2.default.createElement(_react2.default.Fragment, null, _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3",} ), formatRadius(searchRadius), "範圍店舗")
                   , _react2.default.createElement('span', null, "· ", shops.length, " 間", !allGridsDone && '+')
                 )
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "text-xs flex items-center gap-1 hover:bg-white/10 px-1.5 py-0.5 rounded",}
@@ -1446,12 +1518,12 @@ function ToyFinder() {
           ) : effectivePlacesStatus === 'loading' ? (
             _react2.default.createElement('div', { className: "flex items-center gap-2 text-xs bg-white/15 rounded-lg px-3 py-2",}
               , _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin",})
-              , _react2.default.createElement('span', null, "正在搜尋附近玩具店...")
+              , _react2.default.createElement('span', null, "正在搜尋", formatRadius(searchRadius), "範圍內的玩具店...")
             )
           ) : effectivePlacesStatus === 'empty' ? (
             _react2.default.createElement('div', { className: "bg-amber-400/25 border border-amber-300/40 rounded-lg px-3 py-2 text-xs",}
               , _react2.default.createElement('div', { className: "flex items-center justify-between",}
-                , _react2.default.createElement('span', null, usingDefaultLocation ? '預設位置' : '您附近', " ", SEARCH_RADIUS_M / 1000, "km 內沒有玩具店")
+                , _react2.default.createElement('span', null, usingDefaultLocation ? '預設位置' : '您附近', " ", formatRadius(searchRadius), " 內沒有玩具店")
                 , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "underline",}, "重試")
               )
               , filterStats.total > 0 && filterStats.kept === 0 && (
@@ -1502,7 +1574,7 @@ function ToyFinder() {
       , _react2.default.createElement('div', { className: "px-5 py-3 flex items-center justify-between",}
         , _react2.default.createElement('div', { className: "flex items-center gap-2",}
           , _react2.default.createElement(_lucidereact.Navigation, { className: "w-4 h-4 text-blue-500",} )
-          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900",}, activeCategory === '全部' ? '附近玩具店' : `附近${activeCategory}類店舗`)
+          , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900",}, activeCategory === '全部' ? `${formatRadius(searchRadius)}附近玩具店` : `附近${activeCategory}類店舗`)
           , _react2.default.createElement('span', { className: "text-xs text-gray-400",}, "· ", filteredShops.length, " 間")
         )
         , _react2.default.createElement('button', { onClick: () => setShowFilter(!showFilter), className: "flex items-center gap-1 text-xs text-gray-600 bg-white border rounded-full px-3 py-1",}
@@ -1522,13 +1594,13 @@ function ToyFinder() {
         , isInitialLoading && shops.length === 0 && (
           _react2.default.createElement('div', { className: "text-center py-16 text-gray-400",}
             , _react2.default.createElement('div', { className: "inline-block w-10 h-10 border-4 border-red-400 border-t-transparent rounded-full animate-spin mb-3",})
-            , _react2.default.createElement('p', { className: "text-sm",}, locationStatus === 'requesting' ? '正在取得位置...' : mapsStatus === 'loading' ? '載入 Google Maps...' : '搜尋附近玩具店...')
+            , _react2.default.createElement('p', { className: "text-sm",}, locationStatus === 'requesting' ? '正在取得位置...' : mapsStatus === 'loading' ? '載入 Google Maps...' : `搜尋${formatRadius(searchRadius)}範圍內的玩具店...`)
           )
         )
         , isEmpty && !isInitialLoading && (
           _react2.default.createElement('div', { className: "text-center py-16 text-gray-500",}
             , _react2.default.createElement('div', { className: "text-5xl mb-3",}, "🔎")
-            , _react2.default.createElement('p', { className: "text-sm font-semibold text-gray-700",}, "附近 ", SEARCH_RADIUS_M / 1000, "km 內沒有玩具店")
+            , _react2.default.createElement('p', { className: "text-sm font-semibold text-gray-700",}, "附近 ", formatRadius(searchRadius), " 內沒有玩具店")
             , filterStats.total > 0 && filterStats.kept === 0
               ? _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1",}, "Google 回傳 ", filterStats.total, " 筆,但真偽驗證後全部被剔除")
               : _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1",}, usingDefaultLocation ? `目前搜尋範圍: ${DEFAULT_USER_LABEL}` : '試試擴大搜尋範圍')
@@ -1595,7 +1667,6 @@ function ToyFinder() {
           )
         ))
 
-        // ⭐ Sentinel — 滑到底自動觸發載入,沒有按鈕
         , !allGridsDone && effectivePlacesStatus === 'ready' && (
           _react2.default.createElement('div', { ref: sentinelRef, className: "py-6 text-center text-xs text-gray-400",}
             , _react2.default.createElement('div', { className: "inline-flex items-center gap-2",}
@@ -1609,7 +1680,7 @@ function ToyFinder() {
         )
         , allGridsDone && shops.length > 0 && (
           _react2.default.createElement('div', { className: "py-6 text-center text-xs text-gray-400",}
-            , "已顯示全部 ", gridProgress.total, " 個區域的搜尋結果 · 共 ", shops.length, " 間玩具店"
+            , "已顯示 ", formatRadius(searchRadius), " 範圍內全部 ", gridProgress.total, " 個區域 · 共 ", shops.length, " 間玩具店"
           )
         )
       )
