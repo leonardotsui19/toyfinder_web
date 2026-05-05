@@ -112,7 +112,7 @@ function loadGoogleMaps(apiKey) {
   if (gmapsLoaderPromise) return gmapsLoaderPromise;
   gmapsLoaderPromise = (async () => {
     bootstrapGoogleMaps({ key: apiKey, v: 'weekly' });
-    if (!_optionalChain([window, 'access', _7 => _7.google, 'optionalAccess', _8 => _8.importLibrary])) throw new Error('bootstrap failed');
+    if (!_optionalChain([window, 'access', _7 => _7.google, 'optionalAccess', _8 => _8.maps, 'optionalAccess', _9 => _9.importLibrary])) throw new Error('bootstrap failed');
     await window.google.maps.importLibrary('maps');
     await window.google.maps.importLibrary('marker');
     await window.google.maps.importLibrary('places');
