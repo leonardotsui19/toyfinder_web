@@ -897,7 +897,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const atMaxZoom = zoom >= MAP_MAX_ZOOM;
 
   return (
-    _react2.default.createElement('div', { className: "relative h-screen w-full overflow-hidden bg-gray-200 select-none",}
+    _react2.default.createElement('div', { className: "fixed inset-0 w-full overflow-hidden overscroll-none bg-gray-200 select-none", style: { height: "100dvh" } }
       , _react2.default.createElement('div', { ref: mapRef, className: "absolute inset-0 z-0 bg-gray-200",} )
 
       , mapStatus !== 'ready' && (
