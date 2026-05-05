@@ -137,7 +137,6 @@ const PLACE_FIELDS = [
   'googleMapsURI',
 ];
 
-// Legacy details API：用 placeId 補電話/網站/完整營業時間
 function fetchPlaceDetailsLegacy(google, placeId) {
   return new Promise((resolve) => {
     const places = google.maps.places;
@@ -157,7 +156,6 @@ function fetchPlaceDetailsLegacy(google, placeId) {
   });
 }
 
-// 產生網格中心點
 function generateGridCenters(google, center, radius, step) {
   const centers = [];
   const latStep = step / 111000;
@@ -185,7 +183,6 @@ function generateGridCenters(google, center, radius, step) {
   return centers;
 }
 
-// 單一區域搜尋 (Legacy API,含分頁,最多60筆)
 async function searchSingleAreaLegacy(google, service, S, center, radius) {
   const all = [];
   let pagination = null;
@@ -221,8 +218,7 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
   return all;
 }
 
-// 單一區域搜尋 (New API,含分頁,最多60筆)
-async function searchSingleAreaNewAPI(google, Place, TextRankPreference, center, radius) {
+async function searchSingleAreaNewAPI(google, Place, RankPreference, center, radius) {
   const all = [];
   let pageToken = null;
   let page = 0;
@@ -231,29 +227,19 @@ async function searchSingleAreaNewAPI(google, Place, TextRankPreference, center,
   do {
     const request = {
       fields: PLACE_FIELDS,
-      textQuery: 'toy store hobby shop collectibles model kits action figures gundam lego gachapon',
-      locationBias: { center: center, radius: radius },  // CircleLiteral 直接傳
+      locationRestriction: { center: center, radius: radius },
+      includedTypes: ['store', 'toy_store', 'hobby_shop', 'antique_store', 'second_hand_store'],
+      textQuery: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
       maxResultCount: 20,
-      // searchByText 預設 rankPreference 是 RELEVANCE,要按距離可解開下行
-      // rankPreference: TextRankPreference ? TextRankPreference.DISTANCE : undefined,
-      useStrictTypeFiltering: false,
+      rankPreference: RankPreference.DISTANCE,
     };
     if (pageToken) request.pageToken = pageToken;
 
-    let response;
-    try {
-      response = await Place.searchByText(request);
-    } catch (err) {
-      console.error('[New API] searchByText 失敗:', err);
-      throw err;
-    }
-
+    const response = await Place.searchNearby(request);
     const results = response.places || [];
     pageToken = response.nextPageToken;
     if (results.length > 0) all.push(...results);
     page++;
-
-    // 重要:next page token 通常需要短暫延遲才會生效
     if (pageToken && page < MAX_PAGES) {
       await new Promise(resolve => setTimeout(resolve, 2200));
     }
@@ -284,7 +270,6 @@ function normalizeLegacyPlace(p) {
   };
 }
 
-// ⭐ 新增: 一次性建立 search session(挑選 API + 產生網格 + 按距離排序)
 async function prepareSearchSession(google, center, bigRadius, gridSize) {
   if (bigRadius < gridSize) gridSize = bigRadius;
   const places = google.maps.places;
@@ -292,9 +277,9 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   let apiType = null;
   let apiCtx = null;
 
-  //if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchByText === 'function') {
+  //if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
   //  apiType = 'new';
-  //  apiCtx = { Place: places.Place, RankPreference: places.SearchByTextRankPreference };
+  //  apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
   //  console.log('[Search Session] 使用 New Places API');
   //} else if (places && places.PlacesService) {
     apiType = 'legacy';
@@ -307,7 +292,6 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   //  throw new Error('No Places API available');
   //}
 
-  // 產生網格 + 按距離由近到遠排序(使用者所在那格排第一)
   const rawCenters = generateGridCenters(google, center, bigRadius, gridSize);
   const centers = rawCenters
     .map(c => ({ lat: c.lat, lng: c.lng, _dist: haversine(center, c) }))
@@ -318,7 +302,6 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   return { apiType, apiCtx, centers, gridSize, center, bigRadius };
 }
 
-// ⭐ 新增: 搜單一網格 + 詳情補完(回傳已正規化的 place 陣列)
 async function searchOneGridAndEnrich(google, session, idx) {
   const gridCenter = session.centers[idx];
   if (!gridCenter) return [];
@@ -334,7 +317,6 @@ async function searchOneGridAndEnrich(google, session, idx) {
 
   console.log(`[Search Session] 網格 #${idx + 1}/${session.centers.length} 取得 ${raw.length} 筆原始資料 (距離 ${gridCenter._dist ? gridCenter._dist.toFixed(2) : '?'} km)`);
 
-  // 並行補完詳情(電話/網站/完整營業時間)
   const enriched = await Promise.all(raw.map(async (place) => {
     try {
       const idForDetails = session.apiType === 'new' ? place.id : place.place_id;
@@ -579,7 +561,6 @@ function computeBoundsForShops(google, userPos, shops) {
   return bounds;
 }
 
-// ⭐ 修改: 加入 sentinel 支援滑到底自動續查
 function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = false, onLoadMore, loadingMore, allDone }) {
   const scrollRef = _react.useRef.call(void 0, null);
   const sentinelRef = _react.useRef.call(void 0, null);
@@ -621,7 +602,6 @@ function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = fal
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp); };
   }, []);
 
-  // ⭐ Sentinel observer (橫向滑動到尾端時觸發)
   _react.useEffect.call(void 0, () => {
     if (!onLoadMore) return;
     if (allDone) return;
@@ -996,7 +976,6 @@ function ToyFinder() {
   const [refreshTick, setRefreshTick] = _react.useState.call(void 0, 0);
   const [showRejected, setShowRejected] = _react.useState.call(void 0, false);
 
-  // ⭐ 新增: 漸進式搜尋相關 state/ref
   const [loadingMore, setLoadingMore] = _react.useState.call(void 0, false);
   const [gridProgress, setGridProgress] = _react.useState.call(void 0, { done: 0, total: 0 });
   const [allGridsDone, setAllGridsDone] = _react.useState.call(void 0, false);
@@ -1063,7 +1042,10 @@ function ToyFinder() {
     return () => { cancelled = true; };
   }, [hasValidKey]);
 
-  // ⭐ 核心: loadNextGrid (跑下一個網格,把結果 append 到 state)
+  // ⭐ 給子元件用的穩定 ref(在 loadNextGrid 之前先宣告,讓 loadNextGrid 內可以遞迴呼叫)
+  const loadNextGridRef = _react.useRef.call(void 0, () => {});
+
+  // ⭐ 核心: loadNextGrid (跑下一個網格 + 自動續查直到撈到第一筆 OR 全部跑完)
   const loadNextGrid = _react.useCallback.call(void 0, async () => {
     const state = sessionStateRef.current;
     if (!state.session) return;
@@ -1079,12 +1061,12 @@ function ToyFinder() {
     isLoadingGridRef.current = true;
     setLoadingMore(true);
 
+    let addedCount = 0;
     try {
       const google = window.google;
       const results = await searchOneGridAndEnrich(google, state.session, idx);
       if (sessionStateRef.current.gen !== gen) return;
 
-      // 即時處理結果 + dedup
       const seen = state.seen;
       const newKeptPlaces = [];
       const newRejected = [];
@@ -1104,12 +1086,15 @@ function ToyFinder() {
         }
       });
 
-      console.log(`[Grid #${idx + 1}] dedup後 新增 ${newKeptPlaces.length} 間,過濾 ${newRejected.length} 間`);
+      addedCount = newKeptPlaces.length;
+      console.log(`[Grid #${idx + 1}] dedup後 新增 ${addedCount} 間,過濾 ${newRejected.length} 間`);
 
-      setPlacesShops(prev => {
-        const newShops = newKeptPlaces.map((p, i) => placeToShop(p, userPos, prev.length + i)).filter(Boolean);
-        return [...prev, ...newShops];
-      });
+      if (addedCount > 0) {
+        setPlacesShops(prev => {
+          const newShops = newKeptPlaces.map((p, i) => placeToShop(p, userPos, prev.length + i)).filter(Boolean);
+          return [...prev, ...newShops];
+        });
+      }
       setFilterStats(prev => ({
         total: prev.total + results.length,
         kept: prev.kept + newKeptPlaces.length,
@@ -1119,19 +1104,30 @@ function ToyFinder() {
       setGridProgress({ done: idx + 1, total: state.session.centers.length });
       if (idx + 1 >= state.session.centers.length) setAllGridsDone(true);
     } catch (err) {
-      if (sessionStateRef.current.gen !== gen) return;
-      console.error(`[Grid #${idx + 1}] 失敗:`, err);
-      // 不終止整個 session,只是跳過這格
-      setGridProgress({ done: idx + 1, total: state.session.centers.length });
-      if (idx + 1 >= state.session.centers.length) setAllGridsDone(true);
+      if (sessionStateRef.current.gen === gen) {
+        console.error(`[Grid #${idx + 1}] 失敗:`, err);
+        setGridProgress({ done: idx + 1, total: state.session.centers.length });
+        if (sessionStateRef.current.nextIdx >= state.session.centers.length) setAllGridsDone(true);
+      }
     } finally {
       isLoadingGridRef.current = false;
       setLoadingMore(false);
     }
+
+    // ⭐ 自動續查: 如果這格沒撈到任何新店,且還有未搜尋的網格,自動跳下一格
+    // 這樣使用者就不用手動再滑就能拿到至少一筆新資料(或一直跑到全部跑完)
+    if (sessionStateRef.current.gen !== gen) return;
+    const sess = sessionStateRef.current.session;
+    if (!sess) return;
+    const stillHasGrids = sessionStateRef.current.nextIdx < sess.centers.length;
+    if (addedCount === 0 && stillHasGrids) {
+      // 用 setTimeout 切到下個 task,讓 React 有機會更新 UI,並避免 stack 過深
+      setTimeout(() => {
+        if (sessionStateRef.current.gen === gen) loadNextGridRef.current();
+      }, 0);
+    }
   }, [userPos]);
 
-  // 給子元件用的穩定 ref
-  const loadNextGridRef = _react.useRef.call(void 0, () => {});
   loadNextGridRef.current = loadNextGrid;
 
   // ⭐ session 啟動 effect (位置/Maps ready 時建立 session + 跑第一格)
@@ -1139,7 +1135,6 @@ function ToyFinder() {
     if (mapsStatus !== 'ready') return;
     if (locationStatus === 'requesting') return;
 
-    // 重置 session
     sessionStateRef.current.gen += 1;
     const gen = sessionStateRef.current.gen;
     sessionStateRef.current.session = null;
@@ -1165,12 +1160,10 @@ function ToyFinder() {
         sessionStateRef.current.session = session;
         setApiUsed(session.apiType);
         setGridProgress({ done: 0, total: session.centers.length });
-
-        // 跑第一格(使用者所在 grid)
-        await loadNextGridRef.current();
-        if (sessionStateRef.current.gen !== gen) return;
-
         setPlacesStatus('ready');
+
+        // 跑第一格 — loadNextGrid 內建自動續查,所以如果第一格 0 筆會自動跳第二格...
+        loadNextGridRef.current();
       } catch (err) {
         if (sessionStateRef.current.gen !== gen) return;
         console.error('[Search Session] 初始化失敗:', err);
@@ -1180,22 +1173,10 @@ function ToyFinder() {
     })();
 
     return () => {
-      // 失效當前 session,讓 in-flight 請求自我跳出
       sessionStateRef.current.gen += 1;
       isLoadingGridRef.current = false;
     };
   }, [mapsStatus, locationStatus, userPos, refreshTick]);
-
-  // ⭐ 自動續查 (當有 session 且仍然沒有結果時,自動下一格,直到撈到第一筆 OR 全部跑完)
-  _react.useEffect.call(void 0, () => {
-    if (placesStatus !== 'ready') return;
-    if (allGridsDone) return;
-    if (placesShops.length > 0) return;
-    if (loadingMore) return;
-    if (isLoadingGridRef.current) return;
-    // 觸發下一格
-    loadNextGridRef.current();
-  }, [placesStatus, allGridsDone, placesShops.length, loadingMore]);
 
   // ⭐ 首頁列表底部 sentinel observer (滑到底自動續查下一格)
   _react.useEffect.call(void 0, () => {
@@ -1222,7 +1203,6 @@ function ToyFinder() {
   const shops = placesShops;
   const usingDefaultLocation = locationStatus !== 'granted' && locationStatus !== 'requesting';
 
-  // ⭐ 派生 effective status: ready 但所有 grid 都跑完且無結果 → empty
   const effectivePlacesStatus = (placesStatus === 'ready' && allGridsDone && shops.length === 0) ? 'empty' : placesStatus;
 
   const availableCategories = _react.useMemo.call(void 0, () => new Set(['全部', ...shops.map(s => s.category)]), [shops]);
@@ -1615,17 +1595,16 @@ function ToyFinder() {
           )
         ))
 
-        // ⭐ Sentinel + 載入更多狀態
+        // ⭐ Sentinel — 滑到底自動觸發載入,沒有按鈕
         , !allGridsDone && effectivePlacesStatus === 'ready' && (
-          _react2.default.createElement('div', { ref: sentinelRef, className: "py-6 text-center",}
-            , loadingMore
-              ? _react2.default.createElement('div', { className: "inline-flex items-center gap-2 text-sm text-gray-500",}
-                  , _react2.default.createElement('div', { className: "w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin",})
-                  , _react2.default.createElement('span', null, "搜尋下一個區域中... (", gridProgress.done, "/", gridProgress.total, ")")
+          _react2.default.createElement('div', { ref: sentinelRef, className: "py-6 text-center text-xs text-gray-400",}
+            , _react2.default.createElement('div', { className: "inline-flex items-center gap-2",}
+              , _react2.default.createElement('div', { className: "w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin",})
+              , _react2.default.createElement('span', null, loadingMore
+                  ? `搜尋下一個區域中... (${gridProgress.done}/${gridProgress.total})`
+                  : `繼續向下滑動載入更多 (${gridProgress.done}/${gridProgress.total} 區域)`
                 )
-              : _react2.default.createElement('button', { onClick: () => loadNextGridRef.current(), className: "inline-flex items-center gap-1.5 text-sm text-red-500 font-semibold bg-white border border-red-200 rounded-full px-4 py-2 shadow-sm",}
-                  , _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3.5 h-3.5",} ), "載入更多 (", gridProgress.done, "/", gridProgress.total, " 區域)"
-                )
+            )
           )
         )
         , allGridsDone && shops.length > 0 && (
