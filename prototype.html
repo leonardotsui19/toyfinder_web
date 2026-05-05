@@ -9,8 +9,8 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
 
 const DEFAULT_USER_POS = { lat: 25.0421, lng: 121.5082 };
 const DEFAULT_USER_LABEL = '台北';
-const SEARCH_RADIUS_M = 2000;
-const GRID_SIZE_M = 1000;
+const SEARCH_RADIUS_M = 1000;
+const GRID_SIZE_M = 500;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
 const MAP_MIN_ZOOM = 11;
@@ -222,7 +222,7 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
 }
 
 // 單一區域搜尋 (New API,含分頁,最多60筆)
-async function searchSingleAreaNewAPI(google, Place, RankPreference, center, radius) {
+async function searchSingleAreaNewAPI(google, Place, TextRankPreference, center, radius) {
   const all = [];
   let pageToken = null;
   let page = 0;
@@ -231,19 +231,29 @@ async function searchSingleAreaNewAPI(google, Place, RankPreference, center, rad
   do {
     const request = {
       fields: PLACE_FIELDS,
-      locationRestriction: { center: center, radius: radius },
-      includedTypes: ['store', 'toy_store', 'hobby_shop', 'antique_store', 'second_hand_store'],
-      textQuery: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
+      textQuery: 'toy store hobby shop collectibles model kits action figures gundam lego gachapon',
+      locationBias: { center: center, radius: radius },  // CircleLiteral 直接傳
       maxResultCount: 20,
-      rankPreference: RankPreference.DISTANCE,
+      // searchByText 預設 rankPreference 是 RELEVANCE,要按距離可解開下行
+      // rankPreference: TextRankPreference ? TextRankPreference.DISTANCE : undefined,
+      useStrictTypeFiltering: false,
     };
     if (pageToken) request.pageToken = pageToken;
 
-    const response = await Place.searchNearby(request);
+    let response;
+    try {
+      response = await Place.searchByText(request);
+    } catch (err) {
+      console.error('[New API] searchByText 失敗:', err);
+      throw err;
+    }
+
     const results = response.places || [];
     pageToken = response.nextPageToken;
     if (results.length > 0) all.push(...results);
     page++;
+
+    // 重要:next page token 通常需要短暫延遲才會生效
     if (pageToken && page < MAX_PAGES) {
       await new Promise(resolve => setTimeout(resolve, 2200));
     }
@@ -282,9 +292,9 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   let apiType = null;
   let apiCtx = null;
 
-  if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
+  if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchByText === 'function') {
     apiType = 'new';
-    apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
+    apiCtx = { Place: places.Place, RankPreference: places.SearchByTextRankPreference };
     console.log('[Search Session] 使用 New Places API');
   } else if (places && places.PlacesService) {
     apiType = 'legacy';
