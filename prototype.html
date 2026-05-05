@@ -751,7 +751,7 @@ function HorizontalShopList({ shops, onSelect, scrollPositionRef, isHidden = fal
         , loadingMore
           ? _react2.default.createElement('div', { className: "w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin",})
           : _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-5 h-5 rotate-180 text-gray-400",})
-        , _react2.default.createElement('span', null, loadingMore ? '搜尋中...' : '滑動載入更多')
+        , _react2.default.createElement('span', null, loadingMore ? '探索中...' : '滑動載入更多')
       )
     )
   );
@@ -897,7 +897,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
   const atMaxZoom = zoom >= MAP_MAX_ZOOM;
 
   return (
-    _react2.default.createElement('div', { className: "fixed inset-0 w-full overflow-hidden overscroll-none bg-gray-200 select-none", style: { height: "100dvh" } }
+    _react2.default.createElement('div', { className: "fixed inset-0 w-full overflow-hidden overscroll-none bg-gray-200 select-none", style: { height: "100dvh" }}
       , _react2.default.createElement('div', { ref: mapRef, className: "absolute inset-0 z-0 bg-gray-200",} )
 
       , mapStatus !== 'ready' && (
@@ -934,7 +934,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
           )
           , _react2.default.createElement('div', { className: "flex-1 min-w-0 bg-white rounded-full shadow-lg flex items-center px-4 py-2.5",}
             , _react2.default.createElement(_lucidereact.Search, { className: "w-4 h-4 text-gray-400 flex-shrink-0",} )
-            , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋附近玩具店...", className: "flex-1 ml-2 text-sm outline-none bg-transparent min-w-0",} )
+            , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "探索附近玩具店...", className: "flex-1 ml-2 text-sm outline-none bg-transparent min-w-0",} )
             , searchQuery && _react2.default.createElement('button', { onClick: () => setSearchQuery(''),}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4 text-gray-400",} ))
           )
           , _react2.default.createElement('div', { className: "bg-white rounded-full shadow-lg px-3 py-2 text-xs font-bold text-gray-700 flex items-center gap-1 flex-shrink-0",}
@@ -973,7 +973,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
       , _react2.default.createElement('div', { className: "absolute bottom-20 left-0 right-0 z-30 pointer-events-none",}
         , !mapPinShop && _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto",}
           , _react2.default.createElement('span', { className: "text-xs font-bold text-gray-700 bg-white px-2.5 py-1 rounded-full shadow",}, "📍 "
-             , visibleShops.length > 0 ? `${visibleShops.length} 間玩具店${!allGridsDone ? '+' : ''}` : (placesStatus === 'loading' || loadingMore ? '搜尋中...' : '沒有符合的店舗')
+             , visibleShops.length > 0 ? `${visibleShops.length} 間玩具店${!allGridsDone ? '+' : ''}` : (placesStatus === 'loading' || loadingMore ? '探索中...' : '沒有符合的店舗')
           )
           , favIdSet && favIdSet.size > 0 && _react2.default.createElement('span', { className: "text-xs font-bold text-red-500 bg-white px-2.5 py-1 rounded-full shadow flex items-center gap-1",}
               , _react2.default.createElement(_lucidereact.Heart, { className: "w-3 h-3 fill-red-500",} )
@@ -1095,7 +1095,7 @@ function RadiusPicker({ value, onChange }) {
       , _react2.default.createElement('button', {
           onClick: () => setOpen(o => !o),
           className: "inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/25 hover:bg-white/35 active:bg-white/40 transition whitespace-nowrap",
-          title: "選擇搜尋範圍",
+          title: "選擇探索範圍",
         }
         , _react2.default.createElement(_lucidereact.Target, { className: "w-3 h-3 flex-shrink-0",} )
         , _react2.default.createElement('span', null, "範圍 ", formatRadius(value))
@@ -1103,7 +1103,7 @@ function RadiusPicker({ value, onChange }) {
       )
       , open && (
         _react2.default.createElement('div', { className: "absolute z-50 mt-2 right-0 bg-white rounded-xl shadow-2xl border border-gray-100 p-2 w-52",}
-          , _react2.default.createElement('div', { className: "px-1.5 py-1 text-xs font-bold text-gray-500",}, "搜尋範圍")
+          , _react2.default.createElement('div', { className: "px-1.5 py-1 text-xs font-bold text-gray-500",}, "探索範圍")
           , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-1.5",}
             , RADIUS_OPTIONS.map(r => {
                 const active = r === value;
@@ -1462,7 +1462,7 @@ function ToyFinder() {
     });
   }, [favorites, shops, userPos]);
 
-  // 地圖用: 合併當前搜尋結果 + 不在範圍內的收藏
+  // 地圖用: 合併當前探索結果 + 不在範圍內的收藏
   const mergedMapShops = _react.useMemo.call(void 0, () => {
     const inSearch = new Set(shops.map(s => s.id));
     const extras = favorites
@@ -1543,10 +1543,8 @@ function ToyFinder() {
         , _react2.default.createElement('div', { className: "bg-gradient-to-br from-red-500 via-rose-500 to-pink-500 px-5 pt-8 pb-5 text-white",}
           , _react2.default.createElement('div', { className: "flex items-center justify-between mb-1",}
             , _react2.default.createElement('div', null
-              , _react2.default.createElement('h1', { className: "text-3xl font-black tracking-tight flex items-center gap-2",}, _react2.default.createElement(_lucidereact.Heart, { className: "w-7 h-7 fill-white",} ), "我的收藏")
-              , _react2.default.createElement('p', { className: "text-sm text-white/85 mt-0.5",}, favorites.length > 0 ? `${favorites.length} 間已收藏的店舗` : '把喜愛的店收藏起來吧')
+              , _react2.default.createElement('h1', { className: "text-3xl font-black tracking-tight flex items-center gap-2",}, "我的收藏")
             )
-            , _react2.default.createElement('div', { className: "text-5xl",}, "❤️")
           )
 
           , favorites.length > 0 && _react2.default.createElement('div', { className: "grid grid-cols-3 gap-2 mt-4",}
@@ -1588,7 +1586,6 @@ function ToyFinder() {
         , _react2.default.createElement('div', { className: "px-5 py-3 space-y-3",}
           , favorites.length === 0 ? (
             _react2.default.createElement('div', { className: "text-center py-16 px-4",}
-              , _react2.default.createElement('div', { className: "text-7xl mb-4",}, "💝")
               , _react2.default.createElement('p', { className: "text-lg font-bold text-gray-700",}, "尚未收藏任何店舗")
               , _react2.default.createElement('p', { className: "text-sm text-gray-400 mt-2",}, "在探索頁或地圖上點 ❤️ 即可加入收藏")
               , _react2.default.createElement('button', { onClick: () => setView('home'), className: "mt-6 inline-flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full px-5 py-2.5 font-bold text-sm shadow-lg",}
@@ -1768,7 +1765,7 @@ function ToyFinder() {
 
         , _react2.default.createElement('div', { className: "mt-3 bg-white rounded-xl flex items-center px-3 py-2.5 shadow-lg",}
           , _react2.default.createElement(_lucidereact.Search, { className: "w-4 h-4 text-gray-400",} )
-          , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "搜尋店舗、區域或關鍵字...", className: "flex-1 ml-2 text-sm text-gray-800 outline-none bg-transparent",} )
+          , _react2.default.createElement('input', { value: searchQuery, onChange: e => setSearchQuery(e.target.value), placeholder: "探索店舗、區域或關鍵字...", className: "flex-1 ml-2 text-sm text-gray-800 outline-none bg-transparent",} )
           , searchQuery && _react2.default.createElement('button', { onClick: () => setSearchQuery(''),}, _react2.default.createElement(_lucidereact.X, { className: "w-4 h-4 text-gray-400",} ))
         )
 
@@ -1777,7 +1774,7 @@ function ToyFinder() {
             , _react2.default.createElement('div', { className: "bg-white rounded-lg p-2",}, _react2.default.createElement(_lucidereact.Map, { className: "w-4 h-4 text-red-500",} ))
             , _react2.default.createElement('div', { className: "text-left",}
               , _react2.default.createElement('p', { className: "text-sm font-bold",}, "地圖模式")
-              , _react2.default.createElement('p', { className: "text-xs text-white/80",}, "搜尋範圍 ", formatRadius(searchRadius), favorites.length > 0 ? ` · 含 ${favorites.length} 個收藏` : '')
+              , _react2.default.createElement('p', { className: "text-xs text-white/80",}, "探索範圍 ", formatRadius(searchRadius), favorites.length > 0 ? ` · 含 ${favorites.length} 個收藏` : '')
             )
           )
           , _react2.default.createElement(_lucidereact.ChevronLeft, { className: "w-4 h-4 rotate-180",} )
@@ -1811,26 +1808,26 @@ function ToyFinder() {
                   , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3",} ), "重新整理"
                 )
               )
-              , gridProgress.total > 0 && (
-                _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-3 py-1.5 text-xs flex items-center gap-2",}
-                  , loadingMore
-                    ? _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0",})
-                    : _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3 flex-shrink-0",} )
-                  , _react2.default.createElement('div', { className: "flex-1 min-w-0",}
-                    , _react2.default.createElement('div', { className: "flex items-center justify-between gap-2",}
-                      , _react2.default.createElement('span', null, allGridsDone ? `已搜尋全部 ${gridProgress.total} 個區域` : (loadingMore ? `搜尋中 (${gridProgress.done}/${gridProgress.total})` : `已載入 ${gridProgress.done}/${gridProgress.total} 區域 · 滑到底再載入`))
-                    )
-                    , _react2.default.createElement('div', { className: "h-1 bg-white/20 rounded-full mt-1 overflow-hidden",}
-                      , _react2.default.createElement('div', { className: "h-full bg-emerald-300 rounded-full transition-all", style: { width: `${gridProgress.total ? Math.round((gridProgress.done / gridProgress.total) * 100) : 0}%` },})
-                    )
-                  )
-                )
-              )
+              //, gridProgress.total > 0 && (
+              //  _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-3 py-1.5 text-xs flex items-center gap-2",}
+              //    , loadingMore
+              //      ? _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0",})
+              //      : _react2.default.createElement(_lucidereact.Sparkles, { className: "w-3 h-3 flex-shrink-0",} )
+              //    , _react2.default.createElement('div', { className: "flex-1 min-w-0",}
+              //      , _react2.default.createElement('div', { className: "flex items-center justify-between gap-2",}
+              //        , _react2.default.createElement('span', null, allGridsDone ? `已探索全部 ${gridProgress.total} 個區域` : (loadingMore ? `探索中 (${gridProgress.done}/${gridProgress.total})` : `已載入 ${gridProgress.done}/${gridProgress.total} 區域 · 滑到底再載入`))
+              //      )
+              //      , _react2.default.createElement('div', { className: "h-1 bg-white/20 rounded-full mt-1 overflow-hidden",}
+              //        , _react2.default.createElement('div', { className: "h-full bg-emerald-300 rounded-full transition-all", style: { width: `${gridProgress.total ? Math.round((gridProgress.done / gridProgress.total) * 100) : 0}%` },})
+              //      )
+              //    )
+              //  )
+              //)
             )
           ) : effectivePlacesStatus === 'loading' ? (
             _react2.default.createElement('div', { className: "flex items-center gap-2 text-xs bg-white/15 rounded-lg px-3 py-2",}
               , _react2.default.createElement('div', { className: "w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin",})
-              , _react2.default.createElement('span', null, "正在搜尋", formatRadius(searchRadius), "範圍內的玩具店...")
+              , _react2.default.createElement('span', null, "正在探索", formatRadius(searchRadius), "範圍內的玩具店...")
             )
           ) : effectivePlacesStatus === 'empty' ? (
             _react2.default.createElement('div', { className: "bg-amber-400/25 border border-amber-300/40 rounded-lg px-3 py-2 text-xs",}
@@ -1855,8 +1852,8 @@ function ToyFinder() {
 
         , _react2.default.createElement('div', { className: "grid grid-cols-3 gap-2 mt-3",}
           , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center",}
-            , _react2.default.createElement('p', { className: "text-lg font-bold",}, shops.length, !allGridsDone && _react2.default.createElement('span', { className: "text-xs",}, "+"))
-            , _react2.default.createElement('p', { className: "text-xs text-white/80",}, "已驗證店舗")
+            , _react2.default.createElement('p', { className: "text-lg font-bold",}, shops.length, shops.length > 0 && !allGridsDone && _react2.default.createElement('span', { className: "text-xs",}, "+"))
+            , _react2.default.createElement('p', { className: "text-xs text-white/80",}, "已驗證玩具店")
           )
           , _react2.default.createElement('div', { className: "bg-white/15 rounded-lg px-2 py-2 text-center",}
             , _react2.default.createElement('p', { className: "text-lg font-bold",}, nearbyShops[0] ? `${nearbyShops[0].distance.toFixed(1)}km` : '–')
@@ -1906,7 +1903,7 @@ function ToyFinder() {
         , isInitialLoading && shops.length === 0 && (
           _react2.default.createElement('div', { className: "text-center py-16 text-gray-400",}
             , _react2.default.createElement('div', { className: "inline-block w-10 h-10 border-4 border-red-400 border-t-transparent rounded-full animate-spin mb-3",})
-            , _react2.default.createElement('p', { className: "text-sm",}, locationStatus === 'requesting' ? '正在取得位置...' : mapsStatus === 'loading' ? '載入 Google Maps...' : `搜尋${formatRadius(searchRadius)}範圍內的玩具店...`)
+            , _react2.default.createElement('p', { className: "text-sm",}, locationStatus === 'requesting' ? '正在取得位置...' : mapsStatus === 'loading' ? '載入 Google Maps...' : `探索${formatRadius(searchRadius)}範圍內的玩具店...`)
           )
         )
         , isEmpty && !isInitialLoading && (
@@ -1915,9 +1912,9 @@ function ToyFinder() {
             , _react2.default.createElement('p', { className: "text-sm font-semibold text-gray-700",}, "附近 ", formatRadius(searchRadius), " 內沒有玩具店")
             , filterStats.total > 0 && filterStats.kept === 0
               ? _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1",}, "Google 回傳 ", filterStats.total, " 筆,但真偽驗證後全部被剔除")
-              : _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1",}, usingDefaultLocation ? `目前搜尋範圍: ${DEFAULT_USER_LABEL}` : '試試擴大搜尋範圍')
+              : _react2.default.createElement('p', { className: "text-xs text-gray-400 mt-1",}, usingDefaultLocation ? `目前探索範圍: ${DEFAULT_USER_LABEL}` : '試試擴大探索範圍')
             , _react2.default.createElement('button', { onClick: () => setRefreshTick(t => t + 1), className: "mt-3 inline-flex items-center gap-1 text-sm text-red-500 font-semibold",}
-              , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3",} ), "重新搜尋"
+              , _react2.default.createElement(_lucidereact.RefreshCw, { className: "w-3 h-3",} ), "重新探索"
             )
           )
         )
@@ -1938,7 +1935,7 @@ function ToyFinder() {
         , !isInitialLoading && !isEmpty && effectivePlacesStatus !== 'error' && filteredShops.length === 0 && shops.length > 0 && (
           _react2.default.createElement('div', { className: "text-center py-12 text-gray-400",}
             , _react2.default.createElement('div', { className: "text-4xl mb-2",}, "🔍")
-            , _react2.default.createElement('p', { className: "text-sm",}, "目前分類或搜尋條件下沒有店舗")
+            , _react2.default.createElement('p', { className: "text-sm",}, "目前分類或探索條件下沒有店舗")
             , _react2.default.createElement('button', { onClick: () => { setActiveCategory('全部'); setSearchQuery(''); }, className: "mt-2 text-xs text-red-500 font-semibold",}, "清除篩選")
           )
         )
@@ -1959,15 +1956,15 @@ function ToyFinder() {
             , _react2.default.createElement('div', { className: "inline-flex items-center gap-2",}
               , _react2.default.createElement('div', { className: "w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin",})
               , _react2.default.createElement('span', null, loadingMore
-                  ? `搜尋下一個區域中... (${gridProgress.done}/${gridProgress.total})`
-                  : `繼續向下滑動載入更多 (${gridProgress.done}/${gridProgress.total} 區域)`
+                  ? `探索下一個區域中... (${gridProgress.done}/${gridProgress.total})`
+                  : `繼續向下滑動載入更多範圍內的店舖)`
                 )
             )
           )
         )
         , allGridsDone && shops.length > 0 && (
           _react2.default.createElement('div', { className: "py-6 text-center text-xs text-gray-400",}
-            , "已顯示 ", formatRadius(searchRadius), " 範圍內全部 ", gridProgress.total, " 個區域 · 共 ", shops.length, " 間玩具店"
+            , "已顯示 ", formatRadius(searchRadius), " 範圍內全部 ", shops.length, " 間玩具店"
           )
         )
       )
