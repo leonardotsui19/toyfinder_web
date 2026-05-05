@@ -35,7 +35,7 @@ function gridSizeForRadius(radius) {
 const MAP_MIN_ZOOM = 11;
 const MAP_MAX_ZOOM = 18;
 const MAP_DEFAULT_ZOOM = 14;
-const FIT_PADDING = { top: 140, right: 30, bottom: 220, left: 30 };
+const FIT_PADDING = { top: 140, right: 30, bottom: 290, left: 30 };
 
 // ============= 收藏儲存層 =============
 const FAVORITES_STORAGE_KEY = 'toyfinder_favorites_v1';
@@ -970,7 +970,7 @@ function MapView({ mapStatus, mapsError, userPos, locationStatus, refreshLocatio
         )
       )
 
-      , _react2.default.createElement('div', { className: "absolute bottom-4 left-0 right-0 z-30 pointer-events-none",}
+      , _react2.default.createElement('div', { className: "absolute bottom-20 left-0 right-0 z-30 pointer-events-none",}
         , !mapPinShop && _react2.default.createElement('div', { className: "px-4 mb-2 flex items-center justify-between pointer-events-auto",}
           , _react2.default.createElement('span', { className: "text-xs font-bold text-gray-700 bg-white px-2.5 py-1 rounded-full shadow",}, "📍 "
              , visibleShops.length > 0 ? `${visibleShops.length} 間玩具店${!allGridsDone ? '+' : ''}` : (placesStatus === 'loading' || loadingMore ? '搜尋中...' : '沒有符合的店舗')
