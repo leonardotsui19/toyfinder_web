@@ -21,15 +21,20 @@ function formatRadius(m) {
   return `${m}m`;
 }
 
+//function gridSizeForRadius(radius) {
+//  if (radius <= 200) return Math.max(80, radius);
+//  if (radius <= 500) return 250;
+//  if (radius <= 1000) return 500;
+//  if (radius <= 2000) return 600;
+//  if (radius <= 3000) return 800;
+//  if (radius <= 5000) return 1200;
+//  if (radius <= 10000) return 1800;
+//  return 2500;
+//}
+
 function gridSizeForRadius(radius) {
-  if (radius <= 200) return Math.max(80, radius);
-  if (radius <= 500) return 250;
-  if (radius <= 1000) return 500;
-  if (radius <= 2000) return 600;
-  if (radius <= 3000) return 800;
-  if (radius <= 5000) return 1200;
-  if (radius <= 10000) return 1800;
-  return 2500;
+  if (radius <= 500) return 100;
+  return 500;
 }
 
 const MAP_MIN_ZOOM = 11;
