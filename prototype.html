@@ -1166,10 +1166,10 @@ function ShopRow({ shop, idx, showRank, isFavorite, onToggleFav, onOpen, StarRat
 // 底部導航 (各頁共用)
 function BottomNav({ view, setView, favoritesCount }) {
   const tabs = [
-    { key: 'home', label: '探索', icon: _lucidereact.TrendingUp },
+    { key: 'home', label: '探索', icon: _lucidereact.Binoculars },
     { key: 'map', label: '地圖', icon: _lucidereact.Map },
     { key: 'favorites', label: '收藏', icon: _lucidereact.Heart, badge: favoritesCount },
-    { key: 'me', label: '我的', icon: null },
+    { key: 'me', label: '我的', icon: _lucidereact.CircleUserRound },
   ];
   return (
     _react2.default.createElement('div', { className: "fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-40",}
