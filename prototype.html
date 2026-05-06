@@ -516,7 +516,7 @@ function placeToShop(place, userPos, idx) {
     badge, image: GRADIENTS[idx % GRADIENTS.length], emoji: EMOJIS[category] || '🧸',
     _photoRef: photoRef,
     _hasPhoto: !!photoRef,
-    description: `${primaryDisplay || '玩具店'}・位於${area},距離 ${distance.toFixed(1)} km。${isClosed ? ' (目前暫停營業)' : ''}`,
+    description: `${primaryDisplay || '玩具店'}・位於${area}。${isClosed ? ' (目前暫停營業)' : ''}`,
     highlights, lat: pos.lat, lng: pos.lng, distance, address: addr, isClosed,
     __legacy: !!place.__legacy,
     __primaryType: place.primaryType || '',
