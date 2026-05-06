@@ -1565,7 +1565,7 @@ function ToyFinder() {
 
         , favorites.length > 0 && _react2.default.createElement('div', { className: "px-5 py-3 flex items-center justify-between bg-white border-b",}
           , _react2.default.createElement('div', { className: "flex items-center gap-2",}
-            , _react2.default.createElement(_lucidereact.Bookmark, { className: "w-4 h-4 text-red-500",} )
+            , _react2.default.createElement(_lucidereact.Heart, { className: "w-4 h-4 text-red-500",} )
             , _react2.default.createElement('span', { className: "text-sm font-bold text-gray-900",}, "收藏列表")
             , _react2.default.createElement('span', { className: "text-xs text-gray-400",}, "· ", sortedFavorites.length, " 間")
           )
@@ -1718,7 +1718,7 @@ function ToyFinder() {
         )
         , _react2.default.createElement('div', { className: "fixed bottom-0 left-0 right-0 bg-white border-t px-5 py-3 flex gap-3 z-40",}
           , _react2.default.createElement('button', { onClick: () => toggleFav(cur), className: "flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2.5 flex items-center gap-1.5",}
-            , _react2.default.createElement(_lucidereact.Bookmark, { className: `w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`,} )
+            , _react2.default.createElement(_lucidereact.Heart, { className: `w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`,} )
             , _react2.default.createElement('span', { className: "text-sm font-semibold",}, isFav ? '已收藏' : '收藏')
           )
           , _react2.default.createElement('a', { href: `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${cur.lat},${cur.lng}&destination_place_id=${cur.id}`, target: "_blank", rel: "noopener noreferrer", className: "flex-1 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg py-2.5 font-bold text-sm shadow-lg text-center",}, "導航前往 (", cur.distance.toFixed(1), " km)")
