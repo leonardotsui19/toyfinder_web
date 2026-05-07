@@ -434,7 +434,7 @@ function todayIndexInDescriptions(weekdayDescriptions) {
   return -1;
 }
 
-const EMOJIS = { '綜合玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '復古玩具': '🎪', '公仔': '🦸', '盒玩': '📦', '設計師玩具': '🎨' };
+const EMOJIS = { '綜合玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '復古玩具': '🎪', '手辦': '🦸', '盒玩': '📦', '設計師玩具': '🎨' };
 const GRADIENTS = [
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -1525,7 +1525,7 @@ function ToyFinder() {
 
   const getCategoryColor = _react.useCallback.call(void 0, (cat) => ({
     '綜合玩具': '#ef4444', '模型': '#6366f1', '扭蛋': '#ec4899', '積木': '#3b82f6',
-    '復古玩具': '#f59e0b', '公仔': '#10b981', '設計師玩具': '#a855f7', '盒玩': '#f97316'
+    '復古玩具': '#f59e0b', '手辦': '#10b981', '設計師玩具': '#a855f7', '盒玩': '#f97316'
   }[cat] || '#ef4444'), []);
 
   const StarRating = ({ rating, size = 'sm' }) => {
