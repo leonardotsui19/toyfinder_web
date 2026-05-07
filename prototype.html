@@ -198,7 +198,7 @@ function fetchPlaceDetailsLegacy(google, placeId) {
       {
         placeId,
         fields: ['formatted_phone_number', 'international_phone_number', 'website', 'url', 'opening_hours'],
-        language: 'zh-TW',
+        language: 'zh-HK',
       },
       (result, status) => {
         if (status === places.PlacesServiceStatus.OK) resolve(result);
@@ -246,6 +246,7 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
     radius: Math.floor(radius),
     keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
     type: 'store',
+	language: 'zh-HK'
   };
 
   do {
@@ -284,6 +285,7 @@ async function searchSingleAreaNewAPI(google, Place, RankPreference, center, rad
       textQuery: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
       maxResultCount: 20,
       rankPreference: RankPreference.DISTANCE,
+	  language: 'zh-HK'
     };
     if (pageToken) request.pageToken = pageToken;
 
