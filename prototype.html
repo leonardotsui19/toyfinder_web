@@ -520,7 +520,7 @@ function placeToShop(place, userPos, idx) {
     badge, image: GRADIENTS[idx % GRADIENTS.length], emoji: EMOJIS[category] || '🧸',
     _photoRef: photoRef,
     _hasPhoto: !!photoRef,
-    description: `${primaryDisplay || '玩具店'}・位於${area}。${isClosed ? ' (目前暫停營業)' : ''}`,
+    description: `${primaryDisplay || '玩具店'}・位於${addr}。${isClosed ? ' (目前暫停營業)' : ''}`,
     highlights, lat: pos.lat, lng: pos.lng, distance, address: addr, isClosed,
     __legacy: !!place.__legacy,
     __primaryType: place.primaryType || '',
@@ -1594,7 +1594,7 @@ function ToyFinder() {
               , _react2.default.createElement('p', { className: "text-lg font-bold text-gray-700",}, "尚未收藏任何店舖")
               , _react2.default.createElement('p', { className: "text-sm text-gray-400 mt-2",}, "在探索頁或地圖上點 ❤️ 即可加入收藏")
               , _react2.default.createElement('button', { onClick: () => setView('home'), className: "mt-6 inline-flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full px-5 py-2.5 font-bold text-sm shadow-lg",}
-                , _react2.default.createElement(_lucidereact.TrendingUp, { className: "w-4 h-4",} ), "去探索"
+                , _react2.default.createElement(_lucidereact.Binoculars, { className: "w-4 h-4",} ), "去探索"
               )
             )
           ) : (
