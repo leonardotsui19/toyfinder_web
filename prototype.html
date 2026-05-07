@@ -400,7 +400,7 @@ function inferCategory(name = '', types = []) {
   if (/手辦|figure|figurine|景品|黏土人|nendoroid|figma|hottoys||hot ?toys|inart|scale/i.test(n)) return '手辦';
   if (/盒玩|食玩|盲盒|blind ?box|popmart|泡泡瑪特|molly|labubu/i.test(n)) return '盒玩';
   if (/設計師|手作|手工|diy|craft|工房|gallery|studio|ハンドメイド|軟膠|搪膠|sofubi|sofvi|ソフビ/i.test(n)) return '設計師玩具';
-  if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '懷舊玩具';
+  if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '復古玩具';
   return '綜合玩具';
 }
 
@@ -433,7 +433,7 @@ function todayIndexInDescriptions(weekdayDescriptions) {
   return -1;
 }
 
-const EMOJIS = { '玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '懷舊玩具': '🎪', '公仔': '🦸', '盒玩': '📦', '設計師/手作玩具': '🎨' };
+const EMOJIS = { '綜合玩具': '🧸', '扭蛋': '🎰', '模型': '🤖', '積木': '🧱', '復古玩具': '🎪', '公仔': '🦸', '盒玩': '📦', '設計師玩具': '🎨' };
 const GRADIENTS = [
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -1443,7 +1443,7 @@ function ToyFinder() {
     return () => io.disconnect();
   }, [view, allGridsDone, placesStatus, placesShops.length]);
 
-  const categories = ['全部', '玩具', '扭蛋', '模型', '積木', '懷舊玩具', '公仔', '盒玩', '設計師/手作玩具'];
+  const categories = ['全部', '綜合玩具', '扭蛋', '模型', '積木', '手辦', '盒玩', '設計師玩具', '復古玩具'];
   const shops = placesShops;
   const usingDefaultLocation = locationStatus !== 'granted' && locationStatus !== 'requesting';
 
@@ -1523,8 +1523,8 @@ function ToyFinder() {
   const closeDetail = _react.useCallback.call(void 0, () => { setView(detailFrom || 'home'); }, [detailFrom]);
 
   const getCategoryColor = _react.useCallback.call(void 0, (cat) => ({
-    '玩具': '#ef4444', '模型': '#6366f1', '扭蛋': '#ec4899', '積木': '#3b82f6',
-    '懷舊玩具': '#f59e0b', '公仔': '#10b981', '設計師/手作玩具': '#a855f7', '盒玩': '#f97316'
+    '綜合玩具': '#ef4444', '模型': '#6366f1', '扭蛋': '#ec4899', '積木': '#3b82f6',
+    '復古玩具': '#f59e0b', '公仔': '#10b981', '設計師玩具': '#a855f7', '盒玩': '#f97316'
   }[cat] || '#ef4444'), []);
 
   const StarRating = ({ rating, size = 'sm' }) => {
