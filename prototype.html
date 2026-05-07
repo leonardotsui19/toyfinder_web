@@ -397,7 +397,7 @@ function inferCategory(name = '', types = []) {
   if (/扭蛋|轉蛋|ガチャ|gacha|gashapon|カプセル/i.test(n)) return '扭蛋';
   if (/模型|Hobby|Hobbies|Model|鋼彈|高達|gundam|plamo|プラモ|塑膠模型|田宮|tamiya|rc\s?car|遙控/i.test(n)) return '模型';
   if (/積木|樂高|lego|brick|ブロック|nanoblock/i.test(n)) return '積木';
-  if (/手辦|figure|figurine|景品|黏土人|nendoroid|figma|hottoys||hot ?toys|inart|scale/i.test(n)) return '手辦';
+  if (/手辦|figure|figurine|景品|黏土人|nendoroid|figma|hottoys|hot ?toys|inart|scale/i.test(n)) return '手辦';
   if (/盒玩|食玩|盲盒|blind ?box|popmart|泡泡瑪特|molly|labubu/i.test(n)) return '盒玩';
   if (/設計師|手作|手工|diy|craft|工房|gallery|studio|ハンドメイド|軟膠|搪膠|sofubi|sofvi|ソフビ/i.test(n)) return '設計師玩具';
   if (/懷舊|vintage|古董|絕版|昭和|retro|古玩|中古/i.test(n)) return '復古玩具';
