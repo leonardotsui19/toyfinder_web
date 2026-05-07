@@ -129,6 +129,7 @@ function bootstrapGoogleMaps(params) {
   const injectScript = () => scriptPromise || (scriptPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     const qs = new URLSearchParams();
+	qs.set('language', 'zh-HK');
     qs.set('libraries', [...requestedLibs].join(','));
     for (const k in params) qs.set(k.replace(/[A-Z]/g, ch => '_' + ch.toLowerCase()), params[k]);
     qs.set('loading', 'async');
