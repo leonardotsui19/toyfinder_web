@@ -170,7 +170,7 @@ function extractName(place) {
     : (_optionalChain([place, 'access', _10 => _10.displayName, 'optionalAccess', _11 => _11.text]) || place.name || '');
 }
 
-function classifyToyStore(place, userPos) {
+function classifyToyStore(place, userPos, searchRadius) {
   const pos = getLatLng(place.location);
   if (!pos) return { ok: false };
   const placeDistance = haversine(userPos, pos) * 1000;
@@ -1331,7 +1331,7 @@ function ToyFinder() {
       results.forEach(p => {
         if (!p.id || seen.has(p.id)) return;
         seen.add(p.id);
-        const verdict = classifyToyStore(p, userPos);
+        const verdict = classifyToyStore(p, userPos, searchRadius);
         if (verdict.ok) {
           newKeptPlaces.push(p);
         } else {
