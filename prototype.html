@@ -342,20 +342,20 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   let apiType = null;
   let apiCtx = null;
 
-  //if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
-  //  apiType = 'new';
-  //  apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
-  //  console.log('[Search Session] 使用 New Places API');
-  //} else if (places && places.PlacesService) {
+  if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
+    apiType = 'new';
+    apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
+    console.log('[Search Session] 使用 New Places API');
+  } else if (places && places.PlacesService) {
     apiType = 'legacy';
     apiCtx = {
       service: new places.PlacesService(document.createElement('div')),
       S: places.PlacesServiceStatus,
     };
     console.log('[Search Session] 使用 Legacy Places API');
-  //} else {
-  //  throw new Error('No Places API available');
-  //}
+  } else {
+    throw new Error('No Places API available');
+  }
 
   const rawCenters = generateGridCenters(google, center, bigRadius, gridSize);
   const centers = rawCenters
