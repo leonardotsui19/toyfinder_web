@@ -11,8 +11,11 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyBbHEhUV2VE75urk9wWfHoohDdQCb31EW4';
 //const DEFAULT_USER_LABEL = '台北';
 const DEFAULT_USER_POS = { lat: 22.302711, lng: 114.177216 };
 const DEFAULT_USER_LABEL = '香港';
+let _currentUserPos = DEFAULT_USER_POS;
+let _currentUserPosLabel = DEFAULT_USER_LABEL;
 
 const DEFAULT_SEARCH_RADIUS_M = 1000;
+let _currentSearchRadius = DEFAULT_SEARCH_RADIUS_M;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
 const RADIUS_OPTIONS = [100, 300, 500, 800, 1000, 2000, 3000, 5000, 10000, 15000, 20000];
@@ -170,12 +173,12 @@ function extractName(place) {
     : (_optionalChain([place, 'access', _10 => _10.displayName, 'optionalAccess', _11 => _11.text]) || place.name || '');
 }
 
-function classifyToyStore(place, userPos, searchRadius) {
+function classifyToyStore(place) {
   const pos = getLatLng(place.location);
   if (!pos) return { ok: false };
-  const placeDistance = haversine(userPos, pos) * 1000;
-  if (placeDistance > searchRadius) {
-	console.log(placeDistance + '>' + searchRadius);
+  const placeDistance = haversine(_currentUserPos, pos) * 1000;
+  if (placeDistance > _currentSearchRadius) {
+	console.log(placeDistance + '>' + _currentSearchRadius);
 	return { ok: false };
   }
   const name = extractName(place);
@@ -1124,7 +1127,7 @@ function RadiusPicker({ value, onChange }) {
                 const active = r === value;
                 return _react2.default.createElement('button', {
                     key: r,
-                    onClick: () => { onChange(r); setOpen(false); },
+                    onClick: () => { _currentSearchRadius = r; onChange(r); setOpen(false); },
                     className: `text-xs font-bold py-2 rounded-lg transition ${active ? 'bg-red-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`,
                   }, formatDistance(r));
               })
@@ -1257,7 +1260,8 @@ function ToyFinder() {
     setLocationStatus('requesting');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+		_currentUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPos(_currentUserPos);
         setLocationStatus('granted');
         setLocationError('');
         try {
@@ -1265,7 +1269,10 @@ function ToyFinder() {
           geocoder.geocode({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }, (results, status) => {
             if (status === "OK" && results && results.length) {
               const pick = results[Math.min(7, results.length - 1)] || results[0];
-              if (pick) setUserPosLabel(pick.formatted_address);
+              if (pick) { 
+			    _currentUserPosLabel = pick.formatted_address;
+				setUserPosLabel(_currentUserPosLabel);
+			  }
             }
           });
         } catch (e) { /* geocoder may not be ready yet */ }
@@ -1273,7 +1280,7 @@ function ToyFinder() {
       (err) => {
         const codes = { 1: ['denied', '定位權限被拒,已使用預設位置'], 2: ['fallback', '無法取得位置訊號,已使用預設位置'], 3: ['fallback', '定位逾時,已使用預設位置'] };
         const [s, m] = codes[err.code] || ['fallback', '定位失敗,已使用預設位置'];
-        setUserPos(DEFAULT_USER_POS); setUserPosLabel(DEFAULT_USER_LABEL); setLocationStatus(s); setLocationError(m);
+        _currentUserPos = DEFAULT_USER_POS; setUserPos(_currentUserPos); _currentUserPosLabel = DEFAULT_USER_LABEL; setUserPosLabel(_currentUserPosLabel); setLocationStatus(s); setLocationError(m);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
@@ -1286,8 +1293,10 @@ function ToyFinder() {
     const t = setTimeout(() => {
       setLocationStatus(prev => {
         if (prev !== 'requesting') return prev;
-        setUserPos(DEFAULT_USER_POS);
-        setUserPosLabel(DEFAULT_USER_LABEL);
+		_currentUserPos = DEFAULT_USER_POS;
+        setUserPos(_currentUserPos);
+        _currentUserPosLabel = DEFAULT_USER_LABEL; 
+		setUserPosLabel(_currentUserPosLabel);
         setLocationError('定位超時,已使用預設位置');
         return 'fallback';
       });
@@ -1334,7 +1343,7 @@ function ToyFinder() {
       results.forEach(p => {
         if (!p.id || seen.has(p.id)) return;
         seen.add(p.id);
-        const verdict = classifyToyStore(p, userPos, searchRadius);
+        const verdict = classifyToyStore(p);
         if (verdict.ok) {
           newKeptPlaces.push(p);
         } else {
