@@ -171,6 +171,10 @@ function extractName(place) {
 }
 
 function classifyToyStore(place) {
+  const pos = getLatLng(place.location);
+  if (!pos) return { ok: false };
+  const placeDistance = haversine(userPos, pos) * 1000;
+  if (placeDistance > searchRadius) return { ok: false };
   const name = extractName(place);
   const types = place.types || [];
   const primaryType = place.primaryType || '';
