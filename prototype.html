@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://*.googleusercontent.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; img-src 'self' data: blob: https: ; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
+<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com https://*.googleusercontent.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://places.googleapis.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; img-src 'self' data: blob: https: ; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
     <meta charset="utf-8">
     <title>ToyFinder Prototype</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -282,6 +282,20 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
   return all;
 }
 
+function getRectangleFromCircle(lat, lng, radiusInMeters) {
+    const EARTH_RADIUS = 6378137; // 地球半徑 (米)
+    
+    // 緯度的偏移量
+    const dLat = radiusInMeters / EARTH_RADIUS;
+    // 經度的偏移量 (考慮到緯度會影響經度距離)
+    const dLng = radiusInMeters / (EARTH_RADIUS * Math.cos(Math.PI * lat / 180));
+
+    return new google.maps.LatLngBounds(
+        { lat: lat - (dLat * 180 / Math.PI), lng: lng - (dLng * 180 / Math.PI) }, // 西南角 (Southwest)
+        { lat: lat + (dLat * 180 / Math.PI), lng: lng + (dLng * 180 / Math.PI) }  // 東北角 (Northeast)
+      );
+}
+
 async function searchSingleAreaNewAPI(google, Place, RankPreference, center, radius) {
   const all = [];
   let pageToken = null;
@@ -289,22 +303,38 @@ async function searchSingleAreaNewAPI(google, Place, RankPreference, center, rad
   const MAX_PAGES = 3;
 
   do {
-    const request = {
+    const request_old = {
       fields: PLACE_FIELDS,
       locationRestriction: {
         center,
         radius, // Search radius in meters
       },
-      //includedTypes: ['store', 'toy_store', 'hobby_shop', 'antique_store', 'second_hand_store'],
+      //includedTypes: ['toy_store'],
       //textQuery: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
-      includedPrimaryTypes: ["toy_store"],
+      includedPrimaryTypes: ['toy_store'],
       maxResultCount: 20,
       rankPreference: "DISTANCE",
 	    language: 'zh-HK'
     };
+    
+    const biasCircle = new google.maps.Circle({
+      center: center,
+      radius: radius
+    });
+    const request = {
+      textQuery: 'toys hobbies collectibles',
+      fields: PLACE_FIELDS,
+      includedType: 'toy_store', // Restrict query to a specific type (leave blank for any).
+      useStrictTypeFiltering: true,
+      locationRestriction: getRectangleFromCircle(center.lat, center.lng, radius),
+      language: 'zh-HK',
+      maxResultCount: 20,
+    };
+
     if (pageToken) request.pageToken = pageToken;
 
-    const response = await Place.searchNearby(request);
+    //const response = await Place.searchNearby(request);
+    const response = await Place.searchByText(request);
     const results = response.places || [];
     pageToken = response.nextPageToken;
     if (results.length > 0) all.push(...results);
@@ -346,20 +376,20 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   let apiType = null;
   let apiCtx = null;
 
-  if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
-    apiType = 'new';
-    apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
-    console.log('[Search Session] 使用 New Places API');
-  } else if (places && places.PlacesService) {
+  //if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
+  //  apiType = 'new';
+  //  apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
+  //  console.log('[Search Session] 使用 New Places API');
+  //} else if (places && places.PlacesService) {
     apiType = 'legacy';
     apiCtx = {
       service: new places.PlacesService(document.createElement('div')),
       S: places.PlacesServiceStatus,
     };
     console.log('[Search Session] 使用 Legacy Places API');
-  } else {
-    throw new Error('No Places API available');
-  }
+  //} else {
+  //  throw new Error('No Places API available');
+  //}
 
   const rawCenters = generateGridCenters(google, center, bigRadius, gridSize);
   const centers = rawCenters
