@@ -1605,10 +1605,10 @@ function ToyFinder() {
   const openDetail = _react.useCallback(async (shop) => {
   setDetailFrom(prev => view === 'detail' ? prev : view);
   
-  let enrichedShop = shop;
+  //let enrichedShop = shop;
 
   // 如果還沒有詳細資料（電話、網站、完整營業時間），才去抓
-  if (!shop.phone && !shop.website && (!shop.weekdayHours || shop.weekdayHours.length === 0)) {
+  /*if (!shop.phone && !shop.website && (!shop.weekdayHours || shop.weekdayHours.length === 0)) {
     try {
       const google = window.google;
       const details = await fetchPlaceDetailsLegacy(google, shop.placeId || shop.id);
@@ -1627,9 +1627,25 @@ function ToyFinder() {
     } catch (err) {
       console.warn('抓取詳細資料失敗', err);
     }
-  }
+  }*/
+  
+	try {
+	  const google = window.google;
+      const details = await fetchPlaceDetailsLegacy(google, shop.placeId || shop.id);
+      if (details) {
+        if (details.formatted_phone_number) shop.formatted_phone_number = details.formatted_phone_number;
+        if (details.international_phone_number) shop.international_phone_number = details.international_phone_number;
+        if (details.website) shop.website = details.website;
+        if (details.url) shop.url = details.url;
+        if (details.opening_hours) {
+          shop.opening_hours = { ...(shop.opening_hours || {}), ...details.opening_hours };
+        }
+      }
+    } catch (err) {
+      console.warn('抓取詳細資料失敗', err);
+    }
 
-  setSelectedShop(enrichedShop);
+  setSelectedShop(shop);
   setView('detail');
 }, [view]);
 
