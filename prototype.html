@@ -19,6 +19,15 @@ let _currentSearchRadius = DEFAULT_SEARCH_RADIUS_M;
 const LOCATION_SAFETY_TIMEOUT_MS = 12000;
 
 const RADIUS_OPTIONS = [100, 300, 500, 800, 1000, 2000, 3000, 5000, 10000, 15000, 20000];
+
+// Details 快取
+const placeDetailsCache = new Map();   // key: placeId, value: details物件
+
+// 清除快取（可選，開發時使用）
+function clearDetailsCache() {
+  placeDetailsCache.clear();
+}
+
 function formatDistance(m) {
   if (m >= 1000) {
     const km = m / 1000;
@@ -201,6 +210,12 @@ const PLACE_FIELDS = [
 ];
 
 function fetchPlaceDetailsLegacy(google, placeId) {
+
+  // 優先從快取取
+  if (placeDetailsCache.has(placeId)) {
+    return placeDetailsCache.get(placeId);
+  }
+
   return new Promise((resolve) => {
     const places = google.maps.places;
     if (!places || !places.PlacesService) { resolve(null); return; }
@@ -212,7 +227,10 @@ function fetchPlaceDetailsLegacy(google, placeId) {
         language: 'zh-HK',
       },
       (result, status) => {
-        if (status === places.PlacesServiceStatus.OK) resolve(result);
+        if (status === places.PlacesServiceStatus.OK) { 
+			placeDetailsCache.set(placeId, result);   // 存入快取
+			resolve(result); 
+		}
         else { console.warn(`[legacy details] ${placeId} 失敗: ${status}`); resolve(null); }
       }
     );
@@ -416,7 +434,7 @@ async function searchOneGridAndEnrich(google, session, idx) {
 
   console.log(`[Search Session] 網格 #${idx + 1}/${session.centers.length} 取得 ${raw.length} 筆 (距離 ${gridCenter._dist ? gridCenter._dist.toFixed(2) : '?'} km)`);
 
-  const enriched = await Promise.all(raw.map(async (place) => {
+  /*const enriched = await Promise.all(raw.map(async (place) => {
     try {
       const idForDetails = session.apiType === 'new' ? place.id : place.place_id;
       const details = await fetchPlaceDetailsLegacy(google, idForDetails);
@@ -437,6 +455,15 @@ async function searchOneGridAndEnrich(google, session, idx) {
 
   if (session.apiType === 'legacy') return enriched.map(normalizeLegacyPlace);
   return enriched;
+  */
+  
+  // 只做基本處理 + normalize，不再批量抓 details
+  let processed = raw;
+  if (session.apiType === 'legacy') {
+    processed = raw.map(normalizeLegacyPlace);
+  }
+
+  return processed;
 }
 
 function inferCategory(name = '', types = []) {
@@ -1569,11 +1596,42 @@ function ToyFinder() {
     });
   }, []);
 
-  const openDetail = _react.useCallback.call(void 0, (shop) => {
+  /*const openDetail = _react.useCallback.call(void 0, (shop) => {
     setDetailFrom(prev => view === 'detail' ? prev : view);
     setSelectedShop(shop);
     setView('detail');
-  }, [view]);
+  }, [view]);*/
+  
+  const openDetail = _react.useCallback(async (shop) => {
+  setDetailFrom(prev => view === 'detail' ? prev : view);
+  
+  let enrichedShop = shop;
+
+  // 如果還沒有詳細資料（電話、網站、完整營業時間），才去抓
+  if (!shop.phone && !shop.website && (!shop.weekdayHours || shop.weekdayHours.length === 0)) {
+    try {
+      const google = window.google;
+      const details = await fetchPlaceDetailsLegacy(google, shop.placeId || shop.id);
+      
+      if (details) {
+        enrichedShop = { 
+          ...shop,
+          formatted_phone_number: details.formatted_phone_number,
+          international_phone_number: details.international_phone_number,
+          phone: details.formatted_phone_number || details.international_phone_number || shop.phone,
+          website: details.website || details.url || shop.website,
+          weekdayHours: details.opening_hours?.weekday_text || shop.weekdayHours || [],
+          opening_hours: details.opening_hours
+        };
+      }
+    } catch (err) {
+      console.warn('抓取詳細資料失敗', err);
+    }
+  }
+
+  setSelectedShop(enrichedShop);
+  setView('detail');
+}, [view]);
 
   const closeDetail = _react.useCallback.call(void 0, () => { setView(detailFrom || 'home'); }, [detailFrom]);
 
