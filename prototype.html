@@ -1609,8 +1609,9 @@ function ToyFinder() {
 			if (details.website) shop.website = details.website;
 			if (details.url) shop.url = details.url;
 			if (details.opening_hours) {
-			  shop.weekdayHours = details.opening_hours?.weekday_text || shop.weekdayHours || [],
 			  shop.opening_hours = details.opening_hours;
+			  shop.weekdayHours = details.opening_hours?.weekday_text || shop.weekdayHours || [];
+			  shop.todayDescriptionIdx = todayIndexInDescriptions(shop.weekdayHours);
 			}
 		  }
 		} catch (err) {
