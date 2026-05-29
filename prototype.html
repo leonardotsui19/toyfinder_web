@@ -313,55 +313,62 @@ function getRectangleFromCircle(lat, lng, radiusInMeters) {
       );
 }
 
-async function searchSingleAreaNewAPI(google, Place, RankPreference, center, radius) {
-  const all = [];
-  let pageToken = null;
-  let page = 0;
-  const MAX_PAGES = 3;
+async function searchSingleAreaNewAPI(google, Place, rankPreference, center, radius) {
+    const allPlaces = new Map();
+    const MAX_PAGES = 3;
+    const DELAY_BETWEEN_PAGES = 2200;
 
-  do {
-    const request_old = {
-      fields: PLACE_FIELDS,
-      locationRestriction: {
-        center,
-        radius, // Search radius in meters
-      },
-      //includedTypes: ['toy_store'],
-      //textQuery: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
-      includedPrimaryTypes: ['toy_store'],
-      maxResultCount: 20,
-      rankPreference: "DISTANCE",
-	    language: 'zh-HK'
-    };
-    
-    const biasCircle = new google.maps.Circle({
-      center: center,
-      radius: radius
-    });
-    const request = {
-      textQuery: 'toys hobbies collectibles',
-      fields: PLACE_FIELDS,
-      includedType: 'toy_store', // Restrict query to a specific type (leave blank for any).
-      useStrictTypeFiltering: true,
-      locationRestriction: getRectangleFromCircle(center.lat, center.lng, radius),
-      language: 'zh-HK',
-      maxResultCount: 20,
-    };
+    const searchQueries = [
+        "toys hobbies collectibles", "toys", "hobbies", "model kits", "rc vehicles", "diecast cars", "action figures", "retro toys", "designer toys", "vintage toys", "vinyl toys", "sofubi"
+    ];
 
-    if (pageToken) request.pageToken = pageToken;
+    for (const textQuery of searchQueries) {
+        let pageToken = null;
+        let page = 0;
 
-    //const response = await Place.searchNearby(request);
-    const response = await Place.searchByText(request);
-    const results = response.places || [];
-    pageToken = response.nextPageToken;
-    if (results.length > 0) all.push(...results);
-    page++;
-    if (pageToken && page < MAX_PAGES) {
-      await new Promise(resolve => setTimeout(resolve, 2200));
+        do {
+            const request = {
+                textQuery: textQuery,
+                fields: PLACE_FIELDS,
+                includedType: 'toy_store',
+                useStrictTypeFiltering: true,
+                locationRestriction: getRectangleFromCircle(center.lat, center.lng, radius),
+                maxResultCount: 20,
+                rankPreference: "RELEVANCE",
+            };
+
+            if (pageToken) {
+                request.pageToken = pageToken;
+            }
+
+            try {
+                const response = await Place.searchByText(request);
+                const results = response.places || [];
+
+                results.forEach(place => {
+                    if (place.id) {
+                        allPlaces.set(place.id, place); // 自動去重
+                    }
+                });
+
+                pageToken = response.nextPageToken;
+                page++;
+
+                // 避免超過配額
+                if (pageToken && page < MAX_PAGES) {
+                    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_PAGES));
+                }
+            } catch (error) {
+                console.warn(`搜尋 "${textQuery}" 失敗:`, error);
+                break;
+            }
+        } while (pageToken && page < MAX_PAGES);
     }
-  } while (pageToken && page < MAX_PAGES);
 
-  return all;
+    const finalResults = Array.from(allPlaces.values());
+    
+    console.log(`共找到 ${finalResults.length} 間玩具相關店家 (去重後)`);
+    return finalResults;
 }
 
 function normalizeLegacyPlace(p) {
@@ -393,20 +400,20 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   let apiType = null;
   let apiCtx = null;
 
-  //if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
-  //  apiType = 'new';
-  //  apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
-  //  console.log('[Search Session] 使用 New Places API');
-  //} else if (places && places.PlacesService) {
+  if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
+    apiType = 'new';
+    apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
+    console.log('[Search Session] 使用 New Places API');
+  } else if (places && places.PlacesService) {
     apiType = 'legacy';
     apiCtx = {
       service: new places.PlacesService(document.createElement('div')),
       S: places.PlacesServiceStatus,
     };
     console.log('[Search Session] 使用 Legacy Places API');
-  //} else {
-  //  throw new Error('No Places API available');
-  //}
+  } else {
+    throw new Error('No Places API available');
+  }
 
   const rawCenters = generateGridCenters(google, center, bigRadius, gridSize);
   const centers = rawCenters
