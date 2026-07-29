@@ -37,14 +37,14 @@ function formatDistance(m) {
 }
 
 function gridSizeForRadius(radius) {
-  if (radius <= 200) return Math.max(80, radius);
-  if (radius <= 500) return 250;
-  if (radius <= 1000) return 500;
-  if (radius <= 2000) return 600;
-  if (radius <= 3000) return 800;
-  if (radius <= 5000) return 1200;
-  if (radius <= 10000) return 1800;
-  return 2500;
+  if (radius <= 200) return Math.max(100, radius);
+  if (radius <= 500) return 300;
+  if (radius <= 1000) return 700;
+  if (radius <= 2000) return 1200;
+  if (radius <= 3000) return 1800;
+  if (radius <= 5000) return 2500;
+  if (radius <= 10000) return 4000;
+  return 5000;
 }
 
 const MAP_MIN_ZOOM = 11;
@@ -176,6 +176,9 @@ const POSITIVE_TYPES = new Set(['toy_store', 'hobby_shop']);
 
 const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具|軟膠|搪膠|sofubi|sofvi|ソフビ/i;
 
+// NEW: Add negative keywords to filter out general retailers that happen to sell a few toys
+const NEGATIVE_KEYWORDS = /超市|便利店|藥局|藥妝|嬰兒用品|童裝|文具|supermarket|grocery|convenience|pharmacy|baby|infant|apparel|stationery/i;
+
 function extractName(place) {
   return typeof place.displayName === 'string'
     ? place.displayName
@@ -184,20 +187,30 @@ function extractName(place) {
 
 function classifyToyStore(place) {
   const pos = getLatLng(place.location);
-  if (!pos) return { ok: false };
+  if (!pos) return { ok: false, reason: 'no_location' };
+  
   const placeDistance = haversine(_currentUserPos, pos) * 1000;
   if (placeDistance > _currentSearchRadius) {
-	return { ok: false };
+    return { ok: false, reason: 'out_of_range' };
   }
+  
   const name = extractName(place);
+  
+  // NEW: Immediately reject places with negative keywords in their name
+  if (NEGATIVE_KEYWORDS.test(name)) return { ok: false, reason: 'negative_keyword' };
+
   const types = place.types || [];
   const primaryType = place.primaryType || '';
   if (POSITIVE_TYPES.has(primaryType)) return { ok: true };
+  
   const hasPositiveType = types.some(t => POSITIVE_TYPES.has(t));
   const nameHasToyKeyword = TOY_KEYWORDS.test(name);
+  
   if (nameHasToyKeyword) return { ok: true };
   if (hasPositiveType) return { ok: true };
-  return { ok: true };
+  
+  // FIX BUG: Default to false instead of true
+  return { ok: false, reason: 'no_match' };
 }
 
 const PLACE_FIELDS = [
@@ -272,9 +285,9 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
   const request = {
     location: new google.maps.LatLng(center.lat, center.lng),
     radius: Math.floor(radius),
-    keyword: 'toys hobbies collectibles OR toys OR hobbies OR model kits OR collectibles OR rc vehicles OR diecast cars OR action figures OR retro toys OR designer toys OR vintage toys OR vinyl toys OR sofubi',
+    keyword: 'toy store OR hobby shop OR collectibles OR action figures OR model kits',
     type: 'toy_store',
-	language: 'zh-HK'
+    language: 'zh-HK'
   };
 
   do {
@@ -319,7 +332,8 @@ async function searchSingleAreaNewAPI(google, Place, rankPreference, center, rad
     const DELAY_BETWEEN_PAGES = 2200;
 
     const searchQueries = [
-        "toys hobbies collectibles", "toys", "hobbies", "model kits", "rc vehicles", "diecast cars", "action figures", "retro toys", "designer toys", "vintage toys", "vinyl toys", "sofubi"
+        "toys OR hobbies OR action figures OR model kits OR collectibles",
+        "designer toys OR retro toys OR sofubi OR diecast cars"
     ];
 
     for (const textQuery of searchQueries) {
