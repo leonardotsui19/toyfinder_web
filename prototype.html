@@ -176,7 +176,8 @@ const POSITIVE_TYPES = new Set(['toy_store', 'hobby_shop']);
 
 const TOY_KEYWORDS = /玩具|toy|toys|玩偶|公仔|figure|figurine|手辦|景品|模型|鋼彈|高達|gundam|plamo|プラモ|田宮|tamiya|海洋堂|good\s?smile|積木|樂高|lego|brick|ブロック|nanoblock|扭蛋|轉蛋|gacha|gashapon|ガチャ|カプセル|盒玩|食玩|盲盒|blind\s?box|pop\s?mart|泡泡瑪特|molly|labubu|黏土人|nendoroid|figma|萬代|bandai|takara|多美|tomica|tomy|disney\s?store|sanrio|三麗鷗|hello\s?kitty|hobby|ホビー|模型屋|玩具屋|童玩|益智|桌遊|board\s?game|tcg|卡牌|集換式|pokemon|寶可夢|yu-?gi-?oh|遊戲王|magic\s?the\s?gathering|mtg|rc\s?car|遙控車|遙控模型|動漫|anime|動漫周邊|周邊|二次元|collectibles?|collectable|二手玩具|中古玩具|軟膠|搪膠|sofubi|sofvi|ソフビ/i;
 
-// NEW: Add negative keywords to filter out general retailers that happen to sell a few toys
+const NEGATIVE_TYPES = new Set(['supermarket', 'convenience_store', 'pharmacy', 'drugstore', 'clothing_store', 'grocery_or_supermarket']);
+
 const NEGATIVE_KEYWORDS = /超市|便利店|藥局|藥妝|嬰兒用品|童裝|文具|supermarket|grocery|convenience|pharmacy|baby|infant|apparel|stationery/i;
 
 function extractName(place) {
@@ -195,22 +196,17 @@ function classifyToyStore(place) {
   }
   
   const name = extractName(place);
-  
-  // NEW: Immediately reject places with negative keywords in their name
+  const primaryType = place.primaryType || '';
+
+  // 1. Blacklist by Name
   if (NEGATIVE_KEYWORDS.test(name)) return { ok: false, reason: 'negative_keyword' };
 
-  const types = place.types || [];
-  const primaryType = place.primaryType || '';
-  if (POSITIVE_TYPES.has(primaryType)) return { ok: true };
-  
-  const hasPositiveType = types.some(t => POSITIVE_TYPES.has(t));
-  const nameHasToyKeyword = TOY_KEYWORDS.test(name);
-  
-  if (nameHasToyKeyword) return { ok: true };
-  if (hasPositiveType) return { ok: true };
-  
-  // FIX BUG: Default to false instead of true
-  return { ok: false, reason: 'no_match' };
+  // 2. Blacklist by Type
+  if (NEGATIVE_TYPES.has(primaryType)) return { ok: false, reason: 'negative_type' };
+
+  // 3. Trust Google's Search Relevance for the rest!
+  // Since the query was specifically for toy/hobby stores, passing the blacklist means it is highly likely valid.
+  return { ok: true };
 }
 
 const PLACE_FIELDS = [
@@ -285,8 +281,7 @@ async function searchSingleAreaLegacy(google, service, S, center, radius) {
   const request = {
     location: new google.maps.LatLng(center.lat, center.lng),
     radius: Math.floor(radius),
-    keyword: 'toy store OR hobby shop OR collectibles OR action figures OR model kits',
-    type: 'toy_store',
+    keyword: 'toy store collectibles',
     language: 'zh-HK'
   };
 
@@ -332,8 +327,10 @@ async function searchSingleAreaNewAPI(google, Place, rankPreference, center, rad
     const DELAY_BETWEEN_PAGES = 2200;
 
     const searchQueries = [
-        "toys OR hobbies OR action figures OR model kits OR collectibles",
-        "designer toys OR retro toys OR sofubi OR diecast cars"
+		"toy store", 
+        "hobby shop collectibles",
+        "designer toys", 
+		"retro toys"
     ];
 
     for (const textQuery of searchQueries) {
@@ -344,8 +341,6 @@ async function searchSingleAreaNewAPI(google, Place, rankPreference, center, rad
             const request = {
                 textQuery: textQuery,
                 fields: PLACE_FIELDS,
-                includedType: 'toy_store',
-                useStrictTypeFiltering: true,
                 locationRestriction: getRectangleFromCircle(center.lat, center.lng, radius),
                 maxResultCount: 20,
                 rankPreference: "RELEVANCE",
@@ -369,9 +364,9 @@ async function searchSingleAreaNewAPI(google, Place, rankPreference, center, rad
                 page++;
 
                 // 避免超過配額
-                if (pageToken && page < MAX_PAGES) {
-                    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_PAGES));
-                }
+                //if (pageToken && page < MAX_PAGES) {
+                //    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_PAGES));
+                //}
             } catch (error) {
                 console.warn(`搜尋 "${textQuery}" 失敗:`, error);
                 break;
@@ -407,14 +402,15 @@ function normalizeLegacyPlace(p) {
   };
 }
 
-async function prepareSearchSession(google, center, bigRadius, gridSize) {
+async function prepareSearchSession(google, center, bigRadius, gridSize, apiPreference) {
   if (bigRadius < gridSize) gridSize = bigRadius;
   const places = google.maps.places;
 
   let apiType = null;
   let apiCtx = null;
 
-  if (_optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
+  // Check user preference explicitly
+  if (apiPreference === 'new' && _optionalChain([places, 'optionalAccess', _40 => _40.Place]) && typeof places.Place.searchNearby === 'function') {
     apiType = 'new';
     apiCtx = { Place: places.Place, RankPreference: places.SearchNearbyRankPreference };
     console.log('[Search Session] 使用 New Places API');
@@ -433,8 +429,6 @@ async function prepareSearchSession(google, center, bigRadius, gridSize) {
   const centers = rawCenters
     .map(c => ({ lat: c.lat, lng: c.lng, _dist: haversine(center, c) }))
     .sort((a, b) => a._dist - b._dist);
-
-  console.log(`[Search Session] 半徑 ${bigRadius}m / grid ${gridSize}m → 共 ${centers.length} 個網格 (由近至遠)`);
 
   return { apiType, apiCtx, centers, gridSize, center, bigRadius };
 }
@@ -1278,9 +1272,8 @@ function BottomNav({ view, setView, favoritesCount }) {
           const labelCls = active ? 'text-red-500 font-bold' : 'text-gray-400';
           return _react2.default.createElement('button', {
               key: t.key,
-              onClick: () => { if (t.key !== 'me') setView(t.key); },
+              onClick: () => { setView(t.key); },
               className: "flex flex-col items-center py-1 px-4 relative",
-              disabled: t.key === 'me',
             }
             , t.icon
               ? _react2.default.createElement(t.icon, { className: `w-5 h-5 ${colorCls} ${active && t.key === 'favorites' ? 'fill-red-500' : ''}`,} )
@@ -1295,6 +1288,10 @@ function BottomNav({ view, setView, favoritesCount }) {
 
 function ToyFinder() {
   const [view, setView] = _react.useState.call(void 0, 'home');
+  const [apiPreference, setApiPreference] = _react.useState.call(void 0, () => {
+    if (typeof localStorage !== 'undefined') return localStorage.getItem('toyfinder_api_pref') || 'new';
+    return 'new';
+  });
   const [selectedShop, setSelectedShop] = _react.useState.call(void 0, null);
   const [detailFrom, setDetailFrom] = _react.useState.call(void 0, 'home');
   const [searchQuery, setSearchQuery] = _react.useState.call(void 0, '');
@@ -1502,7 +1499,7 @@ function ToyFinder() {
       try {
         const google = window.google;
         const gridSize = gridSizeForRadius(searchRadius);
-        const session = await prepareSearchSession(google, userPos, searchRadius, gridSize);
+		const session = await prepareSearchSession(google, userPos, searchRadius, gridSize, apiPreference);
         if (sessionStateRef.current.gen !== gen) return;
 
         sessionStateRef.current.session = session;
@@ -1523,7 +1520,7 @@ function ToyFinder() {
       sessionStateRef.current.gen += 1;
       isLoadingGridRef.current = false;
     };
-  }, [mapsStatus, locationStatus, userPos, refreshTick, searchRadius]);
+  }, [mapsStatus, locationStatus, userPos, refreshTick, searchRadius, apiPreference]);
 
   _react.useEffect.call(void 0, () => {
     if (view !== 'home') return;
@@ -1661,6 +1658,57 @@ function ToyFinder() {
     if (badge === 'Silver') return _react2.default.createElement('div', { className: "flex items-center gap-1 bg-gradient-to-r from-gray-400 to-gray-300 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow",}, _react2.default.createElement(_lucidereact.Award, { className: "w-3 h-3",} ), "銀牌店舖");
     return null;
   };
+  
+  // ============ 我的 (Settings) 頁 ============
+  if (view === 'me') {
+    const changeApiPref = (val) => {
+      setApiPreference(val);
+      if (typeof localStorage !== 'undefined') localStorage.setItem('toyfinder_api_pref', val);
+    };
+
+    return (
+      _react2.default.createElement('div', { className: "min-h-screen bg-gray-50 pb-20",}
+        , _react2.default.createElement('div', { className: "bg-gradient-to-br from-gray-800 to-gray-900 px-5 pt-10 pb-6 text-white",}
+          , _react2.default.createElement('h1', { className: "text-3xl font-black tracking-tight",}, "設定與資訊")
+        )
+        
+        , _react2.default.createElement('div', { className: "px-5 py-6 space-y-6",}
+          , _react2.default.createElement('div', { className: "bg-white rounded-2xl shadow-sm border border-gray-100 p-4",}
+            , _react2.default.createElement('h2', { className: "font-bold text-gray-900 mb-3 flex items-center gap-2",}
+              , _react2.default.createElement(_lucidereact.Settings, { className: "w-5 h-5 text-gray-500",} )
+              , "搜尋引擎設定"
+            )
+            , _react2.default.createElement('p', { className: "text-xs text-gray-500 mb-4",}, "切換 Google Maps API 的搜尋引擎。新版 API 支援更強的語義搜尋與更快的結果，但需要確保您的 API Key 已啟用 Places API (New)。")
+            
+            , _react2.default.createElement('div', { className: "space-y-3",}
+              , _react2.default.createElement('button', { 
+                  onClick: () => changeApiPref('new'),
+                  className: `w-full flex items-center justify-between p-3 rounded-xl border-2 transition ${apiPreference === 'new' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 hover:border-gray-200'}`,
+                }
+                , _react2.default.createElement('div', { className: "text-left",}
+                  , _react2.default.createElement('p', { className: `font-bold ${apiPreference === 'new' ? 'text-blue-700' : 'text-gray-700'}`,}, "Places API (New)")
+                  , _react2.default.createElement('p', { className: "text-xs text-gray-500 mt-0.5",}, "推薦・速度快、結果更精準")
+                )
+                , apiPreference === 'new' && _react2.default.createElement(_lucidereact.CheckCircle2, { className: "w-5 h-5 text-blue-500",} )
+              )
+              
+              , _react2.default.createElement('button', { 
+                  onClick: () => changeApiPref('legacy'),
+                  className: `w-full flex items-center justify-between p-3 rounded-xl border-2 transition ${apiPreference === 'legacy' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 hover:border-gray-200'}`,
+                }
+                , _react2.default.createElement('div', { className: "text-left",}
+                  , _react2.default.createElement('p', { className: `font-bold ${apiPreference === 'legacy' ? 'text-blue-700' : 'text-gray-700'}`,}, "Legacy Places API")
+                  , _react2.default.createElement('p', { className: "text-xs text-gray-500 mt-0.5",}, "舊版・穩定相容")
+                )
+                , apiPreference === 'legacy' && _react2.default.createElement(_lucidereact.CheckCircle2, { className: "w-5 h-5 text-blue-500",} )
+              )
+            )
+          )
+        )
+        , _react2.default.createElement(BottomNav, { view: view, setView: setView, favoritesCount: favorites.length,} )
+      )
+    );
+  }
 
   // ============ 收藏頁 ============
   if (view === 'favorites') {
